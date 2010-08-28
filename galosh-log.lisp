@@ -266,11 +266,6 @@
 	   (let ((b (concatenate 'string buffer (string-upcase (string c)))))
 	     (event-loop b))))))
 
-(defun init-db ()
-  (truncate-database)
-  (create-view-from-class 'qso)
-  (create-sequence 'qso-ids))
-  
 (defun start-interface ()
   (initscr)
   ;(raw) ; Get everything, including ^C, ^Z, etc
@@ -284,9 +279,7 @@
   (unwind-protect
        (progn
 	 (connect '("log.db") :database-type :sqlite3)
-					;	 (init-db)
 	 (start-interface))
-;)
     (progn
       (endwin)
       (disconnect))))

@@ -1,0 +1,11 @@
+#! /bin/sh -
+
+if [[ -e ".galosh" && ! -d ".galosh" ]]; then
+    rm .galosh
+fi
+
+if [[ ! -d ".galosh" ]]; then
+    mkdir .galosh
+fi
+
+./galosh-init-db.lisp
