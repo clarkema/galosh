@@ -21,7 +21,11 @@
   (:use :cl
 	:galosh-qso
 	:galosh-utils)
-  (:export :map-over-qsos)
+  (:export :map-over-qsos
+	   :adif-error
+	   :adif-error-message
+	   :adif-error-value
+	   :adif-error-line-number)
   (:shadow :read-char))
 (in-package :galosh-adif)
 
@@ -29,6 +33,37 @@
   (get 'linenum stream))
 (defun (setf line-num) (val stream)
   (setf (get 'linenum stream) val))
+
+(define-condition adif-error (error)
+  ((message
+    :initarg :message
+    :accessor adif-error-message
+    :initform nil
+    :documentation "Text message indicating what went wrong with the validation.")
+   (value
+    :initarg :value
+    :accessor adif-error-value
+    :initform nil
+    :documentation "The value of the field for which the error is signalled.")
+   (line-number
+    :initarg :line-number
+    :accessor adif-error-line-number
+    :initform nil
+    :documentation "The number of the line on which the error was encountered.")))
+
+;; Do something more useful than the default printer behaviour
+(defmethod print-object ((object adif-error) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (format stream "~@(~a~) ~s on line ~a"
+            (adif-error-message object)
+            (adif-error-value object)
+            (adif-error-line-number object))))
+
+(defun adif-error (message &key value line-number)
+  (error 'adif-error
+         :message message
+         :value value
+         :line-number line-number))
 
 (defstruct tag
   name
@@ -97,7 +132,6 @@
       (let ((qso (make-qso)))
 	(do ((tag (read-tag stream) (read-tag stream)))
 	    ((eql (tag-name tag) :EOR)
-	     (format t "~7a " (line-num stream))
 	     qso)
 	  (let ((value (read-value stream tag)))
 	    (case (tag-name tag)
@@ -120,7 +154,9 @@
 	      (:stx (setf (q-stx qso) value))
 	      (:srx (setf (q-srx qso) value))
 	      (:notes ())
-	      (otherwise (error (format nil "Unrecognised ADIF field ~s" (tag-name tag))))))))))
+	      (otherwise (adif-error "unrecognised ADIF field"
+				     :value (tag-name tag)
+				     :line-number (line-num stream)))))))))
 
 (defun read-header (stream)
   ; If the first character of the file is #\<, there is no header.

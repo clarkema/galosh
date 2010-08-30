@@ -70,6 +70,10 @@
 		*comment-prefix* (cdr (assoc "comment-prefix" options :test #'string=)))
 	  (process-file filename))
       (file-error () (format t "Error: file `~a' does not exist!~%" filename))
-      (simple-error (e) (format t "~a~%" e)))))
+      (simple-error (e) (format t "~a~%" e))
+      (adif-error (e) (format t "Parse error: ~a ~a on line ~s.~%"
+			      (adif-error-message e)
+			      (adif-error-value e)
+			      (adif-error-line-number e))))))
 
 (main)
