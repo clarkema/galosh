@@ -16,24 +16,27 @@
 
 (load "qso.lisp")
 (load "galosh-utils.lisp")
+(load "galosh-lisp.lisp")
 
 (defpackage :galosh-adif
   (:use :cl
+	:gl
 	:galosh-qso
 	:galosh-utils)
   (:export :map-over-qsos
 	   :adif-error
 	   :adif-error-message
 	   :adif-error-value
-	   :adif-error-line-number)
+	   :adif-error-line-number
+	   :qso->adif)
   (:shadow :read-char))
 (in-package :galosh-adif)
 
-(defun line-num (stream)
-  (get 'linenum stream))
-(defun (setf line-num) (val stream)
-  (setf (get 'linenum stream) val))
+(defvar *line-number* nil)
 
+;;; ===================================================================
+;;; Condition handling and definition
+;;; ===================================================================
 (define-condition adif-error (error)
   ((message
     :initarg :message
@@ -51,7 +54,6 @@
     :initform nil
     :documentation "The number of the line on which the error was encountered.")))
 
-;; Do something more useful than the default printer behaviour
 (defmethod print-object ((object adif-error) stream)
   (print-unreadable-object (object stream :type t :identity t)
     (format stream "~@(~a~) ~s on line ~a"
@@ -65,6 +67,9 @@
          :value value
          :line-number line-number))
 
+;;; ===================================================================
+;;; ADIF tag representation
+;;; ===================================================================
 (defstruct tag
   name
   length
@@ -80,16 +85,64 @@
 	  (tag-type tag) (third l))
     tag))
 
+;;; ===================================================================
+;;; Translations
+;;; ===================================================================
+(defstruct (translation (:conc-name t-))
+  slot-name
+  field-name
+  (qso->adif #'identity)
+  (adif->qso #'identity))
+
+(defparameter *slot-translations*
+  (list
+   (make-translation :slot-name 'q-band :field-name "band")
+   (make-translation :slot-name 'q-hiscall :field-name "call")
+   (make-translation :slot-name 'q-comment :field-name "comment")
+   (make-translation :slot-name 'q-qrg :field-name "freq"
+                     :qso->adif #'(lambda (x) (format nil "~,6,f" (float (/ x 1000000)))))
+   (make-translation :slot-name 'q-his-grid :field-name "gridsquare")
+   (make-translation :slot-name 'q-his-iota :field-name "iota")
+   (make-translation :slot-name 'q-mode :field-name "mode")
+   (make-translation :slot-name 'q-name :field-name "name")
+   (make-translation :slot-name 'q-qso-date :field-name "qso_date")
+   (make-translation :slot-name 'q-tx-rst :field-name "rst_sent")
+   (make-translation :slot-name 'q-rx-rst :field-name "rst_rcvd")
+   (make-translation :slot-name 'q-time-on :field-name "time_on")
+   (make-translation :slot-name 'q-time-off :field-name "time_off")))
+
+(defparameter *slot-name->adif* (make-hash-table))
+(defparameter *adif->slot-name* (make-hash-table))
+(mapcar #'(lambda (tr)
+	    (setf (gethash (t-slot-name tr) *slot-name->adif*) tr)
+	    (setf (gethash (t-field-name tr) *adif->slot-name*) tr))
+	*slot-translations*)
+
+;;; ===================================================================
+
+(defun package-adif (qso slot-name)
+  (let* ((translator (gethash slot-name *slot-name->adif*))
+	 (value (funcall (t-qso->adif translator) (funcall slot-name qso))))
+    (when value
+      (format t "<~:@(~a~):~a>~a " (t-field-name translator)
+	      (length (format nil "~a" value))
+	      value))))
+
+(defun qso->adif (qso)
+  (format nil "~{ ~:a ~% ~}<EOR>~%"
+	  (remove nil (mapcar #'(lambda (slot-name) (package-adif qso slot-name))
+			      (keys *slot-name->adif*)))))
+
 (defun read-char (stream)
   "Wrap cl:read-char with a version that counts newlines in passing."
   (let ((r (cl:read-char stream)))
-    (if (char= r #\Newline)
-	(incf (line-num stream)))
+    (when (char= r #\Newline)
+      (incf *line-number*))
     r))
 
-;;; NB: We are using read-char below and not simply relying on peek-char to
-;;; eat unwanted characters up to a #\< in order to allow our own read-char
-;;; wrapper to count newlines.
+;; NB: We are using read-char below and not simply relying on peek-char to
+;; eat unwanted characters up to a #\< in order to allow our own read-char
+;; wrapper to count newlines.
 (defun discard-until-tag (stream)
   "Discard everything on a stream until we hit a < character."
   (case (peek-char nil stream nil :eof)
@@ -156,7 +209,7 @@
 	      (:notes ())
 	      (otherwise (adif-error "unrecognised ADIF field"
 				     :value (tag-name tag)
-				     :line-number (line-num stream)))))))))
+				     :line-number *line-number*))))))))
 
 (defun read-header (stream)
   ; If the first character of the file is #\<, there is no header.
@@ -172,10 +225,10 @@
 		     r))))
 
 (defun map-over-qsos (func stream)
-  (setf (line-num stream) 1)
-  (read-header stream) ; Discard any header
-  (let ((next-qso (make-qso-iterator stream)))
-    (macrolet ((next () `(funcall next-qso)))
-      (do ((qso (next) (next)))
-	  ((null qso) 'done)
-	(funcall func qso)))))
+  (let ((*line-number* 1))
+    (read-header stream) ; Discard any header
+    (let ((next-qso (make-qso-iterator stream)))
+      (macrolet ((next () `(funcall next-qso)))
+	(do ((qso (next) (next)))
+	    ((null qso) 'done)
+	  (funcall func qso))))))
