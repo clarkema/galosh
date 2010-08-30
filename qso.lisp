@@ -46,7 +46,8 @@
     :accessor q-time-off)
    (operator
     :db-type "TEXT"
-    :accessor q-operator)
+    :accessor q-operator
+    :initform nil)
    (hiscall
     :db-type "TEXT"
     :accessor q-hiscall)
