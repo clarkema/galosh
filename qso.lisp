@@ -123,7 +123,7 @@
 
 (defgeneric as-string (x))
 (defmethod as-string ((q qso))
-  (format nil "~a ~a ~a ~10a ~8a ~5a ~3a ~3a ~6a ~a~%"
+  (format nil "~a ~a ~a ~10a ~8@a ~5a ~3a ~3a ~6a ~a~%"
 	  (q-id q)
 	  (q-qso-date q)
 	  (q-time-on q)
