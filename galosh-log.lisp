@@ -82,6 +82,9 @@
     (mvprintw 5 4 (format nil "Follow up? ~a~%" q-followup))
     (refresh)))
 
+(defun display-status-bar ()
+  (mvprintw 0 0 (format nil "QRG: ~10a Mode: ~a~%" *qrg* *mode*)))
+
 (defun prompt (p)
   (mvprintw (1- *LINES*) 0 (format nil "~a~%" p))
   (refresh))
@@ -179,13 +182,29 @@
 				:rx-rst (ensure-valid-rst rx-rst))))
 	  (display-qso-and-prompt-for-options q)))))
 
+(defun galosh-set (string)
+  (let* ((tokens (split-words string))
+	 (place (second tokens))
+	 (value (third tokens)))
+    (cond ((string-equal place "qrg") (setf *qrg* (parse-integer value :junk-allowed t)))
+	  ((string-equal place "mode") (setf *mode* (string-upcase value))))))
+
+(defun process-option (string)
+  (let ((verb (first (split-words string))))
+    (cond
+      ((string-equal verb "set") (galosh-set string))
+      ((string-equal verb "q") nil)
+      (t t))))
+
 (defun event-loop (buffer)
+  (display-status-bar)
   (print-buffer buffer)
   (refresh)
   (let* ((raw-code (getch))
 	 (c (code-char raw-code)))
     (cond ((eql c #\:)
-	   (printw "Quit"))
+	   (if (process-option (read-value :prompt ":"))
+	       (event-loop "")))
           ((eql c #\Newline)
 	   (process-entry buffer)
 	   (event-loop ""))
