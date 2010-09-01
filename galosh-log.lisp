@@ -108,12 +108,6 @@
       (subseq str 0 (- (length str) 1))
       ""))
 
-(defun kill-last-word (str)
-  (let ((index (position #\Space (string-right-trim '(#\Space) str) :from-end t)))
-    (if index
-	(values (subseq str 0 (+ index 1)) (subseq str (+ index 1)))
-	(values "" nil))))
-
 (defun nil->es (var)
   (if (null var)
       ""

@@ -19,7 +19,7 @@
 (defpackage :galosh-utils
   (:nicknames :gu)
   (:use :cl)
-  (:export :split :split-words :string-empty-p :with-gensyms))
+  (:export :split :split-words :string-empty-p :with-gensyms :kill-last-word))
 
 (in-package :galosh-utils)
 
@@ -37,3 +37,9 @@
 		     `(,s (gensym)))
 		 syms)
      ,@body))
+
+(defun kill-last-word (str)
+  (let ((index (position #\Space (string-right-trim '(#\Space #\Tab #\Newline) str) :from-end t)))
+    (if index
+	(values (subseq str 0 (+ index 1)) (subseq str (+ index 1)))
+	(values "" nil))))
