@@ -181,33 +181,6 @@
     (:exit #\Newline nil)
     (:default qso)))
 
-#|
-(defun option-mode-loop (qso)
-  (let* ((raw-code (getch))
-	 (c (code-char raw-code)))
-    (cond ((eql c #\Newline)
-	   nil)
-	  ((eql c #\g)
-	   (setf (q-his-grid qso) (es->nil (read-value :prompt "Grid: "
-						       :buffer (nil->es (q-his-grid qso)))))
-	   qso)
-	  ((eql c #\i)
-	   (setf (q-his-iota qso) (es->nil (read-value :prompt "IOTA: "
-						       :ucase-p t 
-						       :buffer (nil->es (q-his-iota qso)))))
-	   qso)
-	  ((eql c #\f)
-	   (setf (q-followup qso) (if (eql 1 (q-followup qso)) 0 1))
-	   qso)
-	  ((eql c #\c)
-	   (setf (q-comment qso) (es->nil (read-value :prompt "Comment: " :buffer (nil->es (q-comment qso)))))
-	   qso)
-	  ((eql c #\C)
-	   (setf (q-hiscall qso) (read-value :prompt "Call: " :buffer (q-hiscall qso)
-					     :value-required-p t :ucase-p t))
-	   qso)
-	  (t qso))))
-|#
 (defun display-qso-and-prompt-for-options (q)
   (display-qso q)
   (prompt "> ")
