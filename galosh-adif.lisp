@@ -129,7 +129,7 @@
 (defun read-record (stream)
   (if (eql (discard-until-tag stream) :EOF)
       :EOF
-      (let ((qso (make-qso)))
+      (let ((qso (make-instance 'qso)))
 	(do ((tag (read-tag stream) (read-tag stream)))
 	    ((eql (tag-name tag) :EOR)
 	     qso)

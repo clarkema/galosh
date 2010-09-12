@@ -21,10 +21,11 @@
 
 (load "qso.lisp")
 (load "galosh-utils.lisp")
+(load "galosh-lisp.lisp")
 
 (defpackage :galosh-logger 
-  (:use :cl :clsql-user
-	:galosh-qso :gu "CL-NCURSES"))
+  (:use :cl :gl :clsql-user
+	:galosh-qso :gu :cl-ncurses))
 (in-package :galosh-logger)
 
 (clsql:enable-sql-reader-syntax) 
@@ -33,11 +34,6 @@
 (defvar *mode*    "SSB")
 (defvar *history* ())
 (defparameter *history-size* 15)
-
-(defun default-rst-for-mode (mode)
-  (if (member mode '("SSB" "ESSB" "AM") :test #'string=)
-      59
-      599))
 
 (defun log-date-time ()
   (multiple-value-bind
@@ -64,40 +60,27 @@
   (let ((q (reverse (select 'qso 
 			    :order-by '(([qso_date] :desc)([time_on] :desc)) 
 			    :limit *history-size* 
-			    :caching nil))))
+			    :caching nil
+			    :flatp t))))
     (dotimes (i *history-size*)
-      (mvprintw (- *LINES* (- (1+ *history-size*) i)) 0 (format nil "~a~%" (as-string (car (elt q i)))))))
+      (mvprintw (- *LINES* (- (1+ *history-size*) i)) 0 (format nil "~a~%" (as-string (elt q i))))))
   (refresh))
 
 (defun ensure-valid-rst (val)
-  (cond ((stringp val)
-	 (parse-integer val))
-	((integerp val)
-	 val)
-	(t
-	 (default-rst-for-mode *mode*))))
+  (cond ((stringp val) (parse-integer val))
+	((integerp val) val)
+	(t (default-rst-for-mode *mode*))))
 
-(defun sane-callsign-p (call)
-  (labels ((valid-call-char (c)
-	     (or (alphanumericp c) (char= c #\/))))
-    (if (and (> (length call) 0) (every #'valid-call-char call))
-	call
-	nil)))
-      
-
-(defun display-qso (q)
-  (mvprintw 1 0 (format nil "~a ~a ~a ~a ~a ~a~%" 
-			(q-qso-date q)
-			(q-time-on q)
-			(q-hiscall q)
-			(q-qrg q)
-			(q-rx-rst q)
-			(q-tx-rst q)))			
-  (mvprintw 2 4 (format nil "IOTA: ~a MODE: ~a GRID: ~a~%" (q-his-iota q) (q-mode q) (q-his-grid q)))
-  (mvprintw 3 4 (format nil "Name: ~a~%" (q-name q)))
-  (mvprintw 4 4 (format nil "Comment: ~a~%" (q-comment q)))
-  (mvprintw 5 4 (format nil "Follow up? ~a~%" (q-followup q)))
-  (refresh))
+(defun print-qso (q)
+  (with-qso-accessors q
+    (mvprintw 1 0 (format nil "~a ~a ~a ~a ~a ~a~%"
+			  q-qso-date q-time-on q-hiscall
+			  q-qrg      q-rx-rst  q-tx-rst))
+    (mvprintw 2 4 (format nil "IOTA: ~a MODE: ~a GRID: ~a~%" q-his-iota q-mode q-his-grid))
+    (mvprintw 3 4 (format nil "Name: ~a~%" q-name))
+    (mvprintw 4 4 (format nil "Comment: ~a~%" q-comment))
+    (mvprintw 5 4 (format nil "Follow up? ~a~%" q-followup))
+    (refresh)))
 
 (defun prompt (p)
   (mvprintw (1- *LINES*) 0 (format nil "~a~%" p))
@@ -109,8 +92,7 @@
       ""))
 
 (defun read-value (&key prompt ucase-p value-required-p (buffer ""))
-  (if (null buffer)
-      (setf buffer ""))
+  (default buffer "")
   (labels ((optional-ucase (c) (if ucase-p
 				   (string-upcase (string c))
 				   (string c)))
@@ -162,7 +144,7 @@
 
     
 (defun option-mode-loop (qso)
-  (display-qso qso)
+  (print-qso qso)
   (prompt "> ")
   (case-with-char (code-char (getch)) qso
 		  (#\g q-his-grid "Grid: ")
@@ -184,30 +166,18 @@
       qso)))
 
 (defun process-entry (buffer)
-  (let* ((words (split-words buffer))
-	 (call (first words))
-	 (rx-rst (second words))
-	 (tx-rst (third words)))
+  (destructuring-bind (call &optional rx-rst tx-rst) (split-words buffer)
     (if (sane-callsign-p call)
-	(let ((q (make-qso)))   ; This way around to avoid assigning db ids for invalid entries
-	  (with-accessors ((q-operator q-operator)
-			   (q-hiscall q-hiscall)
-			   (q-qso-date q-qso-date)
-			   (q-time-on q-time-on)
-			   (q-mode q-mode)
-			   (q-qrg q-qrg)
-			   (q-tx-rst q-tx-rst)
-			   (q-rx-rst q-rx-rst)) q
-	    (setf q-operator "VP8DMH")
-	    (setf q-hiscall call)
-	    (setf q-qso-date (log-date))
-	    (setf q-time-on (log-time))
-	    (setf q-mode *mode*)
-	    (setf q-qrg *qrg*)
-	    (setf q-tx-rst (ensure-valid-rst tx-rst))
-	    (setf q-rx-rst (ensure-valid-rst rx-rst))
-	    (display-qso-and-prompt-for-options q)
-	    (print-history))))))
+	(let ((q (make-instance 'qso
+				:operator "VP8DMH"
+				:hiscall  call
+				:qso-date (log-date)
+				:time-on  (log-time)
+				:mode *mode*
+				:qrg *qrg*
+				:tx-rst (ensure-valid-rst tx-rst)
+				:rx-rst (ensure-valid-rst rx-rst))))
+	  (display-qso-and-prompt-for-options q)))))
 
 (defun event-loop (buffer)
   (print-buffer buffer)

@@ -18,7 +18,7 @@
 
 (defpackage :galosh-qso
   (:use :cl :clsql-user)
-  (:export :qso :make-qso
+  (:export :qso :with-qso-accessors
 	   :q-qso-date :q-time-on :q-time-off :q-operator :q-hiscall :q-band :q-qrg :q-mode
 	   :q-tx-rst :q-rx-rst :q-stx :q-srx :q-name :q-his-iota :q-our-iota :q-comment :q-followup :q-tx-pwr
 	   :q-his-state :q-his-ve-prov :as-string :q-his-grid :q-our-grid
@@ -37,43 +37,55 @@
     :accessor q-id)
    (qso-date
     :db-type "TEXT"
-    :accessor q-qso-date)
+    :accessor q-qso-date
+    :initarg :qso-date)
    (time-on
     :db-type "TEXT"
-    :accessor q-time-on)
+    :accessor q-time-on
+    :initarg :time-on)
    (time-off
     :db-type "TEXT"
-    :accessor q-time-off)
+    :accessor q-time-off
+    :initarg :time-off)
    (operator
     :db-type "TEXT"
     :accessor q-operator
+    :initarg :operator
     :initform nil)
    (hiscall
     :db-type "TEXT"
-    :accessor q-hiscall)
+    :accessor q-hiscall
+    :initarg :hiscall)
    (band
     :db-type "TEXT"
-    :accessor q-band)
+    :accessor q-band
+    :initarg :band)
    (qrg
     :type integer
     :accessor q-qrg
-    :initform 0)
+    :initform 0
+    :initarg :qrg)
    (mode
     :db-type "TEXT"
     :accessor q-mode
-    :initform "SSB")
+    :initform "SSB"
+    :initarg :mode)
    (tx-rst
     :type integer
-    :accessor q-tx-rst)
+    :accessor q-tx-rst
+    :initarg :tx-rst)
    (rx-rst 
     :type integer
-    :accessor q-rx-rst)
+    :accessor q-rx-rst
+    :initarg :rx-rst)
    (stx
     :db-type "TEXT"
-    :accessor q-stx)
+    :accessor q-stx
+    :initarg :stx)
    (srx
     :db-type "TEXT"
-    :accessor q-srx)
+    :accessor q-srx
+    :initarg :srx)
    (tx-pwr
     :documentation "Power of this station in Watts"
     :type integer
@@ -138,5 +150,19 @@
 (defun q-toggle-followup (qso)
   (setf (q-followup qso) (if (eql 1 (q-followup qso)) 0 1)))
 
-(defmacro make-qso ()
-  '(make-instance (quote qso)))
+(defmacro with-qso-accessors (qso &body body)
+  `(with-accessors ((q-operator q-operator)
+		    (q-hiscall q-hiscall)
+		    (q-qso-date q-qso-date)
+		    (q-time-on q-time-on)
+		    (q-time-off q-time-off)
+		    (q-mode q-mode)
+		    (q-qrg q-qrg)
+		    (q-tx-rst q-tx-rst)
+		    (q-rx-rst q-rx-rst)
+		    (q-comment q-comment)
+		    (q-followup q-followup)
+		    (q-his-grid q-his-grid)
+		    (q-his-iota q-his-iota)
+		    (q-name q-name)) ,qso
+     ,@body))
