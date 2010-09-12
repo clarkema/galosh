@@ -108,17 +108,9 @@
       (subseq str 0 (- (length str) 1))
       ""))
 
-(defun nil->es (var)
-  (if (null var)
-      ""
-      var))
-
-(defun es->nil (var)
-  (if (string= var "")
-      nil
-      var))
-
 (defun read-value (&key prompt ucase-p value-required-p (buffer ""))
+  (if (null buffer)
+      (setf buffer ""))
   (labels ((optional-ucase (c) (if ucase-p
 				   (string-upcase (string c))
 				   (string c)))
@@ -127,8 +119,10 @@
 		    (let* ((raw-code (getch))
 			   (c (code-char raw-code)))
 		      (cond ((eql c #\Newline)
-			     (if (and (string-empty-p buffer) value-required-p)
-				 (r buffer)
+			     (if (string-empty-p buffer)
+				 (if value-required-p
+				     (r buffer)
+				     nil)
 				 buffer))
 			    ((eql c #\Tab)
 			     (r (concatenate 'string buffer (string #\Space))))
@@ -141,7 +135,7 @@
 			       (r b))))))))
     (r buffer)))
 
-(defmacro with-char (char value &body body)
+(defmacro case-with-char (char value &body body)
   (with-gensyms (c val)
     (let ((acc '(cond)))
       (dolist (form body)
@@ -155,11 +149,13 @@
 	  ((:default) 
 	   (setf acc (append acc `((t ,(second form))))))
 	  (otherwise
-	   (setf acc (append acc `(((char= ,c ,(first form))
-				    (setf (,(second form) ,val) (es->nil (read-value :prompt ,(third form)
-										     :buffer (nil->es (,(second form) ,val))
-										     ,@(fourth form))))
-				    (option-mode-loop ,val))))))))
+	   (let ((accessor-name (second form))
+		 (read-value-options (fourth form)))
+	     (setf acc (append acc `(((char= ,c ,(first form))
+				      (setf (,accessor-name ,val) (read-value :prompt ,(third form)
+									      :buffer (,accessor-name ,val)
+									      ,@read-value-options))
+				      (option-mode-loop ,val)))))))))
       (append `(let ((,c ,char)
 		     (,val ,value)))
 	      (list acc)))))
@@ -168,16 +164,16 @@
 (defun option-mode-loop (qso)
   (display-qso qso)
   (prompt "> ")
-  (with-char (code-char (getch)) qso
-	     (#\g q-his-grid "Grid: ")
-	     (#\i q-his-iota "IOTA: " (:ucase-p t))
-	     (#\c q-comment  "Comment: ")
-	     (#\C q-hiscall  "Call: " (:ucase-p t :value-required-p t))
-	     (#\n q-name     "Name: ")
-	     (:func #\f #'(lambda () (q-toggle-followup qso)))
-	     (:exit #\Newline qso)
-	     (:exit #\Esc :cancel)
-	     (:default (option-mode-loop qso))))
+  (case-with-char (code-char (getch)) qso
+		  (#\g q-his-grid "Grid: ")
+		  (#\i q-his-iota "IOTA: " (:ucase-p t))
+		  (#\c q-comment  "Comment: ")
+		  (#\C q-hiscall  "Call: " (:ucase-p t :value-required-p t))
+		  (#\n q-name     "Name: ")
+		  (:func #\f #'(lambda () (q-toggle-followup qso)))
+		  (:exit #\Newline qso)
+		  (:exit #\Esc :cancel)
+		  (:default (option-mode-loop qso))))
 
 (defun display-qso-and-prompt-for-options (q)
   (let ((qso (option-mode-loop q)))
