@@ -21,6 +21,7 @@
 	   :valid-callsign-char-p
 	   :sane-callsign-p
 	   :empty-string-p
+	   :keys
 	   :default))
 
 (in-package :galosh-lisp)
@@ -35,6 +36,9 @@
 (defmacro default (place value)
   `(if (null ,place)
        (setf ,place ,value)))
+
+(defun keys (hash)
+  (loop for k being the hash-keys of hash collect k))
 
 (defun default-rst-for-mode (mode)
   (if (member mode *non-tone-modes* :test #'string=)
