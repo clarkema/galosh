@@ -16,17 +16,10 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'cl-ncurses)
-(require 'clsql)
-
-(load "qso.lisp")
-(load "galosh-utils.lisp")
-(load "galosh-lisp.lisp")
-
-(defpackage :galosh-logger 
+(defpackage :galosh-log
   (:use :cl :gl :clsql-user
 	:galosh-qso :gu :cl-ncurses))
-(in-package :galosh-logger)
+(in-package :galosh-log)
 
 (clsql:enable-sql-reader-syntax) 
 
@@ -35,6 +28,11 @@
 (defvar *history* ())
 (defparameter *history-size* 15)
 
+(defconstant +inv-green+ 1)
+
+;;; ===================================================================
+;;; Utilities
+;;; ===================================================================
 (defun log-date-time ()
   (multiple-value-bind
         (second minute hour date month year)
@@ -52,6 +50,19 @@
     (declare (ignore date))
     time))
 
+(defun ensure-valid-rst (val)
+  (cond ((stringp val) (parse-integer val))
+	((integerp val) val)
+	(t (default-rst-for-mode *mode*))))
+
+(defun drop-last (str)
+  (if (> (length str) 1)
+      (subseq str 0 (- (length str) 1))
+      ""))
+
+;;; ===================================================================
+;;; Display functions
+;;; ===================================================================
 (defun print-buffer (buffer &optional (prompt ""))
   (mvprintw (- *LINES* 1) 0 (format nil "~a~a~%" prompt buffer))
   (refresh))
@@ -63,13 +74,8 @@
 			    :caching nil
 			    :flatp t))))
     (dotimes (i *history-size*)
-      (mvprintw (- *LINES* (- (1+ *history-size*) i)) 0 (format nil "~a~%" (as-string (elt q i))))))
+      (mvprintw (- *LINES* (- (+ *history-size* 2) i)) 0 (format nil "~a~%" (as-string (elt q i))))))
   (refresh))
-
-(defun ensure-valid-rst (val)
-  (cond ((stringp val) (parse-integer val))
-	((integerp val) val)
-	(t (default-rst-for-mode *mode*))))
 
 (defun print-qso (q)
   (with-qso-accessors q
@@ -82,17 +88,19 @@
     (mvprintw 5 4 (format nil "Follow up? ~a~%" q-followup))
     (refresh)))
 
+(defun display-title-bar ()
+  (with-color +inv-green+
+    (mvprintw 0 0 (string-right-pad *COLS* (format nil " QRG: ~10a Mode: ~a" *qrg* *mode*)))))
+
 (defun display-status-bar ()
-  (mvprintw 0 0 (format nil "QRG: ~10a Mode: ~a~%" *qrg* *mode*)))
+  (with-color +inv-green+
+    (mvprintw (- *LINES* 2) 0
+	      (string-right-pad *COLS*
+				(format nil "---Galosh Logger: ~A" *default-database*)))))
 
 (defun prompt (p)
   (mvprintw (1- *LINES*) 0 (format nil "~a~%" p))
   (refresh))
-
-(defun drop-last (str)
-  (if (> (length str) 1)
-      (subseq str 0 (- (length str) 1))
-      ""))
 
 (defun read-value (&key prompt ucase-p value-required-p (buffer ""))
   (default buffer "")
@@ -145,7 +153,6 @@
 		     (,val ,value)))
 	      (list acc)))))
 
-    
 (defun option-mode-loop (qso)
   (print-qso qso)
   (prompt "> ")
@@ -197,6 +204,7 @@
       (t t))))
 
 (defun event-loop (buffer)
+  (display-title-bar)
   (display-status-bar)
   (print-buffer buffer)
   (refresh)
@@ -223,7 +231,9 @@
   ;(raw) ; Get everything, including ^C, ^Z, etc
   (cbreak) ; Mainly cooked, but don't get ^C, ^Z, etc.
   (noecho)
-  (start-color)
+  (when (has-colors)
+    (start-color)
+    (init-pair +inv-green+ COLOR_BLACK COLOR_GREEN))
   (print-history)
   (event-loop ""))
 
