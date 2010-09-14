@@ -21,6 +21,7 @@
 	   :valid-callsign-char-p
 	   :sane-callsign-p
 	   :empty-string-p
+	   :string-right-pad
 	   :keys
 	   :default))
 
@@ -32,6 +33,9 @@
 
 (defun empty-string-p (str)
   (not (> (length str) 0)))
+
+(defun string-right-pad (target-width str &key (padding-element #\Space))
+  (concatenate 'string str (make-string (- target-width (length str)) :initial-element padding-element)))
 
 (defmacro default (place value)
   `(if (null ,place)
