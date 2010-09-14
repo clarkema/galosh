@@ -19,7 +19,7 @@
 (defpackage :galosh-utils
   (:nicknames :gu)
   (:use :cl)
-  (:export :split :split-words :string-empty-p :with-gensyms :kill-last-word))
+  (:export :split :split-words :string-empty-p :kill-last-word))
 
 (in-package :galosh-utils)
 
@@ -34,11 +34,6 @@
 (defun string-empty-p (str)
   (not (> (length str) 0)))
 
-(defmacro with-gensyms (syms &body body)
-  `(let ,(mapcar #'(lambda (s)
-		     `(,s (gensym)))
-		 syms)
-     ,@body))
 
 (defun kill-last-word (str)
   (let ((index (position #\Space (string-right-trim '(#\Space #\Tab #\Newline) str) :from-end t)))

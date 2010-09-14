@@ -23,7 +23,8 @@
 	   :empty-string-p
 	   :string-right-pad
 	   :keys
-	   :default))
+	   :default
+	   :with-gensyms))
 
 (in-package :galosh-lisp)
 
@@ -57,3 +58,9 @@
   (if (and (not (empty-string-p call)) (every #'valid-callsign-char-p call))
       call
       nil))
+
+(defmacro with-gensyms (syms &body body)
+  `(let ,(mapcar #'(lambda (s)
+		     `(,s (gensym)))
+		 syms)
+     ,@body))
