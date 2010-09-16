@@ -237,7 +237,8 @@
   (print-history)
   (event-loop ""))
 
-(defun main ()
+(defun main (argv)
+  (declare (ignore argv))
   (unwind-protect
        (progn
 	 (connect '("log.db") :database-type :sqlite3)
@@ -245,5 +246,3 @@
     (progn
       (endwin)
       (disconnect))))
-
-(main)

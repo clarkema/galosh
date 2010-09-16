@@ -1,0 +1,61 @@
+#!/usr/bin/perl -w
+
+use strict;
+use 5.010;
+
+our $galosh_dir;
+
+######################################################################
+# General utility functions here
+######################################################################
+sub find_galosh_dir
+{
+    if ( defined $ENV{'GALOSH_DIR'} ) {
+    }
+}
+
+######################################################################
+# Command implemented as cmd_* functions should be defined below in
+# alphabetical order.
+######################################################################
+
+sub cmd_help
+{
+    my $command = $ARGV[1];
+    
+    my $help = <<HELP;
+Usage: galosh COMMAND [ARGS]
+
+The most commonly used galosh commands are:
+log     Start the galosh logger
+
+See 'galosh help COMMAND' for more information on a specific command.
+HELP
+
+    if ( defined $command ) {
+        exec( "man galosh-$command" );
+    }
+    else {
+        print $help;
+    }
+}
+
+######################################################################
+# Main execution starts here
+######################################################################
+
+my $command = $ARGV[0] || 'help';
+
+my $sub_name     = "cmd_$command";
+my $package_name = "galosh-$command";
+if ( defined( &$sub_name ) ) {
+    no strict "refs";
+    $sub_name->();
+}
+else {
+    exec( "sbcl", ( '--noinform',
+                    '--noprint',
+                    '--eval', "(require '$package_name)",
+                    '--eval', "(${package_name}::main nil)",
+                    '--eval' , "(quit)", ) );
+}
