@@ -27,7 +27,9 @@
   `(split-sequence:split-sequence ,sep ,seq))
 
 (defmacro split-words (seq)
-  `(split-sequence:split-sequence #\Space (string-trim '(#\Space #\Tab #\Newline) ,seq)))
+  `(split-sequence:split-sequence #\Space
+				  (string-trim '(#\Space #\Tab #\Newline) ,seq)
+				  :remove-empty-subseqs t))
 
 (defun string-empty-p (str)
   (not (> (length str) 0)))
