@@ -226,6 +226,18 @@
 	   (let ((b (concatenate 'string buffer (string-upcase (string c)))))
 	     (event-loop b))))))
 
+(defun write-state (path)
+  (with-open-file (s path
+		     :direction :output
+		     :if-does-not-exist :create
+		     :if-exists :supersede)
+    (with-standard-io-syntax
+      (print `(setf *qrg*  ,*qrg*)  s)
+      (print `(setf *mode* ,*mode*) s))))
+
+(defun read-state (path)
+  (load path))
+
 (defun start-interface ()
   (initscr)
   ;(raw) ; Get everything, including ^C, ^Z, etc
@@ -239,10 +251,13 @@
 
 (defun main (argv)
   (declare (ignore argv))
-  (unwind-protect
-       (progn
-	 (connect '("log.db") :database-type :sqlite3)
-	 (start-interface))
-    (progn
+  (let* ((galosh-dir (fatal-get-galosh-dir))
+	 (state-file (make-pathname :directory galosh-dir :name "galosh-log" :type "state")))
+    (read-state state-file)
+    (unwind-protect
+	 (progn
+	   (connect '("log.db") :database-type :sqlite3)
+	   (start-interface))
       (endwin)
-      (disconnect))))
+      (disconnect)
+      (write-state state-file))))

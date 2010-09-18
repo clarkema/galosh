@@ -3,15 +3,39 @@
 use strict;
 use 5.010;
 
+use File::Spec;
+
+our $context_dir = File::Spec->join( File::Spec->curdir(), ".galosh" );
 our $galosh_dir;
 
 ######################################################################
 # General utility functions here
 ######################################################################
+sub get_context
+{
+    my $config_file = File::Spec->join( $context_dir, "config" );
+
+    if ( -e -f $config_file ) {
+        return $context_dir;
+    }
+    else {
+        return;
+    }
+}
+
 sub find_galosh_dir
 {
     if ( defined $ENV{'GALOSH_DIR'} ) {
+        $galosh_dir = $ENV{'GALOSH_DIR'};
     }
+    elsif ( get_context() ) {
+        $galosh_dir = get_context();
+    }
+    else {
+        die( "Couldn't find context directory." );
+    }
+
+    $ENV{'GALOSH_DIR'} = File::Spec->rel2abs( $galosh_dir );
 }
 
 ######################################################################
@@ -46,8 +70,11 @@ HELP
 
 my $command = $ARGV[0] || 'help';
 
+find_galosh_dir();
+
 my $sub_name     = "cmd_$command";
 my $package_name = "galosh-$command";
+
 if ( defined( &$sub_name ) ) {
     no strict "refs";
     $sub_name->();

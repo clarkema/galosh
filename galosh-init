@@ -6,6 +6,7 @@ fi
 
 if [[ ! -d ".galosh" ]]; then
     mkdir .galosh
+    touch .galosh/config
 fi
 
 ./galosh-init-db.lisp

@@ -24,7 +24,10 @@
 	   :string-right-pad
 	   :keys
 	   :default
-	   :with-gensyms))
+	   :with-gensyms
+	   :get-galosh-dir
+	   :fatal-get-galosh-dir
+	   :missing-galosh-dir-error))
 
 (in-package :galosh-lisp)
 
@@ -64,3 +67,21 @@
 		     `(,s (gensym)))
 		 syms)
      ,@body))
+
+(define-condition missing-galosh-dir-error (error)
+  ((text :initarg :text :reader text)))
+
+(defun get-galosh-dir ()
+  (let ((gdir (sb-ext:posix-getenv "GALOSH_DIR")))
+    (if gdir
+	gdir
+	(error 'missing-galosh-dir-error :text
+	       "GALOSH_DIR is not defined."))))
+
+
+(defun fatal-get-galosh-dir ()
+  (handler-case
+      (get-galosh-dir)
+    (missing-galosh-dir-error ()
+      (format t "GALOSH_DIR is not defined.~%" )
+      (sb-ext:quit))))
