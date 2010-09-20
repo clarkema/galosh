@@ -6,6 +6,7 @@ fi
 
 if [[ ! -d ".galosh" ]]; then
     mkdir .galosh
+    mkdir .galosh/tmp
     touch .galosh/config
 fi
 
