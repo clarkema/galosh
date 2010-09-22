@@ -68,12 +68,13 @@
   (refresh))
 
 (defun print-history ()
-  (let ((q (reverse (select 'qso 
-			    :order-by '(([qso_date] :desc)([time_on] :desc)) 
-			    :limit *history-size* 
-			    :caching nil
-			    :flatp t))))
-    (dotimes (i *history-size*)
+  (let* ((q (reverse (select 'qso
+			     :order-by '(([qso_date] :desc)([time_on] :desc))
+			     :limit *history-size*
+			     :caching nil
+			     :flatp t)))
+	 (q-length (length q)))
+    (dotimes (i q-length)
       (mvprintw (- *LINES* (- (+ *history-size* 2) i)) 0 (format nil "~a~%" (as-string (elt q i))))))
   (refresh))
 
