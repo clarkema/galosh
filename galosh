@@ -3,6 +3,8 @@
 use strict;
 use 5.010;
 
+use lib 'perllib';
+
 use File::Spec;
 
 our $context_dir = File::Spec->join( File::Spec->curdir(), ".galosh" );
@@ -62,6 +64,12 @@ HELP
     else {
         print $help;
     }
+}
+
+sub cmd_journal
+{
+    use Galosh::Journal;
+    Galosh::Journal::main();
 }
 
 ######################################################################

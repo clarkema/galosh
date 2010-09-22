@@ -27,7 +27,8 @@
        (progn
 	 (connect dbfile :database-type :sqlite3)
 	 (truncate-database)
-	 (create-view-from-class 'qso))
+	 (create-view-from-class 'qso)
+	 (create-view-from-class 'journal-entry))
     (disconnect)))
 
 (defun main (argv)
