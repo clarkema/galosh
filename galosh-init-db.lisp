@@ -1,5 +1,3 @@
-#!/usr/bin/sbcl --script
-
 ;;;; galosh -- amateur radio utilities.
 ;;;; Copyright (C) 2010 Michael Clarke, M0PRL
 ;;;; <clarkema -at- clarkema.org>
@@ -16,14 +14,9 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(setf *debug-beginner-help-p* nil)
-
-(require :getopt)
-(require :clsql)
-(load "qso.lisp")
-
-(use-package :galosh-qso)
-(use-package :clsql-user)
+(defpackage :galosh-init-db
+  (:use :cl :clsql-user :galosh-qso :galosh-journal-entry))
+(in-package :galosh-init-db)
 
 (defun prompt-for-permission (dbfile)
   (format t "Database ~a already exists: really reinitialize it? This cannot be undone. [y/N] "
@@ -37,7 +30,8 @@
 	 (create-view-from-class 'qso))
     (disconnect)))
 
-(defun main ()
+(defun main (argv)
+  (declare (ignore argv))
   (let ((dbfile "log.db"))
     (if (probe-file dbfile)
 	(if (y-or-n-p (concatenate 'string
@@ -51,5 +45,3 @@
 	(progn
 	  (format t "Creating new ~a.~%" dbfile)
 	  (init-db dbfile)))))
-
-(main)

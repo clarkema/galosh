@@ -10,4 +10,4 @@ if [[ ! -d ".galosh" ]]; then
     touch .galosh/config
 fi
 
-./galosh-init-db.lisp
+./galosh init-db
