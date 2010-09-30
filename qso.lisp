@@ -18,7 +18,7 @@
 
 (defpackage :galosh-qso
   (:use :cl :clsql-user)
-  (:export :qso :with-qso-accessors
+  (:export :qso :with-qso-accessors :q-id
 	   :q-qso-date :q-time-on :q-time-off :q-operator :q-hiscall :q-band :q-qrg :q-mode
 	   :q-tx-rst :q-rx-rst :q-stx :q-srx :q-name :q-his-iota :q-our-iota :q-comment :q-followup :q-tx-pwr
 	   :q-his-state :q-his-ve-prov :as-string :q-his-grid :q-our-grid
