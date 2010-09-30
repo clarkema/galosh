@@ -27,7 +27,8 @@
 	   :with-gensyms
 	   :get-galosh-dir
 	   :fatal-get-galosh-dir
-	   :missing-galosh-dir-error))
+	   :missing-galosh-dir-error
+	   :qrg->band))
 
 (in-package :galosh-lisp)
 
@@ -85,3 +86,26 @@
     (missing-galosh-dir-error ()
       (format t "GALOSH_DIR is not defined.~%" )
       (sb-ext:quit))))
+
+(defun qrg->band (qrg)
+  (labels ((between (lower upper)
+	     (and (>= qrg lower) (<= qrg upper))))
+    (cond ((< qrg 1800000) "DC")
+          ((between 1800000 2000000) "160m")
+	  ((between 3500000 4000000) "80m")
+	  ((between 5330500 5403500) "60m")
+	  ((between 7000000 7400000) "40m")
+	  ((between 10100000 10150000) "30m")
+	  ((between 14000000 14350000) "20m")
+	  ((between 18068000 18168000) "17m")
+	  ((between 21000000 21450000) "15m")
+	  ((between 24890000 24990000) "12m")
+	  ((between 28000000 29700000) "10m")
+	  ((between 50000000 54000000) "50m")
+	  ((between 144000000 148000000) "2m")
+	  ((between 219000000 225000000) "1.25m")
+	  ((between 420000000 450000000) "70cm")
+	  ((between 902000000 928000000) "33cm")
+	  ((between 1240000000 1300000000) "23cm")
+	  ((> qrg 1300000000) "Daylight")
+	  (t "Unknown band"))))
