@@ -37,6 +37,7 @@
 	   :missing-galosh-db-error
 	   :missing-galosh-dir-error
 	   :qrg->band
+	   :human-date
 	   :get-config
 	   :check-required-config
 	   :missing-mandatory-configuration-error))
@@ -46,6 +47,9 @@
 (defparameter *non-tone-modes* '("SSB" "ESSB" "AM"))
 (defparameter *default-tone-mode-rst* 599)
 (defparameter *default-non-tone-mode-rst* 59)
+
+(defparameter *short-month-names*
+  '("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sept" "Oct" "Nov" "Dec"))
 
 (defmacro split (sep seq)
   `(split-sequence:split-sequence ,sep ,seq))
@@ -138,6 +142,14 @@
     (missing-galosh-dir-error ()
       (format t "GALOSH_DIR is not defined.~%" )
       (sb-ext:quit))))
+
+(defun human-date (date)
+  (if (= (length date) 8)
+      (progn
+	(format nil "~A-~A-~A"
+		(subseq date 6 8)
+		(nth (- (parse-integer date :start 4 :end 6) 1) *short-month-names*)
+		(subseq date 0 4)))))
 
 (defun qrg->band (qrg)
   (labels ((between (lower upper)
