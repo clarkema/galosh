@@ -103,11 +103,12 @@
   (mvprintw (1- *LINES*) 0 (format nil "~a~%" p))
   (refresh))
 
-(defun read-value (&key prompt ucase-p value-required-p (buffer ""))
+(defun read-value (&key prompt ucase-p capitalize-p value-required-p (buffer ""))
   (default buffer "")
   (labels ((optional-ucase (c) (if ucase-p
 				   (string-upcase (string c))
 				   (string c)))
+	   (optional-capitalize (s) (if capitalize-p (string-capitalize s) s))
 	   (r (buffer)
 	     (progn (print-buffer buffer prompt)
 		    (let* ((raw-code (getch))
@@ -117,7 +118,7 @@
 				 (if value-required-p
 				     (r buffer)
 				     nil)
-				 buffer))
+				 (optional-capitalize buffer)))
 			    ((eql c #\Tab)
 			     (r (concatenate 'string buffer (string #\Space))))
 			    ((eql c #\Rubout)
@@ -162,7 +163,7 @@
 		  (#\i q-his-iota "IOTA: " (:ucase-p t))
 		  (#\c q-comment  "Comment: ")
 		  (#\C q-hiscall  "Call: " (:ucase-p t :value-required-p t))
-		  (#\n q-name     "Name: ")
+		  (#\n q-name     "Name: " (:capitalize-p t))
 		  (:func #\f #'(lambda () (q-toggle-followup qso)))
 		  (:exit #\Newline qso)
 		  (:exit #\Esc :cancel)
