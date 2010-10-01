@@ -1,5 +1,3 @@
-#!/usr/bin/sbcl --script
-
 ;;;; galosh -- amateur radio utilities.
 ;;;; Copyright (C) 2010 Michael Clarke, M0PRL
 ;;;; <clarkema -at- clarkema.org>
@@ -16,25 +14,17 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'getopt)
-(require 'clsql)
-(load "qso.lisp")
-(load "galosh-adif.lisp")
-(load "galosh-utils.lisp")
-
-(use-package :galosh-qso)
-(use-package :galosh-adif)
-(use-package :clsql-user)
-(use-package :gu)
+(defpackage :galosh-export-adif
+  (:use :cl :clsql-user :galosh-qso :galosh-adif))
+(in-package :galosh-export-adif)
 
 (clsql:enable-sql-reader-syntax)
 
-(defun main ()
+(defun main (args)
+  (declare (ignore args))
   (unwind-protect
        (progn
 	 (connect '("log.db") :database-type :sqlite3)
 	 (mapcar #'(lambda (x) (princ (qso->adif x)))
 		 (reverse (select 'qso :order-by '(([qso_date] :desc)([time_on] :desc)) :flatp t))))
     (disconnect)))
-
-(main)

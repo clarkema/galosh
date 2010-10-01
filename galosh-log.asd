@@ -2,8 +2,9 @@
     :depends-on (#:clsql
 		 #:cl-ncurses
 		 #:split-sequence)
-    :components ((:file "qso")
-		 (:file "galosh-lisp")
+    :components ((:file "galosh-lisp")
+		 (:file "qso"
+			:depends-on ("galosh-lisp"))
 		 (:file "galosh-utils")
 		 (:file "galosh-ncurses"
 			:depends-on ("galosh-lisp"))

@@ -14,15 +14,11 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(load "qso.lisp")
-(load "galosh-utils.lisp")
-(load "galosh-lisp.lisp")
-
 (defpackage :galosh-adif
   (:use :cl
 	:gl
-	:galosh-qso
-	:galosh-utils)
+	:gu
+	:galosh-qso)
   (:export :map-over-qsos
 	   :adif-error
 	   :adif-error-message

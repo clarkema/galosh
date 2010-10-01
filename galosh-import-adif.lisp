@@ -1,5 +1,3 @@
-#!/usr/bin/sbcl --script
-
 ;;;; galosh -- amateur radio utilities.
 ;;;; Copyright (C) 2010 Michael Clarke, M0PRL
 ;;;; <clarkema -at- clarkema.org>
@@ -16,14 +14,9 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'getopt)
-(require 'clsql)
-(load "qso.lisp")
-(load "galosh-adif.lisp")
-
-(use-package :galosh-qso)
-(use-package :clsql-user)
-(use-package :galosh-adif)
+(defpackage :galosh-import-adif
+  (:use :cl :gl :clsql :galosh-qso :galosh-adif))
+(in-package :galosh-import-adif)
 
 (defvar *comment-prefix* nil)
 
@@ -33,7 +26,8 @@
   (if (null (q-comment qso))
       (setf (q-comment qso) *comment-prefix*))
   (if (q-his-iota qso)
-      (setf (q-followup qso) 1)))
+      (setf (q-followup qso) 1))
+  (default (q-band qso) (qrg->band (q-qrg qso))))
 
 (defun wrap-comment (string)
   (if *comment-prefix*
@@ -42,9 +36,9 @@
 	  *comment-prefix*)
       string))
 
-(defun process-options ()
+(defun process-options (argv)
   (multiple-value-bind (leftover options)
-      (getopt:getopt *posix-argv* '(("comment-prefix" :required)))
+      (getopt:getopt argv '(("comment-prefix" :required)))
     (if (< (length leftover) 2)
 	(error "Error: please specify input file.")
 	(concatenate 'list options `((filename . ,(second leftover)))))))
@@ -61,11 +55,12 @@
 			  stream))
       (disconnect))))
 
-(defun main ()
+(defun main (argv)
+  (print argv)
   (let (options filename)
     (handler-case
 	(progn
-	  (setf options (process-options)
+	  (setf options (process-options argv)
 		filename (cdr (assoc 'filename options))
 		*comment-prefix* (cdr (assoc "comment-prefix" options :test #'string=)))
 	  (process-file filename))
@@ -75,5 +70,3 @@
 			      (adif-error-message e)
 			      (adif-error-value e)
 			      (adif-error-line-number e))))))
-
-(main)

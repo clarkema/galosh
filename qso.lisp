@@ -17,7 +17,7 @@
 (require 'clsql)
 
 (defpackage :galosh-qso
-  (:use :cl :clsql-user)
+  (:use :cl :gl :clsql-user)
   (:export :qso :with-qso-accessors :q-id
 	   :q-qso-date :q-time-on :q-time-off :q-operator :q-hiscall :q-band :q-qrg :q-mode
 	   :q-tx-rst :q-rx-rst :q-stx :q-srx :q-name :q-his-iota :q-our-iota :q-comment :q-followup :q-tx-pwr
@@ -58,7 +58,6 @@
     :initarg :hiscall)
    (band
     :db-type "TEXT"
-    :accessor q-band
     :initarg :band)
    (qrg
     :type integer
@@ -149,6 +148,17 @@
  
 (defun q-toggle-followup (qso)
   (setf (q-followup qso) (if (eql 1 (q-followup qso)) 0 1)))
+
+
+(defun q-band (qso)
+  (let ((qrg  (slot-value qso 'qrg))
+	(band (slot-value qso 'band)))
+    (if qrg
+	(qrg->band qrg)
+	band)))
+
+(defun (setf q-band) (band qso)
+  (setf (slot-value qso 'band) band))
 
 (defmacro with-qso-accessors (qso &body body)
   `(with-accessors ((q-operator q-operator)
