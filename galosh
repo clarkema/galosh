@@ -6,8 +6,11 @@ use 5.010;
 use lib 'perllib';
 
 use File::Spec;
+use File::HomeDir;
 
-our $context_dir = File::Spec->join( File::Spec->curdir(), ".galosh" );
+our $context_dir     = File::Spec->join( File::Spec->curdir(), ".galosh" );
+our $home_galosh_dir = File::Spec->join( File::HomeDir->my_home, ".galosh" );
+our $compiled_dir    = File::Spec->join( $home_galosh_dir, "compiled" );
 our $galosh_dir;
 
 ######################################################################
@@ -66,6 +69,17 @@ HELP
     }
 }
 
+sub cmd_compile
+{
+    mkdir $home_galosh_dir unless -d $home_galosh_dir;
+    mkdir $compiled_dir unless -d $compiled_dir;
+
+    my $target_command = "galosh-$ARGV[1]";
+    my $output_path = File::Spec->join( $compiled_dir, $target_command );
+
+    system( "buildapp --require $target_command --entry ${target_command}::main --output $output_path" );
+}
+
 sub cmd_journal
 {
     use Galosh::Journal;
@@ -80,12 +94,16 @@ my $command = $ARGV[0] || 'help';
 
 find_galosh_dir();
 
-my $sub_name     = "cmd_$command";
-my $package_name = "galosh-$command";
+my $sub_name      = "cmd_$command";
+my $package_name  = "galosh-$command";
+my $compiled_path = File::Spec->join( $compiled_dir, $package_name );
 
 if ( defined( &$sub_name ) ) {
     no strict "refs";
     $sub_name->();
+}
+elsif ( -e $compiled_path ) {
+    exec( $compiled_path, @ARGV );
 }
 else {
     exec( "sbcl", ( '--noinform',
