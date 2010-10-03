@@ -22,6 +22,7 @@
 	   :sane-callsign-p
 	   :empty-string-p
 	   :string-right-pad
+	   :cats
 	   :keys
 	   :default
 	   :with-gensyms
@@ -41,6 +42,9 @@
 
 (defun string-right-pad (target-width str &key (padding-element #\Space))
   (concatenate 'string str (make-string (- target-width (length str)) :initial-element padding-element)))
+
+(defmacro cats (&rest strings)
+  `(concatenate 'string ,@strings))
 
 (defmacro default (place value)
   `(if (null ,place)
