@@ -91,6 +91,8 @@ else {
     exec( "sbcl", ( '--noinform',
                     '--noprint',
                     '--eval', "(require '$package_name)",
-                    '--eval', "(${package_name}::main nil)",
-                    '--eval' , "(quit)", ) );
+                    '--eval', "(${package_name}::main sb-ext:*posix-argv*)",
+                    '--eval' , "(quit)",
+                    '--end-toplevel-options',
+                    @ARGV, ));
 }
