@@ -50,10 +50,15 @@
     (declare (ignore date))
     time))
 
-(defun ensure-valid-rst (val)
-  (cond ((stringp val) (parse-integer val))
+(defun ensure-valid-rst (val mode)
+  (cond ((stringp val)
+	 (let ((rst (princ-to-string (default-rst-for-mode mode))))
+	   (if (= (length val) 1)
+	       (setf (subseq rst 1 2) val)
+	       (setf (subseq rst 0 (length val)) val))
+	   (parse-integer rst)))
 	((integerp val) val)
-	(t (default-rst-for-mode *mode*))))
+	(t (default-rst-for-mode mode))))
 
 (defun drop-last (str)
   (if (> (length str) 1)
@@ -187,8 +192,8 @@
 				:time-on  (log-time)
 				:mode *mode*
 				:qrg *qrg*
-				:tx-rst (ensure-valid-rst tx-rst)
-				:rx-rst (ensure-valid-rst rx-rst))))
+				:tx-rst (ensure-valid-rst tx-rst *mode*)
+				:rx-rst (ensure-valid-rst rx-rst *mode*))))
 	  (display-qso-and-prompt-for-options q)))))
 
 (defun galosh-set (string)
