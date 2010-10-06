@@ -14,10 +14,13 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+(require 'split-sequence)
 (defpackage :galosh-lisp
   (:nicknames :gl)
   (:use :cl)
-  (:export :default-rst-for-mode
+  (:export :split
+	   :split-words
+	   :default-rst-for-mode
 	   :valid-callsign-char-p
 	   :sane-callsign-p
 	   :empty-string-p
@@ -36,6 +39,14 @@
 (defparameter *non-tone-modes* '("SSB" "ESSB" "AM"))
 (defparameter *default-tone-mode-rst* 599)
 (defparameter *default-non-tone-mode-rst* 59)
+
+(defmacro split (sep seq)
+  `(split-sequence:split-sequence ,sep ,seq))
+
+(defmacro split-words (seq)
+  `(split-sequence:split-sequence #\Space
+				  (string-trim '(#\Space #\Tab #\Newline) ,seq)
+				  :remove-empty-subseqs t))
 
 (defun empty-string-p (str)
   (not (> (length str) 0)))

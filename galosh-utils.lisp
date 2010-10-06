@@ -14,26 +14,15 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'split-sequence)
-
 (defpackage :galosh-utils
   (:nicknames :gu)
   (:use :cl)
-  (:export :split :split-words :string-empty-p :kill-last-word))
+  (:export :string-empty-p :kill-last-word))
 
 (in-package :galosh-utils)
 
-(defmacro split (sep seq)
-  `(split-sequence:split-sequence ,sep ,seq))
-
-(defmacro split-words (seq)
-  `(split-sequence:split-sequence #\Space
-				  (string-trim '(#\Space #\Tab #\Newline) ,seq)
-				  :remove-empty-subseqs t))
-
 (defun string-empty-p (str)
   (not (> (length str) 0)))
-
 
 (defun kill-last-word (str)
   (let ((index (position #\Space (string-right-trim '(#\Space #\Tab #\Newline) str) :from-end t)))
