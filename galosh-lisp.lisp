@@ -26,12 +26,15 @@
 	   :empty-string-p
 	   :string-right-pad
 	   :cats
+	   :join
 	   :say
 	   :keys
 	   :default
 	   :with-gensyms
+	   :with-galosh-db
 	   :get-galosh-dir
 	   :fatal-get-galosh-dir
+	   :missing-galosh-db-error
 	   :missing-galosh-dir-error
 	   :qrg->band))
 
@@ -57,6 +60,13 @@
 
 (defmacro cats (&rest strings)
   `(concatenate 'string ,@strings))
+
+(defun join (strings &optional (separator ""))
+  (let ((sep (string separator)))
+    (with-output-to-string (out)
+      (loop for (string . more?) on strings
+	 do (write-string string out)
+	 when more? do (write-string sep out)))))
 
 (defun say (obj &optional (stream *standard-output*))
   (princ obj stream)
@@ -88,6 +98,21 @@
 		     `(,s (gensym)))
 		 syms)
      ,@body))
+
+(define-condition missing-galosh-db-error (error)
+  ((text :initarg :text :reader text)))
+
+(defmacro with-galosh-db (db &body body)
+  (with-gensyms (dbfile)
+    `(let ((,dbfile ,db))
+       (if (probe-file ,dbfile)
+	   (unwind-protect
+		(progn
+		  (connect (list ,dbfile) :database-type :sqlite3)
+		  ,@body)
+	     (disconnect))
+	   (error 'missing-galosh-db-error :text
+		  (format nil "Could not find database `~a'." ,dbfile))))))
 
 (define-condition missing-galosh-dir-error (error)
   ((text :initarg :text :reader text)))
