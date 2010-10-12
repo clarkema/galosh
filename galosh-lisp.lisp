@@ -26,6 +26,7 @@
 	   :empty-string-p
 	   :string-right-pad
 	   :cats
+	   :say
 	   :keys
 	   :default
 	   :with-gensyms
@@ -56,6 +57,10 @@
 
 (defmacro cats (&rest strings)
   `(concatenate 'string ,@strings))
+
+(defun say (obj &optional (stream *standard-output*))
+  (princ obj stream)
+  (fresh-line stream))
 
 (defmacro default (place value)
   `(if (null ,place)
