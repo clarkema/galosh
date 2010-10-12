@@ -40,7 +40,13 @@ sub find_galosh_dir
         die( "Couldn't find context directory." );
     }
 
-    $ENV{'GALOSH_DIR'} = File::Spec->rel2abs( $galosh_dir );
+    # The trailing slash below is required to make the resulting path usable
+    # with Lisp's merge-pathnames; if it's missing the last element of the path
+    # is assumed to be a file and removed when you try to merge with another
+    # representing just a file name.
+    # FIXME: Find a more portable way to add the correct separator for the
+    # current platform.
+    $ENV{'GALOSH_DIR'} = File::Spec->rel2abs( $galosh_dir ) . "/";
 }
 
 ######################################################################
