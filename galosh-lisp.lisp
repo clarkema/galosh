@@ -14,10 +14,9 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'split-sequence)
 (defpackage :galosh-lisp
   (:nicknames :gl)
-  (:use :cl)
+  (:use :cl :clsql)
   (:export :split
 	   :split-words
 	   :default-rst-for-mode

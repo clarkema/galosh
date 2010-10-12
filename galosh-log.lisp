@@ -1,5 +1,3 @@
-#!/usr/bin/sbcl --script
-
 ;;;; galosh -- amateur radio utilities.
 ;;;; Copyright (C) 2010 Michael Clarke, M0PRL
 ;;;; <clarkema -at- clarkema.org>
@@ -17,12 +15,13 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-log
-  (:use :cl :gl :clsql-user
-	:galosh-qso :gu :cl-ncurses))
+  (:use :cl :gl :clsql
+	:galosh-qso :gu :cl-ncurses :galosh-config))
 (in-package :galosh-log)
 
 (clsql:enable-sql-reader-syntax) 
 
+(defvar *operator* nil)
 (defvar *qrg*     14260000)
 (defvar *mode*    "SSB")
 (defvar *history* ())
@@ -186,7 +185,7 @@
   (destructuring-bind (call &optional rx-rst tx-rst) (split-words buffer)
     (if (sane-callsign-p call)
 	(let ((q (make-instance 'qso
-				:operator "VP8DMH"
+				:operator *operator*
 				:hiscall  call
 				:qso-date (log-date)
 				:time-on  (log-time)
@@ -259,13 +258,11 @@
 
 (defun main (argv)
   (declare (ignore argv))
-  (let* ((galosh-dir (fatal-get-galosh-dir))
-	 (state-file (make-pathname :directory galosh-dir :name "galosh-log" :type "state")))
-    (read-state state-file)
-    (unwind-protect
-	 (progn
-	   (connect '("log.db") :database-type :sqlite3)
-	   (start-interface))
-      (endwin)
-      (disconnect)
-      (write-state state-file))))
+  (let ((state-file (make-pathname :directory (fatal-get-galosh-dir) :name "galosh-log" :type "state"))
+	(*operator* (get-config "user.call")))
+    (with-galosh-db (get-config "core.log")
+      (read-state state-file)
+      (unwind-protect
+	   (start-interface)
+	(endwin)
+	(write-state state-file)))))

@@ -1,11 +1,10 @@
 (asdf:defsystem #:galosh-export-adif
-    :depends-on (#:clsql
-		 #:split-sequence)
-    :components ((:file "galosh-lisp")
-		 (:file "qso"
-			:depends-on ("galosh-lisp"))
-         (:file "galosh-utils")
+    :depends-on (#:galosh-lisp
+		 #:galosh-config
+		 #:clsql)
+    :components ((:file "qso")
+		 (:file "galosh-utils")
 		 (:file "galosh-adif"
-			:depends-on ("qso" "galosh-lisp" "galosh-utils"))
+			:depends-on ("qso" "galosh-utils"))
 		 (:file "galosh-export-adif"
-			:depends-on ("qso" "galosh-adif"))))
+			:depends-on ("galosh-adif"))))

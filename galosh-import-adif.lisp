@@ -15,14 +15,14 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-import-adif
-  (:use :cl :gl :clsql :galosh-qso :galosh-adif))
+  (:use :cl :gl :galosh-config :clsql :galosh-qso :galosh-adif))
 (in-package :galosh-import-adif)
 
 (defvar *comment-prefix* nil)
 
 (defun ensure-defaults (qso)
   (if (null (q-operator qso))
-      (setf (q-operator qso) "VP8DMH"))
+      (setf (q-operator qso) (get-config "user.call")))
   (if (null (q-comment qso))
       (setf (q-comment qso) *comment-prefix*))
   (if (q-his-iota qso)
@@ -44,16 +44,13 @@
 	(concatenate 'list options `((filename . ,(second leftover)))))))
 
 (defun process-file (path)
-  (with-open-file (stream path)
-    (unwind-protect
-	 (progn
-	   (connect '("log.db") :database-type :sqlite3)
-	   (map-over-qsos #'(lambda (q)
-			      (ensure-defaults q)
-			      (update-records-from-instance q)
-			      (format t "~a" (as-string q)))
-			  stream))
-      (disconnect))))
+  (with-galosh-db (get-config "core.log")
+    (with-open-file (stream path)
+      (map-over-qsos #'(lambda (q)
+			 (ensure-defaults q)
+			 (update-records-from-instance q)
+			 (format t "~a" (as-string q)))
+		     stream))))
 
 (defun main (argv)
   (print argv)

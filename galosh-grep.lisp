@@ -15,8 +15,8 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-grep
-  (:use :cl :gl :clsql-user
-	:galosh-qso))
+  (:use :cl :gl :clsql
+	:galosh-qso :galosh-config))
 (in-package :galosh-grep)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -30,10 +30,6 @@
       (princ (as-string qso)))))
 
 (defun main (argv)
-  (let ((galosh-dir (fatal-get-galosh-dir))
-	(unwind-protect
-	     (progn
-	       (connect '("log.db") :database-type :sqlite3)
-	       (dolist (sought (cddr argv))
-		 (grep sought))
-	       (disconnect))))))
+  (with-galosh-db (get-config "core.log")
+    (dolist (sought (cddr argv))
+      (grep sought))))

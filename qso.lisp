@@ -14,10 +14,8 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'clsql)
-
 (defpackage :galosh-qso
-  (:use :cl :gl :clsql-user)
+  (:use :cl :gl :clsql)
   (:export :qso :with-qso-accessors :q-id
 	   :q-qso-date :q-time-on :q-time-off :q-operator :q-hiscall :q-band :q-qrg :q-mode
 	   :q-tx-rst :q-rx-rst :q-stx :q-srx :q-name :q-his-iota :q-our-iota :q-comment :q-followup :q-tx-pwr

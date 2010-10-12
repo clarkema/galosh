@@ -1,12 +1,10 @@
 (asdf:defsystem #:galosh-log
-    :depends-on (#:clsql
-		 #:cl-ncurses
-		 #:split-sequence)
-    :components ((:file "galosh-lisp")
-		 (:file "qso"
-			:depends-on ("galosh-lisp"))
+    :depends-on (#:galosh-lisp
+		 #:galosh-config
+		 #:clsql
+		 #:cl-ncurses)
+    :components ((:file "qso")
 		 (:file "galosh-utils")
-		 (:file "galosh-ncurses"
-			:depends-on ("galosh-lisp"))
+		 (:file "galosh-ncurses")
 		 (:file "galosh-log"
-			:depends-on ("qso" "galosh-lisp" "galosh-utils" "galosh-ncurses"))))
+			:depends-on ("qso" "galosh-utils" "galosh-ncurses"))))
