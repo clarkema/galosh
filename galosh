@@ -3,7 +3,8 @@
 use strict;
 use 5.010;
 
-use lib 'perllib';
+use FindBin;
+use lib "$FindBin::RealBin/perllib";
 
 use File::Spec;
 use File::HomeDir;
