@@ -109,8 +109,32 @@
 	    (:h2 (str "Not found"))
 	  (:p (fmt "Sorry, ~a was not found in the log." c))))))
 
-(define-easy-handler (root :uri "/")
-    (call)
+(defun qrz-info (call)
+  (with-html
+      (:div :id "qrz-info"
+	    (:h2 "QRZ.com information"))))
+
+(defun qso-details (qso)
+  (with-qso-accessors qso
+  (with-html
+      (str (as-string qso))
+    (:h2 (fmt "QSO with ~A on ~A" q-hiscall (human-date q-qso-date)))
+    (:dl
+     (:dt "Band") (:dd (str q-band))
+     (:dt "QRG")  (:dd (fmt "~:D" q-qrg))
+     (:dt "RxRST") (:dd (str q-rx-rst))
+     (:dt "TxRST") (:dd (str q-tx-rst))
+     (:dt "His IOTA") (:dd (str (if q-his-iota q-his-iota "&nbsp;")))
+     (:dt "My IOTA") (:dd (str (if q-our-iota q-our-iota "&nbsp;")))
+     (:dt "Comment") (:dd (str q-comment))))))
+
+(define-easy-handler (review :uri "/review") ()
+  (let ((qso (first (select 'qso :order-by [id] :limit 1 :flatp t :caching nil))))
+    (standard-page (:title (fmt "~A log review" (get-config "user.call")))
+		   (str (qso-details qso))
+		   (str (qrz-info (q-hiscall qso))))))
+
+(define-easy-handler (root :uri "/") (call)
   (let ((total-qsos (first (select [count[*]] :from 'qso :flatp t)))
 	(unique-calls (first (select [count[distinct 'hiscall]] :from 'qso :flatp t))))
     (standard-page (:title call)

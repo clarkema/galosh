@@ -18,17 +18,39 @@
 
 # This file provides bash completion support for Galosh.
 
+_galosh_qrz()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local opts="--offline"
+
+    COMPREPLY=( $(compgen -W "$opts" -- $cur ) )
+    return 0
+}
+
 _galosh()
 {
-    local cur prev commands 
+    local i c=1 command cur commands
 
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    commands="log grep export-adif import-adif"
+    commands="log grep export-adif import-adif import-qrz-db qrz"
 
-    COMPREPLY=( $(compgen -W "$commands" -- $cur ) )
-    return 0
+    while [ $c -lt $COMP_CWORD ]; do
+        i="${COMP_WORDS[c]}"
+        case "$i" in
+            *) command="$i"; break ;;
+        esac
+        c=$((++c))
+    done
+
+    if [ -z "$command" ]; then
+        COMPREPLY=( $(compgen -W "$commands" -- $cur ) )
+        return 0
+    fi
+
+    # Complete options for command
+    completion_func="_galosh_$command"
+    declare -F $completion_func >/dev/null && $completion_func
 }
 complete -F _galosh galosh

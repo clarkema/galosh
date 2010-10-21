@@ -166,11 +166,13 @@
 		    (q-time-off q-time-off)
 		    (q-mode q-mode)
 		    (q-qrg q-qrg)
+		    (q-band q-band)
 		    (q-tx-rst q-tx-rst)
 		    (q-rx-rst q-rx-rst)
 		    (q-comment q-comment)
 		    (q-followup q-followup)
 		    (q-his-grid q-his-grid)
 		    (q-his-iota q-his-iota)
+		    (q-our-iota q-our-iota)
 		    (q-name q-name)) ,qso
      ,@body))
