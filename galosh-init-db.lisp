@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-init-db
-  (:use :cl :clsql-user :galosh-qso :galosh-journal-entry))
+  (:use :cl :gl :clsql :galosh-qso :galosh-journal-entry))
 (in-package :galosh-init-db)
 
 (defun prompt-for-permission (dbfile)
@@ -25,7 +25,7 @@
 (defun init-db (dbfile)
   (unwind-protect
        (progn
-	 (connect dbfile :database-type :sqlite3)
+	 (connect (list dbfile) :database-type :sqlite3)
 	 (truncate-database)
 	 (create-view-from-class 'qso)
 	 (create-view-from-class 'journal-entry))
@@ -33,7 +33,7 @@
 
 (defun main (argv)
   (declare (ignore argv))
-  (let ((dbfile "log.db"))
+  (let ((dbfile (get-config "core.log")))
     (if (probe-file dbfile)
 	(if (y-or-n-p (concatenate 'string
 				   "Database ~a already exists! Really reinitialize it?~%"

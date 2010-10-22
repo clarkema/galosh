@@ -1,4 +1,5 @@
 (asdf:defsystem #:galosh-lisp
     :depends-on (#:clsql
-		 #:split-sequence)
+		 #:split-sequence
+		 #:py-configparser)
     :components ((:file "galosh-lisp")))

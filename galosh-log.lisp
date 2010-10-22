@@ -16,7 +16,7 @@
 
 (defpackage :galosh-log
   (:use :cl :gl :clsql
-	:galosh-qso :gu :cl-ncurses :galosh-config))
+	:galosh-qso :gu :cl-ncurses))
 (in-package :galosh-log)
 
 (clsql:enable-sql-reader-syntax) 
@@ -243,7 +243,8 @@
       (print `(setf *mode* ,*mode*) s))))
 
 (defun read-state (path)
-  (load path))
+  (when (probe-file path)
+    (load path)))
 
 (defun start-interface ()
   (initscr)
@@ -256,13 +257,11 @@
   (print-history)
   (event-loop ""))
 
-(defun main (argv)
-  (declare (ignore argv))
+(define-galosh-command galosh-log (:required-configuration '("user.call"))
   (let ((state-file (make-pathname :directory (fatal-get-galosh-dir) :name "galosh-log" :type "state"))
 	(*operator* (get-config "user.call")))
-    (with-galosh-db (get-config "core.log")
-      (read-state state-file)
-      (unwind-protect
-	   (start-interface)
-	(endwin)
-	(write-state state-file)))))
+    (read-state state-file)
+    (unwind-protect
+	 (start-interface)
+      (endwin)
+      (write-state state-file))))

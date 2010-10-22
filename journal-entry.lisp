@@ -14,10 +14,8 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'clsql)
-
 (defpackage :galosh-journal-entry
-  (:use :cl :clsql-user)
+  (:use :cl :gl :clsql)
   (:export :journal-entry :j-id :j-date :j-text))
 (in-package :galosh-journal-entry)
 

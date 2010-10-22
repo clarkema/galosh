@@ -55,6 +55,11 @@ sub find_galosh_dir
 # alphabetical order.
 ######################################################################
 
+sub cmd_init
+{
+    exec( "$FindBin::RealBin/galosh-init" )
+}
+
 sub cmd_help
 {
     my $command = $ARGV[1];
@@ -99,25 +104,31 @@ sub cmd_journal
 
 my $command = $ARGV[0] || 'help';
 
-find_galosh_dir();
-
 my $sub_name      = "cmd_$command";
 my $package_name  = "galosh-$command";
 my $compiled_path = File::Spec->join( $compiled_dir, $package_name );
 
-if ( defined( &$sub_name ) ) {
-    no strict "refs";
-    $sub_name->();
-}
-elsif ( -e $compiled_path ) {
-    exec( $compiled_path, @ARGV );
+if ( $sub_name eq 'cmd_init' ) {
+    cmd_init()
 }
 else {
-    exec( "sbcl", ( '--noinform',
-                    '--noprint',
-                    '--eval', "(require '$package_name)",
-                    '--eval', "(${package_name}::main sb-ext:*posix-argv*)",
-                    '--eval' , "(quit)",
-                    '--end-toplevel-options',
-                    @ARGV, ));
+    find_galosh_dir();
+
+    if ( defined( &$sub_name ) ) {
+        no strict "refs";
+        $sub_name->();
+    }
+    elsif ( -e $compiled_path ) {
+        exec( $compiled_path, @ARGV );
+    }
+    else {
+        exec( "sbcl", ( '--noinform',
+                        '--noprint',
+                        '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
+                        '--eval', "(require '$package_name)",
+                        '--eval', "(${package_name}::main sb-ext:*posix-argv*)",
+                        '--eval' , "(quit)",
+                        '--end-toplevel-options',
+                        @ARGV, ));
+    }
 }

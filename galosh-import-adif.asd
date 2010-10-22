@@ -1,6 +1,5 @@
 (asdf:defsystem #:galosh-import-adif
     :depends-on (#:galosh-lisp
-		 #:galosh-config
 		 #:clsql
 		 #:getopt)
     :components ((:file "galosh-utils")

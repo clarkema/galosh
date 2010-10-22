@@ -15,8 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-grep
-  (:use :cl :gl :clsql
-	:galosh-qso :galosh-config))
+  (:use :cl :gl :clsql :galosh-qso))
 (in-package :galosh-grep)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -29,7 +28,6 @@
 	       [like 'his_iota liked-term]]])
       (princ (as-string qso)))))
 
-(defun main (argv)
-  (with-galosh-db (get-config "core.log")
-    (dolist (sought (cddr argv))
-      (grep sought))))
+(define-galosh-command galosh-grep ()
+  (dolist (sought (cddr argv))
+    (grep sought)))

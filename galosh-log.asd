@@ -1,6 +1,5 @@
 (asdf:defsystem #:galosh-log
     :depends-on (#:galosh-lisp
-		 #:galosh-config
 		 #:clsql
 		 #:cl-ncurses)
     :components ((:file "qso")

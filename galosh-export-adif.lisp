@@ -15,13 +15,11 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-export-adif
-  (:use :cl :gl :galosh-config :clsql :galosh-qso :galosh-adif))
+  (:use :cl :gl :clsql :galosh-qso :galosh-adif))
 (in-package :galosh-export-adif)
 
 (clsql:file-enable-sql-reader-syntax)
 
-(defun main (args)
-  (declare (ignore args))
-  (with-galosh-db (get-config "core.log")
-    (mapcar #'(lambda (x) (princ (qso->adif x)))
-	    (reverse (select 'qso :order-by '(([qso_date] :desc)([time_on] :desc)) :flatp t)))))
+(define-galosh-command galosh-export-adif ()
+  (mapcar #'(lambda (x) (princ (qso->adif x)))
+	  (reverse (select 'qso :order-by '(([qso_date] :desc)([time_on] :desc)) :flatp t))))

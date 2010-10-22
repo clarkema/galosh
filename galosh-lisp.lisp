@@ -16,7 +16,7 @@
 
 (defpackage :galosh-lisp
   (:nicknames :gl)
-  (:use :cl :clsql)
+  (:use :cl :clsql :py-configparser)
   (:export :split
 	   :split-words
 	   :default-rst-for-mode
@@ -31,11 +31,15 @@
 	   :default
 	   :with-gensyms
 	   :with-galosh-db
+	   :define-galosh-command
 	   :get-galosh-dir
 	   :fatal-get-galosh-dir
 	   :missing-galosh-db-error
 	   :missing-galosh-dir-error
-	   :qrg->band))
+	   :qrg->band
+	   :get-config
+	   :check-required-config
+	   :missing-mandatory-configuration-error))
 
 (in-package :galosh-lisp)
 
@@ -113,6 +117,7 @@
 	   (error 'missing-galosh-db-error :text
 		  (format nil "Could not find database `~a'." ,dbfile))))))
 
+
 (define-condition missing-galosh-dir-error (error)
   ((text :initarg :text :reader text)))
 
@@ -153,3 +158,46 @@
 	  ((between 1240000000 1300000000) "23cm")
 	  ((> qrg 1300000000) "Daylight")
 	  (t "Unknown band"))))
+
+(define-condition missing-mandatory-configuration-error (error)
+  ((text :initarg :text :reader text)))
+
+(defvar *config* nil)
+
+(defun set-defaults (config)
+  (with-input-from-string (s (join
+			      (list "[core]"
+				    (cats "log = " (namestring (merge-pathnames "log.db" (fatal-get-galosh-dir)))))
+			      #\Newline))
+    (setf config (read-stream config s))))
+
+(defun check-required-config (variables)
+  (dolist (ropt variables)
+    (destructuring-bind (section option) (split #\. ropt)
+      (unless (and (has-section-p *config* section)
+		   (has-option-p *config* section option))
+	(error 'missing-mandatory-configuration-error :text
+	       (format nil "Please update your configuration to provide a value for `~a'." ropt))))))
+
+(defun get-config (name)
+  (unless *config* (init-config))
+  (destructuring-bind (section option) (split #\. name)
+    (coerce (get-option *config* section option) 'simple-string)))
+
+(defun init-config ()
+  (setf *config* (set-defaults (make-config)))
+  (read-files *config* (list
+			(make-pathname :directory (fatal-get-galosh-dir) :name "config"))))
+
+(defmacro define-galosh-command (name (&key (required-configuration nil)) &body body)
+  (with-gensyms (req-config)
+    `(defun ,(intern "MAIN" (symbol-name name)) (,(intern "ARGV" (symbol-name name)))
+       (let ((,req-config ,required-configuration))
+	 (init-config)
+	 (handler-case
+	     (check-required-config ,req-config)
+	   (missing-mandatory-configuration-error (e)
+	     (format t "~&~A~&" (text e))
+	     (sb-ext:quit)))
+	 (with-galosh-db (get-config "core.log")
+	   ,@body)))))
