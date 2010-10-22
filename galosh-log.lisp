@@ -182,7 +182,7 @@
       qso)))
 
 (defun process-entry (buffer)
-  (destructuring-bind (call &optional rx-rst tx-rst) (split-words buffer)
+  (destructuring-bind (call &optional rx-rst tx-rst) (split-words buffer :first 3)
     (if (sane-callsign-p call)
 	(let ((q (make-instance 'qso
 				:operator *operator*

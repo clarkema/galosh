@@ -50,10 +50,13 @@
 (defmacro split (sep seq)
   `(split-sequence:split-sequence ,sep ,seq))
 
-(defmacro split-words (seq)
-  `(split-sequence:split-sequence #\Space
-				  (string-trim '(#\Space #\Tab #\Newline) ,seq)
-				  :remove-empty-subseqs t))
+(defun split-words (seq &key (first nil))
+  (let ((options (reverse (list :remove-empty-subseqs t))))
+    (when first
+      (setf options (nconc (reverse (list :count first)) options)))
+    (apply #'split-sequence:split-sequence  #\Space
+	   (string-trim '(#\Space #\Tab #\Newline) seq)
+	   (nreverse options))))
 
 (defun empty-string-p (str)
   (not (> (length str) 0)))
