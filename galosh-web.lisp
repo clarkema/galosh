@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-web
-  (:use :cl :gl :galosh-config :clsql :cl-who :galosh-qso :hunchentoot))
+  (:use :cl :gl :clsql :cl-who :galosh-qso :hunchentoot))
 (in-package :galosh-web)
 
 (clsql:locally-enable-sql-reader-syntax)
@@ -125,17 +125,22 @@
 		   (when call
 		     (str (log-result call))))))
 
-(defun init-server ()
-  (start (make-instance 'acceptor :port 8080))
+(defun start-server ()
   (setf *message-log-pathname* "errors"
 	*default-content-type* "text/html; charset=utf-8"
 	*dispatch-table* (list
 ;			  (create-regex-dispatcher "^/[a-z\\d]+\\d+[a-z]+$" #'(lambda () (log-details :cols *limited-columns*)))
 			  'dispatch-easy-handlers
-			  'default-dispatcher)))
+			  'default-dispatcher))
+  (start (make-instance 'acceptor :port 8080)))
 
-(defun main (argv)
-  (declare (ignore argv))
-  (let ((dbfile (get-config "core.log")))
-    (connect (list dbfile) :database-type :sqlite3)
-    (init-server)))
+(defun sigint-handler (sig code context)
+  (declare (ignore sig code context))
+  (sb-ext:quit))
+
+(define-galosh-command galosh-web (:required-configuration '("user.call"))
+  (let ((server (start-server)))
+    (sb-sys:enable-interrupt sb-unix:sigint #'sigint-handler)
+    (dolist (thread (sb-thread:list-all-threads))
+      (unless (equal sb-thread:*current-thread* thread)
+	(sb-thread:join-thread thread)))))
