@@ -17,7 +17,8 @@
 (defpackage :galosh-lisp
   (:nicknames :gl)
   (:use :cl :clsql :py-configparser)
-  (:export :split
+  (:export :*galosh-db*
+	   :split
 	   :split-words
 	   :default-rst-for-mode
 	   :valid-callsign-char-p
@@ -43,6 +44,8 @@
 	   :missing-mandatory-configuration-error))
 
 (in-package :galosh-lisp)
+
+(defvar *galosh-db* nil)
 
 (defparameter *non-tone-modes* '("SSB" "ESSB" "AM"))
 (defparameter *default-tone-mode-rst* 599)
@@ -112,17 +115,25 @@
 (define-condition missing-galosh-db-error (error)
   ((text :initarg :text :reader text)))
 
-(defmacro with-galosh-db (db &body body)
-  (with-gensyms (dbfile)
-    `(let ((,dbfile ,db))
-       (if (probe-file ,dbfile)
-	   (unwind-protect
-		(progn
-		  (connect (list ,dbfile) :database-type :sqlite3)
-		  ,@body)
-	     (disconnect))
-	   (error 'missing-galosh-db-error :text
-		  (format nil "Could not find database `~a'." ,dbfile))))))
+(defmacro with-galosh-db ((db &key (make-default t)) &body body)
+  (with-gensyms (dbfile default-p)
+    `(let ((,dbfile ,db)
+	   (,default-p ,make-default))
+       (if *galosh-db*
+	   (progn
+	     (if ,default-p
+		 (setf *default-database* *galosh-db*))
+	     ,@body)
+	   (if (probe-file ,dbfile)
+	       (unwind-protect
+		    (progn
+		      (setf *galosh-db* (connect (list ,dbfile) :database-type :sqlite3 :make-default ,default-p
+						 :if-exists :old))
+		      ,@body)
+		 (disconnect :database *galosh-db*)
+		 (setf *galosh-db* nil))
+	       (error 'missing-galosh-db-error :text
+		      (format nil "Could not find database `~a'." ,dbfile)))))))
 
 
 (define-condition missing-galosh-dir-error (error)
@@ -214,5 +225,5 @@
 	   (missing-mandatory-configuration-error (e)
 	     (format t "~&~A~&" (text e))
 	     (sb-ext:quit)))
-	 (with-galosh-db (get-config "core.log")
+	 (with-galosh-db ((get-config "core.log"))
 	   ,@body)))))

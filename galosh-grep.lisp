@@ -15,7 +15,8 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-grep
-  (:use :cl :gl :clsql :galosh-qso))
+  (:use :cl :gl :clsql :galosh-qso)
+  (:export :grep))
 (in-package :galosh-grep)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -25,7 +26,8 @@
     (do-query ((qso) [SELECT 'qso :WHERE [or
 	       [like 'hiscall liked-term]
 	       [like 'comment liked-term]
-	       [like 'his_iota liked-term]]])
+	       [like 'his_iota liked-term]]]
+	       :database *galosh-db*)
       (princ (as-string qso)))))
 
 (define-galosh-command galosh-grep ()
