@@ -89,7 +89,11 @@ sub cmd_compile
     my $target_command = "galosh-$ARGV[1]";
     my $output_path = File::Spec->join( $compiled_dir, $target_command );
 
-    system( "buildapp --require $target_command --entry ${target_command}::main --output $output_path" );
+    exec( "buildapp", ( '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
+                        '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
+                        '--require', $target_command,
+                        '--entry',   "${target_command}::main",
+                        '--output',  $output_path ) );
 }
 
 sub cmd_journal
@@ -124,8 +128,12 @@ else {
     else {
         exec( "sbcl", ( '--noinform',
                         '--noprint',
+                        '--no-userinit',
                         '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
-                        '--eval', "(require '$package_name)",
+                        '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
+                        '--eval', qq{(setf *load-verbose* nil *compile-verbose* nil)},
+                        '--eval', qq{(setf *load-print* nil *compile-print* nil)},
+                        '--eval', qq{(asdf:oos 'asdf:load-op "$package_name" :verbose nil)},
                         '--eval', "(${package_name}::main sb-ext:*posix-argv*)",
                         '--eval' , "(quit)",
                         '--end-toplevel-options',
