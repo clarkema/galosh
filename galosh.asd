@@ -1,9 +1,11 @@
 (asdf:defsystem #:galosh
     :depends-on (#:hunchentoot
-		 #:clsql
-		 #:cl-who
+		 #:clsql-sqlite3
+		 #:yaclml
 		 #:cl-ncurses
 		 #:split-sequence
 		 #:vecto
 		 #:drakma
-		 #:cxml))
+		 #:cxml
+		 #:getopt
+		 #:py-configparser))

@@ -44,11 +44,26 @@
 (in-package :galosh-qrzcom)
 
 (defparameter *qrz-api-url* "http://www.qrz.com/xml")
+(defvar *qrz-keys-by-username* (make-hash-table :test 'equal))
+
+;;;
+;;; QRZ.com client conditions
+;;;
+(define-condition session-timeout-error (error)
+  ())
+(define-condition invalid-session-key-error (error)
+  ())
+(define-condition callsign-not-found-error (error)
+  ((text :initarg :text :reader text)))
 
 (defclass qrzcom-client ()
   ((username :initarg :username :initform "")
-   (password :initarg :password :initform "")
-   (key :accessor qrz-key :initform nil)))
+   (password :initarg :password :initform "")))
+
+(defun get-qrz-key (username)
+  (gethash username *qrz-keys-by-username*))
+(defun (setf get-qrz-key) (new username)
+  (setf (gethash username *qrz-keys-by-username*) new))
 
 (defun login (client)
   (let* ((doc (cxml:parse (http-request (format nil "~A?username=~A&password=~A&agent=~A"
@@ -58,21 +73,13 @@
 						"galosh-testing"))
 			  (cxml-dom:make-dom-builder)))
 	 (key (aref (dom:get-elements-by-tag-name doc "Key") 0)))
-    (setf (qrz-key client) (dom:node-value (dom:first-child key)))
-    (format t "~s ~s" key (qrz-key client))))
-   
-(define-condition session-timeout-error (error)
-  ())
-(define-condition invalid-session-key-error (error)
-  ())
-(define-condition callsign-not-found-error (error)
-  ((text :initarg :text :reader text)))
+    (setf (get-qrz-key (slot-value client 'username)) (dom:node-value (dom:first-child key)))))
 
 (defun api-call (client request)
   (labels ((api-request (try)
 	     (let* ((response (http-request (format nil "~A?s=~A&~A" 
 						    *qrz-api-url* 
-						    (slot-value client 'key)
+						    (get-qrz-key (slot-value client 'username))
 						    request)))
 		    (doc (cxml:parse response (cxml-dom:make-dom-builder)))
 		    (err (dom:get-elements-by-tag-name doc "Error")))
@@ -97,12 +104,12 @@
 			(error (cats "Unknown error: " error-text)))))
 		   doc))))
     (api-request 1)))
-	  
+
 (defun details-by-call (client call)
   (let ((result (make-hash-table :test 'equal))
 	doc callsign)
     (handler-case
-	(setf doc (api-call client (format nil "callsign=~A" call)))
+	(setf doc (api-call client (cats "callsign=" call)))
       (callsign-not-found-error () (return-from details-by-call nil)))
     (setf callsign (aref (dom:get-elements-by-tag-name doc "Callsign") 0))
     (dom:do-node-list (node (dom:child-nodes callsign) result)
