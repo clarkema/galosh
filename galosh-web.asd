@@ -1,9 +1,11 @@
 (asdf:defsystem #:galosh-web
     :depends-on (#:galosh-lisp
+		 #:galosh-qrzcom
 		 #:getopt
 		 #:clsql
-		 #:cl-who
-		 #:hunchentoot)
+		 #:yaclml
+		 #:hunchentoot
+		 #:alexandria)
     :components ((:file "qso")
 		 (:file "galosh-web"
 			:depends-on ("qso"))))
