@@ -3,5 +3,6 @@
 		 #:galosh-qrzcom
 		 #:galosh-grep
 		 #:getopt
-		 #:clsql)
+		 #:clsql
+		 #:alexandria)
     :components ((:file "galosh-qrz")))

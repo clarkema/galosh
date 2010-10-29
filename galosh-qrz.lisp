@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-qrz
-  (:use :cl :gl :galosh-qrzcom :clsql :galosh-grep))
+  (:use :cl :gl :galosh-qrzcom :clsql :galosh-grep :alexandria))
 (in-package :galosh-qrz)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -29,7 +29,7 @@
     (let ((result (make-array (1+ (first (SELECT [max[id]] :FROM 'countries :flatp t :database *qrz-db*)))
 			      :initial-element nil)))
       (setf (svref result 0) "Unknown country")
-      (do-query ((id name) "SELECT id, name FROM countries")
+      (do-query ((id name) "SELECT id, name FROM countries" :database *qrz-db*)
 	(setf (svref result id) (string-capitalize name)))
       result)))
 
@@ -60,12 +60,9 @@
 
 (defun online-qrz-search (call)
   (let* ((client (make-instance 'qrzcom-client
-			       :username (get-config "qrz.user")
-			       :password (get-config "qrz.password")))
+				:username (get-config "qrz.user")
+				:password (get-config "qrz.password")))
 	 (result (details-by-call client call)))
-    (loop for k being the hash-keys in result
-       using (hash-value v)
-       do (format t "~A ~A~%" k v))
     (format t "~A, ~A~%" (string-upcase (gethash "name" result)) (string-capitalize (gethash "fname" result)))
     (format t "~A~&~A~&~A~&" (string-capitalize (gethash "addr1" result))
 	    (string-capitalize (gethash "addr2" result))
@@ -73,7 +70,7 @@
 
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
-        (getopt:getopt argv '(("offline" :none)))
+      (getopt:getopt argv '(("offline" :none)))
     (if (third leftover)
 	(concatenate 'list options `(("sought" . ,(third leftover))))
 	options)))
@@ -86,8 +83,8 @@
 	      (setf *qrz-db* (connect (list ,dbfile) :database-type :sqlite3 :make-default nil))
 	      ,@body)
 	 (when *qrz-db*
-	     (disconnect :database *qrz-db*)
-	     (setf *qrz-db* nil))))))
+	   (disconnect :database *qrz-db*)
+	   (setf *qrz-db* nil))))))
 
 (define-galosh-command galosh-qrz (:required-configuration '("qrz.user" "qrz.password"))
   (let* ((options (process-options argv))
@@ -105,4 +102,4 @@
 	  (with-transaction (:database *qrz-db*)
 	    (do ((sought (read-line *standard-input* nil :eof) (read-line *standard-input* nil :eof)))
 		((equal sought :eof) nil)
-	      (offline-qrz-search sought)))))))
+	      (bulk-offline-qrz-search sought)))))))
