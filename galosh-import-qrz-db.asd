@@ -1,6 +1,5 @@
 (asdf:defsystem #:galosh-import-qrz-db
     :depends-on (#:galosh-lisp
-		 #:galosh-config
 		 #:galosh-qrzcom
 		 #:clsql
 		 #:getopt)

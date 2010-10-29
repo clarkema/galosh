@@ -15,9 +15,11 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-import-qrz-db
-  (:use :cl :gl :galosh-config :clsql-user :galosh-qrzcom)
+  (:use :cl :gl :clsql-user :galosh-qrzcom)
   (:shadow :read-line))
 (in-package :galosh-import-qrz-db)
+
+(clsql:file-enable-sql-reader-syntax)
 
 (defvar *line-number* nil)
 
@@ -74,6 +76,11 @@
 	  (format t "~s~%" record)
 	  (update-records-from-instance country))))))
 
+(defun create-indicies ()
+  (create-index [amateur-calls] :on [amateur]
+		:attributes '([call])
+		:unique t))
+
 (defun init-db ()
   (truncate-database)
   (create-view-from-class 'qrz-record)
@@ -95,7 +102,8 @@
 	       (connect (list (get-config "qrz.offlinedb")) :database-type :sqlite3)
 	       (init-db)
 	       (import-call-file (cdr (assoc 'call-file options)))
-	       (import-country-file (cdr (assoc 'country-file options))))
+	       (import-country-file (cdr (assoc 'country-file options)))
+	       (create-indicies))
 	  (disconnect))
       (file-error () (format t "Error: file `~a' does not exist!~%" (cdr (assoc 'call-file options))))
       (simple-error (e) (format t "~a~%" e)))))
