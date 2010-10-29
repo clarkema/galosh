@@ -1,7 +1,8 @@
 (asdf:defsystem #:galosh-log
     :depends-on (#:galosh-lisp
 		 #:clsql
-		 #:cl-ncurses)
+		 #:cl-ncurses
+		 #:alexandria)
     :components ((:file "qso")
 		 (:file "galosh-utils")
 		 (:file "galosh-ncurses")

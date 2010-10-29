@@ -16,7 +16,7 @@
 
 (defpackage :galosh-log
   (:use :cl :gl :clsql
-	:galosh-qso :gu :cl-ncurses))
+	:galosh-qso :gu :cl-ncurses :alexandria))
 (in-package :galosh-log)
 
 (clsql:enable-sql-reader-syntax) 

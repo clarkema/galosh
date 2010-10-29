@@ -20,7 +20,7 @@
 (in-package :cl-ncurses)
 
 (defmacro with-attr (attr &body body)
-  (gl:with-gensyms (attribute)
+  (alexandria:with-gensyms (attribute)
   `(let ((,attribute ,attr))
      (unwind-protect
 	(progn

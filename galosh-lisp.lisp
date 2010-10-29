@@ -16,7 +16,7 @@
 
 (defpackage :galosh-lisp
   (:nicknames :gl)
-  (:use :cl :clsql :py-configparser)
+  (:use :cl :clsql :py-configparser :alexandria)
   (:export :*galosh-db*
 	   :split
 	   :split-words
@@ -30,7 +30,6 @@
 	   :say
 	   :keys
 	   :default
-	   :with-gensyms
 	   :with-galosh-db
 	   :define-galosh-command
 	   :get-galosh-dir
@@ -105,12 +104,6 @@
   (if (and (not (empty-string-p call)) (every #'valid-callsign-char-p call))
       call
       nil))
-
-(defmacro with-gensyms (syms &body body)
-  `(let ,(mapcar #'(lambda (s)
-		     `(,s (gensym)))
-		 syms)
-     ,@body))
 
 (define-condition missing-galosh-db-error (error)
   ((text :initarg :text :reader text)))
