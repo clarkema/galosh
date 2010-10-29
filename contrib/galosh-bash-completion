@@ -18,6 +18,14 @@
 
 # This file provides bash completion support for Galosh.
 
+_galosh_import_qrz_db()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+
+    _filedir dat
+    return 0
+}
+
 _galosh_qrz()
 {
     local cur="${COMP_WORDS[COMP_CWORD]}"
@@ -50,7 +58,7 @@ _galosh()
     fi
 
     # Complete options for command
-    completion_func="_galosh_$command"
+    completion_func="_galosh_${command//-/_}"
     declare -F $completion_func >/dev/null && $completion_func
 }
 complete -F _galosh galosh
