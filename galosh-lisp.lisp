@@ -204,9 +204,10 @@
     (coerce (get-option *config* section option) 'simple-string)))
 
 (defun init-config ()
-  (setf *config* (set-defaults (make-config)))
-  (read-files *config* (list
-			(make-pathname :directory (fatal-get-galosh-dir) :name "config"))))
+  (let ((global-config (merge-pathnames (make-pathname :directory '(:relative ".galosh") :name "config") (user-homedir-pathname)))
+	(repository-config (make-pathname :directory (fatal-get-galosh-dir) :name "config")))
+    (setf *config* (set-defaults (make-config)))
+    (read-files *config* (list global-config repository-config))))
 
 (defmacro define-galosh-command (name (&key (required-configuration nil)) &body body)
   (with-gensyms (req-config)
