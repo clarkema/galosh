@@ -1,0 +1,25 @@
+ASCIIDOC=asciidoc
+TEXI2PDF=texi2pdf
+MAKEINFO=makeinfo
+
+DOC_MAN1=$(patsubst %.txt,%.1,*.txt)
+DOC_HTML=$(patsubst %.txt,%.html,*.txt)
+
+doc: docs
+docs: manual manpages
+
+manpages: $(DOC_MAN1) $(DOC_HTML)
+
+%.1: %.txt
+	a2x -d manpage -f manpage $<
+
+%.html: %.txt
+	$(ASCIIDOC) $<
+
+manual: galosh.pdf galosh.info
+
+galosh.pdf: galosh.texi
+	$(TEXI2PDF) $< --output $@
+
+galosh.info: galosh.texi
+	$(MAKEINFO) $< --output $@

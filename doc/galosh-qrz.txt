@@ -1,0 +1,82 @@
+galosh-qrz(1)
+=============
+
+NAME
+----
+galosh-qrz - Look up amateur radio operators by callsign
+
+SYNOPSIS
+--------
+'galosh qrz' [<options>] [<callsign>]
+
+'galosh qrz' --offline <callsign>
+
+DESCRIPTION
+-----------
+Looks up information about amateur radio operators by callsign.
+
+'galosh qrz' has two modes: online and offline.  Online mode uses the qrz.com
+XML API and requires an Internet connection.  Offline mode requires an Internet
+connection only to download the latest database from qrz.com; after that, a
+connection is not requried for lookups.  However, offline mode provides access
+to only a small subset of the data available using online mode.  Online mode is
+the default.
+
+SETUP
+-----
+'galosh qrz' uses qrz.com as its data source for callsign lookups, so you will
+need an account.  For more information on this, see the main Galosh user manual.
+
+OPTIONS
+-------
+--offline::
+    Look up <callsign> offline, using a local copy of the qrz.com database.
+
+--raw::
+    Look up <callsign> in online mode, but do minimal data processing.
+    Specifically, rather than providing the pretty printed and formatted
+    output, the raw XML returned by qrz.com is converted into a simple list of
+    key-value pairs separated by tabs, and dumped directly to standard output.
+    
+    
+EXAMPLES
+--------
+
+* Look up a callsign online, using the qrz.com XML API:
++
+--------------------------------------------------------
+$ galosh qrz vpd8mh
+--------------------------------------------------------
+
+* Look up a callsign offline, using a local copy of the qrz.com database:
++
+--------------------------------------------------------
+$ galosh qrz --offline vp8dmh
+--------------------------------------------------------
+
+* Retrieve just the IOTA refrence for a given station:
++
+--------------------------------------------------------
+$ galosh qrz --raw vp8dmh | awk -F "\t" '$1 == "iota:" { print $2 }'
+AN-001
+--------------------------------------------------------
++
+This example uses the --raw option to instruct Galosh to return the data
+as key-value pairs. 'awk(1)' is then used to extract the required value.
+
+SEE ALSO
+--------
+'galosh-import-qrz-db(1)'
+
+Author
+------
+Written by Mike Clarke <clarkema@clarkema.org>.
+
+Documentation
+-------------
+
+Documentation by Mike Clarke.
+
+GALOSH
+------
+Part of the Galosh suite.
