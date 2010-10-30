@@ -1,0 +1,263 @@
+\input texinfo
+@c %**start of header
+@setfilename galosh.info
+@settitle Galosh
+@c %** end of header
+
+@copying
+Copyright (C) 2010 Michael Clarke.
+@end copying
+
+@titlepage
+@title Galosh User's Manual
+@author Michael Clarke
+@insertcopying
+@end titlepage
+
+@ifnottex
+@node top
+@top Galosh sample
+
+This file documents the `Galosh' a suite of amateur radio utilities, version
+0.0.1.
+
+@insertcopying
+
+@end ifnottex
+
+@contents
+@menu
+* Introduction::
+* Configuration::
+* Logging::
+* QRZ::
+@end menu
+
+@node Introduction
+@chapter Introduction
+
+Galosh is a suite 
+
+@node Configuration
+@chapter Configuration
+
+Galosh is designed to be as flexible as possible, and is configurable on many
+levels.  Unfortunately, the cost of this rich configurability is that is can
+sometimes be difficult to know where and how to make changes.  This chapter
+gives an overview of Galosh's configuration options.
+
+@section Global Configuration
+
+Galosh will read its global configuration from @file{$HOME/.galosh/config}.
+Any configuration options that you would like to apply to all (or nearly all)
+of your repositories, such as your callsign, you should set in this file.  The
+configuration file uses an INI-style format, with section headers in square
+brackets on a line of their own.  Options are specified one per line, with an
+equals sign between the name and value, and no whitespace at the start of the
+line.  To start with, edit your global configuration file to specify your name and call.
+
+@example
+[user]
+name = Mike Clarke
+call = VP8DMH
+@end example
+
+Configuration options are often referred to in the rest of the documentation in
+@dfn{dotted form}.  An option written in dotted form is written on a single
+line, with a period between the section and option names.  For example,
+we might refer to the @code{call} option above by saying ``Set @code{user.call}
+to your callsign.''
+
+Notice I said above that you should use the global configuration file for any
+options that you would like to apply to @emph{nearly} all of your repositories.
+Each repository also has its own configuration file, which follows exactly
+the same format as the global file.  This allows you to override options on a
+per-repository basis by entering only those options that you need to change in
+the repository configuration file.  So, just what is a `repository' anyway?
+This brings us neatly on to the next section...
+
+@section The Repository
+
+Galosh is designed as a suite of separate but related commands.  As such, many
+of the Galosh commands might need access to shared data; from configuration up
+to your full QSO log.  However, you might well want to maintain multiple logs
+for different purposes; perhaps an `everyday' log and a `contest' log, or a
+distinct log for a special event station.  It would be inconvenient if dealing
+with different log or different rigs, or different configuration for any other
+purpose entailed passing log and configuration details to every Galosh command
+you wanted to run.  To avoid this, Galosh uses the concept of @dfn{repositories},
+in a similar fashion to version control systems like @command{git}, upon which
+Galosh is in many ways modelled.
+
+@strong{Most uses of Galosh require you to be in a repository.}
+
+A repository is nothing more than a special directory on the file system that
+contains configuration files, your log, and other related information.  To
+create one, simply create a new directory, change into it, and run @code{galosh
+init}.
+
+@example
+$ mkdir log
+$ cd log
+$ galosh init
+@end example
+
+We can explore the new repository with @command{tree}:
+
+@example
+$ tree -a
+.
+`-- .galosh
+    |-- config
+    |-- log.db
+    `-- tmp
+@end example
+
+@file{.galosh/log.db} is the new (currently empty) SQLite database which will contain your logs.
+@file{.galosh/tmp} is used for temporary files created in the course of running
+various commands such as @command{galosh journal}, and can be ignored.
+Finally, @file{.galosh/config} is the configuration file for this repository.
+
+@node Logging
+@chapter Logging
+
+QSO logging under Galosh is provided by the @command{log} command.  Once
+you have initialized a log with @command{galosh init}, 
+QSO logging under Galosh is intended to be as fast as possible; allowing
+efficient logging under busy run conditions, while also offering sufficient
+flexibility to allow the operator to enter additional information for a QSO
+as required.
+
+@node QRZ
+@chapter QRZ
+
+Galosh includes several facilities to help you discover more about the stations
+you're working.  This aids in accurate logging, as well as helping you spot
+stations that are useful for awards you're working towards, and being of
+general interest.
+
+All of the current lookup features rely on callsign data from @indicateurl{qrz.com}.
+@indicateurl{qrz.com} offers two forms of access to its database: an XML API
+for online lookup, and a downloadable database for offline searches.  Each has
+advantages and disadvantages.
+
+The online lookup is always up-to-date with the latest data, and offers far
+more information than the offline database.  However, if you don't have the
+luxury of an always-on Internet connection, it's of no use.  Even if you @emph{do}
+have an always-on connection, a high latency connection such as a satellite
+link can introduce an unacceptable delay into the lookup process.
+
+The offline database requires you to download data files from
+@indicateurl{qrz.com} and import them using @command{galosh import-qrz-db},
+but once the data are imported you can perform lookups much more quickly, and
+without an Internet connection.  The disadvantage is that the offline database
+provides far less information for each callsign; essentially just name and
+postal address, along with some license metadata.  In particular, the offline
+database doesn't contain location (latitude and longitude, or grid) or IOTA
+information.
+
+Galosh supports both @indicateurl{qrz.com}'s XML API and its downloadable
+database.  To get started with either of these, you'll need a subscription from
+@indicateurl{qrz.com}.
+
+@menu
+* Getting Started With The qrz.com XML API::
+* Getting Started With The qrz.com Offline Database::
+@end menu
+
+@node Getting Started With The qrz.com XML API
+@section Getting Started With The qrz.com XML API
+
+If you don't already have an XML subscriber account with @indicateurl{qrz.com}, go to
+@url{http://www.qrz.com/XML/index.html} and sign up.  Once you have your username and
+password, you'll need to configure Galosh (@pxref{Configuration}).  Add the
+following to your configuration file:
+
+@example
+[qrz]
+user = yourcall
+password = yourpassword
+@end example
+
+Once Galosh is configured with your account details, you can perform QRZ
+lookups from the command-line:
+
+@example
+$ galosh qrz vp8dmh
+CLARKE, Mike
+Rothera Research Station
+Adelaide Island
+ANTARCTICA
+
+Lat/Long: -67.566667 -68.133333
+Grid: FC52wk
+IOTA: AN-001
+
+QSL Via: VIA G0VGS
+QSL Methods: eQSL
+@end example
+
+@node Getting Started With The qrz.com Offline Database
+@section Getting Started With The qrz.com Offline Database
+
+If you don't already have a database download account with
+@indicateurl{qrz.com}, go to @url{http://www.qrz.com/i/dlcatalog.html} and sign
+up.  Once you've signed up, download and unpack the archive described as
+`Smaller update package, no QSL images, for update only'.  In the unpacked
+files, you should see @file{callbkc.dat} and @file{country.dat}.  These contain
+the raw callsign and country data; for them to be useful to Galosh they must
+first be imported, using @command{galosh import-qrz-db}.
+
+@example
+$ galosh import-qrz-db callbkc.dat country.dat
+@end example
+
+Once the import is complete, you can perform offline QRZ lookups from the command-line:
+
+@example
+$ galosh qrz --offline vp8dmh
+CLARKE, Mike
+Rothera Research Station
+Adelaide Island
+ANTARCTICA
+@end example
+
+As can clearly be seen from the output, less information is available when running
+offline.  However, running both commands under @command{time} demonstrates
+another difference:
+
+@example
+$ time galosh qrz vp8dmh
+CLARKE, Mike
+Rothera Research Station
+Adelaide Island
+ANTARCTICA
+
+Lat/Long: -67.566667 -68.133333
+Grid: FC52wk
+IOTA: AN-001
+
+QSL Via: VIA G0VGS
+QSL Methods: eQSL
+
+real    0m6.816s
+user    0m0.660s
+sys     0m0.788s
+
+$ time galosh qrz --offline vp8dmh
+CLARKE, Mike
+Rothera Research Station
+Adelaide Island
+ANTARCTICA
+
+real    0m1.237s
+user    0m0.552s
+sys     0m0.556s
+
+@end example
+
+On the satellite connection I was using when I wrote this, there is a 5.5-second
+difference in response time.
+
+@bye
+
