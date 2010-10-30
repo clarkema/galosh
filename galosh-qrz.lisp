@@ -24,6 +24,17 @@
 (defvar *country-by-id* #())
 (declaim (vector *country-by-id*))
 
+(defmacro with-qrz-db ((db) &body body)
+  (with-gensyms (dbfile)
+    `(let ((,dbfile ,db))
+       (unwind-protect
+	    (progn
+	      (setf *qrz-db* (connect (list ,dbfile) :database-type :sqlite3 :make-default nil))
+	      ,@body)
+	 (when *qrz-db*
+	   (disconnect :database *qrz-db*)
+	   (setf *qrz-db* nil))))))
+
 (defun get-country-translations ()
   (with-transaction (:database *qrz-db*)
     (let ((result (make-array (1+ (first (SELECT [max[id]] :FROM 'countries :flatp t :database *qrz-db*)))
@@ -48,55 +59,88 @@
 		(warn (format nil "Invalid country for ~A (~A)" c r))))))
 
 (defun offline-qrz-search (call)
-  (let* ((c (string-upcase call))
-	 (r (first (select 'qrz-record :where [= 'call c] :limit 1 :caching nil :flatp t :database *qrz-db*))))
-    (when r
-      (format t "~%~A~%~A~%" (qrz-call r) (make-string (length (qrz-call r)) :initial-element #\=))
-      (format t "~A, ~A~%" (string-upcase (qrz-lastname r)) (string-capitalize (qrz-firstname r)))
-      (format t "~A~&~A~&~A~&~A~%~%" (string-capitalize (qrz-mailstreet r))
-	      (string-capitalize (qrz-mailcity r))
-	      (string-capitalize (qrz-mailstate r))
-	      (country-name (qrz-country r))))))
+  (with-qrz-db ((get-config "qrz.offlinedb"))
+    (let* ((c (string-upcase call))
+	   (r (first (select 'qrz-record :where [= 'call c] :limit 1 :caching nil :flatp t :database *qrz-db*))))
+      (when r
+	(format t "~A, ~A~%" (string-upcase (qrz-lastname r)) (string-capitalize (qrz-firstname r)))
+	(format t "~A~&~A~&~A~&~A~&" (string-capitalize (qrz-mailstreet r))
+		(string-capitalize (qrz-mailcity r))
+		(string-capitalize (qrz-mailstate r))
+		(country-name (qrz-country r)))))))
+
+(defun raw-online-qrz-search (call)
+  (let* ((client (make-instance 'qrzcom-client
+				:username (get-config "qrz.user")
+				:password (get-config "qrz.password")))
+	 (result (details-by-call client call)))
+    (if result
+	(loop for k being each hash-key of result using (hash-value v)
+	     do (format t "~A:~A~A~%" k #\Tab v)))
+    result))
+
+(defun princ-unless-nil (obj)
+  (unless (null obj)
+    (princ obj)))
+
+(defun prepend-newline (string)
+  (unless (zerop (length string))
+      (cats (format nil "~%") string)))
+
+(defun section-qsl (result)
+  (flet ((r (key) (gethash key result)))
+    (with-output-to-string (*standard-output*)
+      (when-let ((qsl-via (r "qslmgr")))
+	(format t "QSL Via: ~A~%" qsl-via))
+      (princ "QSL Methods: ")
+      (princ (join (remove-if #'null (list (if (equal (r "mqsl") "1") "Direct")
+					   (if (equal (r "eqsl") "1") "eQSL")
+					   (if (equal (r "lotw") "1") "LoTW")))
+		   ", "))
+      (fresh-line))))
+
+(defun section-qth (result)
+  (flet ((r (key) (gethash key result)))
+    (with-output-to-string (*standard-output*)
+      (when-let ((lat (r "lat"))
+		 (lon (r "lon")))
+	(format t "Lat/Long: ~A ~A~&" lat lon))
+      (when-let ((grid (r "grid")))
+	(format t "Grid: ~A~&" grid))
+      (when-let ((iota (r "iota")))
+	(format t "IOTA: ~A~&" iota)))))
 
 (defun online-qrz-search (call)
   (let* ((client (make-instance 'qrzcom-client
 				:username (get-config "qrz.user")
 				:password (get-config "qrz.password")))
 	 (result (details-by-call client call)))
-    (format t "~A, ~A~%" (string-upcase (gethash "name" result)) (string-capitalize (gethash "fname" result)))
-    (format t "~A~&~A~&~A~&" (string-capitalize (gethash "addr1" result))
-	    (string-capitalize (gethash "addr2" result))
-	    (string-upcase (gethash "country" result)))))
+    (if result
+	(flet ((r (key) (gethash key result)))
+	  (format t "~A, ~A~%" (string-upcase (r "name")) (string-capitalize (r "fname")))
+	  (format t "~A~&~A~&~A~&" (string-capitalize (r "addr1"))
+		  (string-capitalize (r "addr2"))
+		  (string-upcase (r "country")))
+	  (mapcar (lambda (section)
+		    (princ-unless-nil (prepend-newline (funcall section result))))
+		  (list #'section-qth #'section-qsl))))))
 
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
-      (getopt:getopt argv '(("offline" :none)))
+      (getopt:getopt argv '(("offline" :none) ("raw" :none)))
     (if (third leftover)
 	(concatenate 'list options `(("sought" . ,(third leftover))))
 	options)))
-
-(defmacro with-qrz-db ((db) &body body)
-  (with-gensyms (dbfile)
-    `(let ((,dbfile ,db))
-       (unwind-protect
-	    (progn
-	      (setf *qrz-db* (connect (list ,dbfile) :database-type :sqlite3 :make-default nil))
-	      ,@body)
-	 (when *qrz-db*
-	   (disconnect :database *qrz-db*)
-	   (setf *qrz-db* nil))))))
 
 (define-galosh-command galosh-qrz (:required-configuration '("qrz.user" "qrz.password"))
   (let* ((options (process-options argv))
 	 (sought (cdr (assoc "sought" options))))
     (if sought
-	(progn
-	  (if (assoc "offline" options)
-	      (with-qrz-db ((get-config "qrz.offlinedb"))
-		(offline-qrz-search sought))
-	      (online-qrz-search sought))
-	  (fresh-line)
-	  (grep sought))
+	(cond ((assoc "offline" options)
+	       (offline-qrz-search sought))
+	      ((assoc "raw" options)
+	       (raw-online-qrz-search sought))
+	      (t (online-qrz-search sought)))
 	(with-qrz-db ((get-config "qrz.offlinedb"))
 	  (setf *country-by-id* (get-country-translations))
 	  (with-transaction (:database *qrz-db*)
