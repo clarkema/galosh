@@ -9,6 +9,11 @@ use lib "$FindBin::RealBin/perllib";
 use File::Spec;
 use File::HomeDir;
 
+# Note that 'require order' below makes processing stop at the first
+# non-option argument.  In this way, options are shared out correctly
+# when running something like 'galosh --debug foo --bar --baz'
+use Getopt::Long qw(:config require_order);
+
 umask 0077;
 
 our $context_dir     = File::Spec->join( File::Spec->curdir(), ".galosh" );
@@ -91,7 +96,9 @@ sub cmd_compile
     my $target_command = "galosh-$ARGV[1]";
     my $output_path = File::Spec->join( $compiled_dir, $target_command );
 
-    exec( "buildapp", ( '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
+    exec( "buildapp", ( '--eval', qq{(sb-ext:disable-debugger)},
+                        '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
+                        '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
                         '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
                         '--require', $target_command,
                         '--entry',   "${target_command}::main",
@@ -107,6 +114,13 @@ sub cmd_journal
 ######################################################################
 # Main execution starts here
 ######################################################################
+
+# Application option variables
+my $debug = 0;
+
+my $options_successful = GetOptions(
+    'debug'            => \$debug,
+);
 
 my $command = $ARGV[0] || 'help';
 
@@ -131,11 +145,14 @@ else {
         exec( "sbcl", ( '--noinform',
                         '--noprint',
                         '--no-userinit',
+                        '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
                         '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
                         '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
-                        '--eval', qq{(setf *load-verbose* nil *compile-verbose* nil)},
-                        '--eval', qq{(setf *load-print* nil *compile-print* nil)},
-                        '--eval', qq{(asdf:oos 'asdf:load-op "$package_name" :verbose nil)},
+                        '--eval',
+                        @{[ $debug
+                                ? qq{(asdf:oos 'asdf:load-op "$package_name")}
+                                : qq{(ql-impl-util:call-with-quiet-compilation #'(lambda () (asdf:oos 'asdf:load-op "$package_name" :verbose nil)))}
+                        ]},
                         '--eval', "(${package_name}::main sb-ext:*posix-argv*)",
                         '--eval' , "(quit)",
                         '--end-toplevel-options',

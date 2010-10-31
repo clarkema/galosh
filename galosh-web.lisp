@@ -209,14 +209,9 @@
 			  'default-dispatcher))
   (start (make-instance 'acceptor :port port)))
 
-(defun sigint-handler (sig code context)
-  (declare (ignore sig code context))
-  (sb-ext:quit))
-
 (define-galosh-command galosh-web (:required-configuration '("user.call"))
   (let* ((port (parse-integer (third argv)))
 	 (server (start-server :port port)))
-    (sb-sys:enable-interrupt sb-unix:sigint #'sigint-handler)
     (dolist (thread (sb-thread:list-all-threads))
       (unless (equal sb-thread:*current-thread* thread)
 	(sb-thread:join-thread thread)))))
