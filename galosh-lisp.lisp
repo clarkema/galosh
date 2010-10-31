@@ -40,7 +40,8 @@
 	   :human-date
 	   :get-config
 	   :check-required-config
-	   :missing-mandatory-configuration-error))
+	   :missing-mandatory-configuration-error
+	   :terminate))
 
 (in-package :galosh-lisp)
 
@@ -146,7 +147,7 @@
       (get-galosh-dir :raise-error t)
     (missing-galosh-dir-error ()
       (format t "GALOSH_DIR is not defined.~%" )
-      (sb-ext:quit))))
+      (terminate 1))))
 
 (defun human-date (date)
   (if (= (length date) 8)
@@ -219,6 +220,15 @@
 	     (check-required-config ,req-config)
 	   (missing-mandatory-configuration-error (e)
 	     (format t "~&~A~&" (text e))
-	     (sb-ext:quit)))
+	     (terminate)))
 	 (with-galosh-db ((get-config "core.log"))
 	   ,@body)))))
+
+(defun terminate (&optional (status 0))
+  #+sbcl     (sb-ext:quit      :unix-status status)    ; SBCL
+  #+ccl      (   ccl:quit      status)                 ; Clozure CL
+  #+clisp    (   ext:quit      status)                 ; GNU CLISP
+  #+cmu      (  unix:unix-exit status)                 ; CMUCL
+  #+abcl     (   ext:quit      :status status)         ; Armed Bear CL
+  #+allegro  (  excl:exit      status :quiet t)        ; Allegro CL
+  (cl-user::quit))           ; Many implementations put QUIT in the sandbox CL-USER package.
