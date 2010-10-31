@@ -64,10 +64,10 @@
 	   (r (first (select 'qrz-record :where [= 'call c] :limit 1 :caching nil :flatp t :database *qrz-db*))))
       (when r
 	(format t "~A, ~A~%" (string-upcase (qrz-lastname r)) (string-capitalize (qrz-firstname r)))
-	(format t "~A~&~A~&~A~&~A~&" (string-capitalize (qrz-mailstreet r))
+	(format t "~A~&~A~&~A~&" (string-capitalize (qrz-mailstreet r))
 		(string-capitalize (qrz-mailcity r))
-		(string-capitalize (qrz-mailstate r))
-		(country-name (qrz-country r)))))))
+		(string-capitalize (qrz-mailstate r)))
+	(princ-unless-nil (qrz-country-name r) :fl t)))))
 
 (defun raw-online-qrz-search (call)
   (let* ((client (make-instance 'qrzcom-client
@@ -79,9 +79,11 @@
 	     do (format t "~A:~A~A~%" k #\Tab v)))
     result))
 
-(defun princ-unless-nil (obj)
+(defun princ-unless-nil (obj &key (fl nil))
   (unless (null obj)
-    (princ obj)))
+    (princ obj)
+    (if fl
+	(fresh-line))))
 
 (defun prepend-newline (string)
   (unless (zerop (length string))
