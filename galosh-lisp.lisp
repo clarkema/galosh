@@ -132,17 +132,18 @@
 (define-condition missing-galosh-dir-error (error)
   ((text :initarg :text :reader text)))
 
-(defun get-galosh-dir ()
+(defun get-galosh-dir (&key (raise-error nil))
   (let ((gdir (sb-ext:posix-getenv "GALOSH_DIR")))
     (if gdir
 	gdir
-	(error 'missing-galosh-dir-error :text
-	       "GALOSH_DIR is not defined."))))
+	(if raise-error
+	    (error 'missing-galosh-dir-error :text
+		   "GALOSH_DIR is not defined.")))))
 
 
 (defun fatal-get-galosh-dir ()
   (handler-case
-      (get-galosh-dir)
+      (get-galosh-dir :raise-error t)
     (missing-galosh-dir-error ()
       (format t "GALOSH_DIR is not defined.~%" )
       (sb-ext:quit))))
