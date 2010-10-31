@@ -47,6 +47,31 @@
 (defvar *qrz-keys-by-username* (make-hash-table :test 'equal))
 
 ;;;
+;;; State management
+;;;
+(defun write-state (path)
+  (with-open-file (s path
+		     :direction :output
+		     :if-does-not-exist :create
+		     :if-exists :supersede)
+    (with-standard-io-syntax
+      (print `(setf *qrz-keys-by-username* ,*qrz-keys-by-username*) s))))
+
+(defun read-state ()
+  (let ((state-files (list (make-pathname :directory (fatal-get-galosh-dir) :name "galosh-qrzcom" :type "state"))))
+    (dolist (file state-files)
+      (if (probe-file file)
+	  (load file)))))
+
+#+sbcl
+(let ((state-hook #'(lambda ()
+		      (when (get-galosh-dir)
+			(write-state (make-pathname :directory (get-galosh-dir) :name "galosh-qrzcom" :type "state"))))))
+  (if (member state-hook sb-ext:*exit-hooks*)
+      (warn "galosh-qrzcom: State hook already added to sb-ext:*exit-hooks*")
+      (push state-hook sb-ext:*exit-hooks*)))
+
+;;;
 ;;; QRZ.com client conditions
 ;;;
 (define-condition session-timeout-error (error)
@@ -76,6 +101,13 @@
     (setf (get-qrz-key (slot-value client 'username)) (dom:node-value (dom:first-child key)))))
 
 (defun api-call (client request)
+  ;; If nothing is stored in *qrz-keys-by-username*, we haven't yet logged in.
+  ;; Try reading our state file to see if that gives us a stored key we can use.
+  (if (zerop (hash-table-count *qrz-keys-by-username*))
+      (read-state))
+  ;; Still nothing?  Try logging in!
+  (if (zerop (hash-table-count *qrz-keys-by-username*))
+      (login client))
   (labels ((api-request (try)
 	     (let* ((response (http-request (format nil "~A?s=~A&~A" 
 						    *qrz-api-url* 
