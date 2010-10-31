@@ -9,6 +9,8 @@ use lib "$FindBin::RealBin/perllib";
 use File::Spec;
 use File::HomeDir;
 
+umask 0077;
+
 our $context_dir     = File::Spec->join( File::Spec->curdir(), ".galosh" );
 our $home_galosh_dir = File::Spec->join( File::HomeDir->my_home, ".galosh" );
 our $compiled_dir    = File::Spec->join( $home_galosh_dir, "compiled" );
