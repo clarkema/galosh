@@ -98,8 +98,8 @@ sub cmd_compile
 
     exec( "buildapp", ( '--eval', qq{(sb-ext:disable-debugger)},
                         '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
-                        '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
                         '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
+                        '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
                         '--require', $target_command,
                         '--entry',   "${target_command}::main",
                         '--output',  $output_path ) );
@@ -146,8 +146,8 @@ else {
                         '--noprint',
                         '--no-userinit',
                         '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
-                        '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
                         '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
+                        '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
                         '--eval',
                         @{[ $debug
                                 ? qq{(asdf:oos 'asdf:load-op "$package_name")}
