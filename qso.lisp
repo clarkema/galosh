@@ -109,6 +109,8 @@
    (our-iota
     :documentation "This station's IOTA reference"
     :db-type "TEXT"
+    :initarg :our-iota
+    :initform nil
     :accessor q-our-iota)
    (comment
     :db-type "TEXT"

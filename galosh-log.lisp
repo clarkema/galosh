@@ -24,6 +24,7 @@
 (defvar *operator* nil)
 (defvar *qrg*     14260000)
 (defvar *mode*    "SSB")
+(defvar *iota*    nil)
 (defvar *history* ())
 (defparameter *history-size* 15)
 
@@ -95,7 +96,7 @@
 
 (defun display-title-bar ()
   (with-color +inv-green+
-    (mvprintw 0 0 (string-right-pad *COLS* (format nil " QRG: ~10a Mode: ~a" *qrg* *mode*)))))
+    (mvprintw 0 0 (string-right-pad *COLS* (format nil " QRG: ~10a Mode: ~a IOTA: ~a" *qrg* *mode* *iota*)))))
 
 (defun display-status-bar ()
   (with-color +inv-green+
@@ -191,6 +192,7 @@
 				:time-on  (log-time)
 				:mode *mode*
 				:qrg *qrg*
+				:our-iota *iota*
 				:tx-rst (ensure-valid-rst tx-rst *mode*)
 				:rx-rst (ensure-valid-rst rx-rst *mode*))))
 	  (display-qso-and-prompt-for-options q)))))
@@ -200,7 +202,8 @@
 	 (place (second tokens))
 	 (value (third tokens)))
     (cond ((string-equal place "qrg") (setf *qrg* (parse-integer value :junk-allowed t)))
-	  ((string-equal place "mode") (setf *mode* (string-upcase value))))))
+	  ((string-equal place "mode") (setf *mode* (string-upcase value)))
+	  ((string-equal place "iota") (setf *iota* (string-upcase value))))))
 
 (defun process-option (string)
   (let ((verb (first (split-words string))))
@@ -240,7 +243,8 @@
 		     :if-exists :supersede)
     (with-standard-io-syntax
       (print `(setf *qrg*  ,*qrg*)  s)
-      (print `(setf *mode* ,*mode*) s))))
+      (print `(setf *mode* ,*mode*) s)
+      (print `(setf *iota* ,*iota*) s))))
 
 (defun read-state (path)
   (when (probe-file path)
