@@ -105,7 +105,8 @@
    (make-translation :slot-name 'q-tx-rst :field-name "rst_sent")
    (make-translation :slot-name 'q-rx-rst :field-name "rst_rcvd")
    (make-translation :slot-name 'q-time-on :field-name "time_on")
-   (make-translation :slot-name 'q-time-off :field-name "time_off")))
+   (make-translation :slot-name 'q-time-off :field-name "time_off")
+   (make-translation :slot-name 'q-operator :field-name "operator")))
 
 (defparameter *slot-name->adif* (make-hash-table))
 (defparameter *adif->slot-name* (make-hash-table))
