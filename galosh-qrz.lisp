@@ -79,6 +79,11 @@
 	     do (format t "~A:~A~A~%" k #\Tab v)))
     result))
 
+(defun print-logged-qsos (term)
+  (let ((q (grep-hiscall term)))
+    (when q
+      (format t "~%QSOs:~%~A" q))))
+
 (defun princ-unless-nil (obj &key (fl nil))
   (unless (null obj)
     (princ obj)
@@ -139,10 +144,12 @@
 	 (sought (cdr (assoc "sought" options))))
     (if sought
 	(cond ((assoc "offline" options)
-	       (offline-qrz-search sought))
+	       (offline-qrz-search sought)
+	       (print-logged-qsos sought))
 	      ((assoc "raw" options)
 	       (raw-online-qrz-search sought))
-	      (t (online-qrz-search sought)))
+	      (t (online-qrz-search sought)
+		 (print-logged-qsos sought)))
 	(with-qrz-db ((get-config "qrz.offlinedb"))
 	  (setf *country-by-id* (get-country-translations))
 	  (with-transaction (:database *qrz-db*)
