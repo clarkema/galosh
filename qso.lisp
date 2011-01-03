@@ -23,6 +23,8 @@
 	   :q-toggle-followup))
 (in-package :galosh-qso)
 
+(clsql:file-enable-sql-reader-syntax)
+
 (def-view-class qso ()
   ((id 
     :type integer
@@ -132,10 +134,13 @@
     :initform nil))
   (:base-table "qso"))
 
+(defun max-qso-id ()
+  (first (select [max [id]] :from 'qso :flatp t)))
+
 (defgeneric as-string (x))
 (defmethod as-string ((q qso))
   (format nil "~a ~a ~a ~10a ~8@a ~6a ~3a ~3a ~6a ~a~%"
-	  (q-id q)
+	  (string-right-pad (length (princ-to-string (max-qso-id))) (princ-to-string (q-id q)))
 	  (q-qso-date q)
 	  (q-time-on q)
 	  (q-hiscall q)
@@ -143,9 +148,9 @@
 	  (q-mode q)
 	  (q-rx-rst q)
 	  (q-tx-rst q)
-	  (q-his-iota q)
-	  (q-comment q)))
- 
+	  (or (q-his-iota q) "")
+	  (or (q-comment q) "")))
+
 (defun q-toggle-followup (qso)
   (setf (q-followup qso) (if (eql 1 (q-followup qso)) 0 1)))
 
