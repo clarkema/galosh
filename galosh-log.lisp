@@ -197,20 +197,33 @@
 				:rx-rst (ensure-valid-rst rx-rst *mode*))))
 	  (display-qso-and-prompt-for-options q)))))
 
-(defun galosh-set (string)
+(defun process-command (string)
+  (let ((verb (first (split-words string))))
+    (cond
+      ((string-equal verb "d") (cmd-delete-qso string))
+      ((string-equal verb "set") (cmd-set string))
+      ((string-equal verb "q") nil)
+      (t t))))
+
+(defun cmd-delete-qso (string)
+  (let* ((tokens (split-words string))
+	 (id (second tokens)))
+    (with-open-file (s (get-config "log.attic")
+		       :direction :output
+		       :if-exists :append
+		       :if-does-not-exist :create)
+      (princ (galosh-adif:qso->adif (first (select 'qso :where [= 'id id] :flatp t :caching nil))) s))
+    (delete-records :from [qso] :where [= 'id id])
+    (print-history))
+  t)
+
+(defun cmd-set (string)
   (let* ((tokens (split-words string))
 	 (place (second tokens))
 	 (value (third tokens)))
     (cond ((string-equal place "qrg") (setf *qrg* (parse-integer value :junk-allowed t)))
 	  ((string-equal place "mode") (setf *mode* (string-upcase value)))
 	  ((string-equal place "iota") (setf *iota* (string-upcase value))))))
-
-(defun process-option (string)
-  (let ((verb (first (split-words string))))
-    (cond
-      ((string-equal verb "set") (galosh-set string))
-      ((string-equal verb "q") nil)
-      (t t))))
 
 (defun event-loop (buffer)
   (display-title-bar)
@@ -220,7 +233,7 @@
   (let* ((raw-code (getch))
 	 (c (code-char raw-code)))
     (cond ((eql c #\:)
-	   (if (process-option (read-value :prompt ":"))
+	   (if (process-command (read-value :prompt ":"))
 	       (event-loop "")))
           ((eql c #\Newline)
 	   (unless (string-empty-p buffer)

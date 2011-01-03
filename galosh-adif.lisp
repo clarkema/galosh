@@ -121,14 +121,15 @@
   (let* ((translator (gethash slot-name *slot-name->adif*))
 	 (value (funcall (t-qso->adif translator) (funcall slot-name qso))))
     (when value
-      (format t "<~:@(~a~):~a>~a " (t-field-name translator)
+      (format nil "<~:@(~a~):~a>~a " (t-field-name translator)
 	      (length (format nil "~a" value))
 	      value))))
 
 (defun qso->adif (qso)
-  (format nil "~{ ~:a ~% ~}<EOR>~%"
-	  (remove nil (mapcar #'(lambda (slot-name) (package-adif qso slot-name))
-			      (keys *slot-name->adif*)))))
+  (when qso
+    (format nil "~{~:a~}<EOR>~%"
+	    (remove nil (mapcar #'(lambda (slot-name) (package-adif qso slot-name))
+				(keys *slot-name->adif*))))))
 
 (defun read-char (stream)
   "Wrap cl:read-char with a version that counts newlines in passing."

@@ -188,7 +188,9 @@
 (defun set-defaults (config)
   (with-input-from-string (s (join
 			      (list "[core]"
-				    (cats "log = " (namestring (merge-pathnames "log.db" (fatal-get-galosh-dir)))))
+				    (cats "log = " (namestring (merge-pathnames "log.db" (fatal-get-galosh-dir))))
+				    "[log]"
+				    (cats "attic = " (namestring (merge-pathnames "log.attic" (fatal-get-galosh-dir)))))
 			      #\Newline))
     (setf config (read-stream config s))))
 
