@@ -5,7 +5,7 @@
 @c %** end of header
 
 @copying
-Copyright (C) 2010 Michael Clarke.
+Copyright (C) 2010, 2011 Michael Clarke.
 @end copying
 
 @titlepage
