@@ -35,6 +35,15 @@ _galosh_qrz()
     return 0
 }
 
+_galosh_export_adif()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local opts="--fieldset --list-fieldsets"
+
+    COMPREPLY=( $(compgen -W "$opts" -- $cur ) )
+    return 0
+}
+
 _galosh()
 {
     local i c=1 command cur commands

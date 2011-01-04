@@ -92,13 +92,18 @@
 
 (defparameter *slot-translations*
   (list
+   (make-translation :slot-name 'q-id :field-name "galosh_id")
    (make-translation :slot-name 'q-band :field-name "band")
    (make-translation :slot-name 'q-hiscall :field-name "call")
    (make-translation :slot-name 'q-comment :field-name "comment")
    (make-translation :slot-name 'q-qrg :field-name "freq"
                      :qso->adif #'(lambda (x) (format nil "~,6,f" (float (/ x 1000000)))))
+   (make-translation :slot-name 'q-his-state :field-name "state")
+   (make-translation :slot-name 'q-his-ve-prov :field-name "ve_prov")
    (make-translation :slot-name 'q-his-grid :field-name "gridsquare")
+   (make-translation :slot-name 'q-our-grid :field-name "galosh_our_grid")
    (make-translation :slot-name 'q-his-iota :field-name "iota")
+   (make-translation :slot-name 'q-our-iota :field-name "galosh_our_iota")
    (make-translation :slot-name 'q-mode :field-name "mode")
    (make-translation :slot-name 'q-name :field-name "name")
    (make-translation :slot-name 'q-qso-date :field-name "qso_date")
@@ -106,7 +111,8 @@
    (make-translation :slot-name 'q-rx-rst :field-name "rst_rcvd")
    (make-translation :slot-name 'q-time-on :field-name "time_on")
    (make-translation :slot-name 'q-time-off :field-name "time_off")
-   (make-translation :slot-name 'q-operator :field-name "operator")))
+   (make-translation :slot-name 'q-operator :field-name "operator")
+   (make-translation :slot-name 'q-followup :field-name "galosh_followup")))
 
 (defparameter *slot-name->adif* (make-hash-table))
 (defparameter *adif->slot-name* (make-hash-table))
@@ -125,11 +131,13 @@
 	      (length (format nil "~a" value))
 	      value))))
 
-(defun qso->adif (qso)
+(defun qso->adif (qso &key slots)
+  (if (or (null slots) (eq slots :all))
+      (setf slots (keys *slot-name->adif*)))
   (when qso
     (format nil "~{~:a~}<EOR>~%"
 	    (remove nil (mapcar #'(lambda (slot-name) (package-adif qso slot-name))
-				(keys *slot-name->adif*))))))
+				slots)))))
 
 (defun read-char (stream)
   "Wrap cl:read-char with a version that counts newlines in passing."

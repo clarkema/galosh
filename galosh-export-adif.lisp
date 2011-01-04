@@ -20,6 +20,37 @@
 
 (clsql:file-enable-sql-reader-syntax)
 
+(defparameter *slot-sets* (make-hash-table :test 'equal))
+(setf (gethash "std" *slot-sets*) '(q-band
+				    q-hiscall
+				    q-comment
+				    q-qrg
+				    q-his-state
+				    q-his-ve-prov
+				    q-his-grid
+				    q-his-iota
+				    q-mode
+				    q-qso-date
+				    q-tx-rst
+				    q-rx-rst
+				    q-time-on
+				    q-time-off
+				    q-operator))
+
+(defun process-options (argv)
+  (multiple-value-bind (leftover options)
+      (getopt:getopt argv '(("fieldset" :optional)
+			    ("list-fieldsets" :none t)))
+    options))
+
 (define-galosh-command galosh-export-adif ()
-  (mapcar #'(lambda (x) (princ (qso->adif x)))
-	  (reverse (select 'qso :order-by '(([qso_date] :desc)([time_on] :desc)) :flatp t))))
+  (let* ((options (process-options argv))
+	 (set (or (cdr (assoc "fieldset" options)) "std")))
+    (if (cdr (assoc "list-fieldsets" options))
+	(format t "~{~:A~%~}~&all~%" (keys *slot-sets*))
+	(mapcar #'(lambda (x)
+		    (princ (qso->adif x
+				      :slots (if (string= set "all")
+						 :all
+						 (gethash set *slot-sets*)))))
+		(reverse (select 'qso :order-by '(([qso_date] :desc)([time_on] :desc)) :flatp t))))))
