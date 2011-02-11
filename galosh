@@ -107,6 +107,52 @@ sub cmd_compile
     }
 }
 
+sub cmd_config
+{
+    my $context_dir = get_context();
+    my $home_config_file = File::Spec->join( $ENV{'HOME'}, ".galosh", "config" );
+    my $repo_config_file = File::Spec->join( $context_dir, "config" );
+    my $config = {};
+
+    read_config( $home_config_file, $config );
+    read_config( $repo_config_file, $config );
+
+    if ( $ARGV[1] ) {
+        print $config->{ $ARGV[1] }, "\n";
+    }
+    else {
+        while ( my ($k, $v) = each %$config ) {
+            print "$k = $v\n"
+        }
+    }
+}
+
+sub read_config
+{
+    my $file     = shift;
+    my $hash_ref = shift;
+    my $section;
+
+    open( my $fh, '<', $file ) or die "Failed to open config file $file: $!\n";
+
+    while ( <$fh> ) {
+        next if /^\s*#/;
+        next if /^$/;
+
+        if ( m/^\[([^\]]+)\]/ ) {
+            $section = $1;
+        }
+        else {
+            m/^(.*?)\s*=\s*(.*)/;
+            my $option = $1;
+            my $value = $2;
+
+            $hash_ref->{ "$section.$option" } = $value;
+        }
+    }
+
+    close( $fh );
+}
 
 sub cmd_journal
 {
