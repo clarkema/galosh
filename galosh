@@ -190,7 +190,7 @@ else {
     elsif ( -e $compiled_path ) {
         exec( $compiled_path, @ARGV );
     }
-    else {
+    elsif ( -e "$FindBin::RealBin/${package_name}.asd" ) {
         exec( "sbcl", ( '--noinform',
                         '--noprint',
                         '--no-userinit',
@@ -206,5 +206,12 @@ else {
                         '--eval' , "(quit)",
                         '--end-toplevel-options',
                         @ARGV, ));
+    }
+    elsif ( -e "$FindBin::RealBin/${package_name}" ) {
+        no warnings qw(uninitialized);
+        exec( "$FindBin::RealBin/${package_name}", @ARGV[1,] );
+    }
+    else {
+        die "Don't know how to run $package_name!";
     }
 }
