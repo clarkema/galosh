@@ -1,0 +1,19 @@
+#! /bin/bash -
+
+mua=$( galosh config core.mua )
+
+if [ -n "$1" ]; then
+    call=$1
+else
+    until [ -n "$call" ]; do
+        read -p "Call: " call
+    done
+fi
+
+address=$( galosh qrz --raw "$call" | awk -F "\t" '$1 == "email:" { print $2 }' )
+
+if [ -n "$address" ]; then
+    $mua -- $address
+else
+    echo "No e-mail address found for $call."
+fi
