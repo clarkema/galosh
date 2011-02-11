@@ -90,20 +90,23 @@ HELP
 
 sub cmd_compile
 {
-    mkdir $home_galosh_dir unless -d $home_galosh_dir;
-    mkdir $compiled_dir unless -d $compiled_dir;
-
     my $target_command = "galosh-$ARGV[1]";
     my $output_path = File::Spec->join( $compiled_dir, $target_command );
 
-    exec( "buildapp", ( '--eval', qq{(sb-ext:disable-debugger)},
-                        '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
-                        '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
-                        '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
-                        '--require', $target_command,
-                        '--entry',   "${target_command}::main",
-                        '--output',  $output_path ) );
+    if ( -e "$FindBin::RealBin/$target_command.asd" ) {
+        mkdir $home_galosh_dir unless -d $home_galosh_dir;
+        mkdir $compiled_dir unless -d $compiled_dir;
+
+        exec( "buildapp", ( '--eval', qq{(sb-ext:disable-debugger)},
+                            '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
+                            '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
+                            '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
+                            '--require', $target_command,
+                            '--entry',   "${target_command}::main",
+                            '--output',  $output_path ) );
+    }
 }
+
 
 sub cmd_journal
 {
