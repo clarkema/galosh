@@ -15,7 +15,8 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-qrz
-  (:use :cl :gl :galosh-qrzcom :clsql :galosh-grep :alexandria))
+  (:use :cl :gl :galosh-qrzcom :clsql :galosh-grep :alexandria)
+  (:export :offline-qrz-search))
 (in-package :galosh-qrz)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -63,11 +64,12 @@
     (let* ((c (string-upcase call))
 	   (r (first (select 'qrz-record :where [= 'call c] :limit 1 :caching nil :flatp t :database *qrz-db*))))
       (when r
-	(format t "~A, ~A~%" (string-upcase (qrz-lastname r)) (string-capitalize (qrz-firstname r)))
-	(format t "~A~&~A~&~A~&" (string-capitalize (qrz-mailstreet r))
-		(string-capitalize (qrz-mailcity r))
-		(string-capitalize (qrz-mailstate r)))
-	(princ-unless-nil (qrz-country-name r) :fl t)))))
+	(list
+	 (format nil "~A, ~A" (string-upcase (qrz-lastname r)) (string-capitalize (qrz-firstname r)))
+	 (string-capitalize (qrz-mailstreet r))
+	 (string-capitalize (qrz-mailcity r))
+	 (string-capitalize (qrz-mailstate r))
+	 (format nil "~A" (qrz-country-name r)))))))
 
 (defun raw-online-qrz-search (call)
   (let* ((client (make-instance 'qrzcom-client
@@ -144,7 +146,7 @@
 	 (sought (cdr (assoc "sought" options))))
     (if sought
 	(cond ((assoc "offline" options)
-	       (offline-qrz-search sought)
+	       (princ (join (offline-qrz-search sought) #\Newline))
 	       (print-logged-qsos sought))
 	      ((assoc "raw" options)
 	       (raw-online-qrz-search sought))

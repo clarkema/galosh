@@ -1,5 +1,6 @@
 (asdf:defsystem #:galosh-log
     :depends-on (#:galosh-lisp
+		 #:galosh-qrz
 		 #:clsql
 		 #:cl-ncurses
 		 #:alexandria)

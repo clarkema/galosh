@@ -25,8 +25,6 @@
 (defvar *qrg*     14260000)
 (defvar *mode*    "SSB")
 (defvar *iota*    nil)
-(defvar *history* ())
-(defparameter *history-size* 15)
 
 (defconstant +inv-green+ 1)
 
@@ -73,25 +71,36 @@
   (refresh))
 
 (defun print-history ()
-  (let* ((q (reverse (select 'qso
+  (let* ((history-size (- *LINES* 9)) ; 9 = 5 for qso, 3 status bars, 1 entry line
+	 (q (reverse (select 'qso
 			     :order-by '(([qso_date] :desc)([time_on] :desc))
-			     :limit *history-size*
+			     :limit history-size
 			     :caching nil
 			     :flatp t)))
 	 (q-length (length q)))
     (dotimes (i q-length)
-      (mvprintw (- *LINES* (- (+ *history-size* 2) i)) 0 (format nil "~a~%" (as-string (elt q i))))))
+      (mvprintw (- *LINES* (- (+ history-size 2) i)) 0 (format nil "~a~%" (as-string (elt q i))))))
   (refresh))
 
 (defun print-qso (q)
   (with-qso-accessors q
-    (mvprintw 1 0 (format nil "~a ~a ~a ~a ~a ~a~%"
-			  q-qso-date q-time-on q-hiscall
-			  q-qrg      q-rx-rst  q-tx-rst))
-    (mvprintw 2 4 (format nil "IOTA: ~a MODE: ~a GRID: ~a~%" q-his-iota q-mode q-his-grid))
-    (mvprintw 3 4 (format nil "Name: ~a~%" q-name))
-    (mvprintw 4 4 (format nil "Comment: ~a~%" q-comment))
-    (mvprintw 5 4 (format nil "Follow up? ~a~%" q-followup))
+    (mvprintw 1 0 (string-right-pad 40 (format nil "~a ~a ~a ~a ~a ~a"
+					       q-qso-date q-time-on q-hiscall
+					       q-qrg      q-rx-rst  q-tx-rst)))
+    (mvprintw 2 0 (string-right-pad 40 (format nil "    IOTA: ~a MODE: ~a GRID: ~a" q-his-iota q-mode q-his-grid)))
+    (mvprintw 3 0 (string-right-pad 40 (format nil "    Name: ~a" q-name)))
+    (mvprintw 4 0 (string-right-pad 40 (format nil "    Comment: ~a" q-comment)))
+    (mvprintw 5 0 (string-right-pad 40 (format nil "    Follow up? ~a" q-followup)))
+    (with-color +inv-green+
+      (mvprintw 6 0 (string-right-pad *COLS* " g:grid i:iota c:comment C:call n:name f:followup")))
+    (refresh)))
+
+(defun print-qrz-info (call)
+  (when (has-config-p "qrz.offlinedb")
+    (let ((i 1))
+      (dolist (line (galosh-qrz:offline-qrz-search call))
+	(mvprintw i 40 (format nil "~A~%" line))
+	(setf i (+ i 1))))
     (refresh)))
 
 (defun display-title-bar ()
@@ -195,6 +204,7 @@
 				:our-iota *iota*
 				:tx-rst (ensure-valid-rst tx-rst *mode*)
 				:rx-rst (ensure-valid-rst rx-rst *mode*))))
+	  (print-qrz-info call)
 	  (display-qso-and-prompt-for-options q)))))
 
 (defun process-command (string)
@@ -232,7 +242,14 @@
   (refresh)
   (let* ((raw-code (getch))
 	 (c (code-char raw-code)))
-    (cond ((eql c #\:)
+    (cond ((equal raw-code 410)
+	   (display-title-bar)
+	   (print-history)
+	   (display-status-bar)
+	   (print-buffer buffer)
+	   (refresh)
+	   (event-loop buffer))
+	  ((eql c #\:)
 	   (if (process-command (read-value :prompt ":"))
 	       (event-loop "")))
           ((eql c #\Newline)

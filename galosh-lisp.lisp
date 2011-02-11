@@ -38,6 +38,7 @@
 	   :missing-galosh-dir-error
 	   :qrg->band
 	   :human-date
+	   :has-config-p
 	   :get-config
 	   :check-required-config
 	   :missing-mandatory-configuration-error
@@ -203,6 +204,12 @@
 		   (has-option-p *config* section option))
 	(error 'missing-mandatory-configuration-error :text
 	       (format nil "Please update your configuration to provide a value for `~a'." ropt))))))
+
+(defun has-config-p (name)
+  (unless *config* (init-config))
+  (destructuring-bind (section option) (split #\. name)
+    (and (has-section-p *config* section)
+	 (has-option-p *config* section option))))
 
 (defun get-config (name)
   (unless *config* (init-config))
