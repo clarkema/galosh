@@ -191,6 +191,9 @@
       (print-history)
       qso)))
 
+(defun run-full-call-handlers (call)
+  (print-qrz-info call))
+
 (defun process-entry (buffer)
   (destructuring-bind (call &optional rx-rst tx-rst) (split-words buffer :first 3)
     (if (sane-callsign-p call)
@@ -204,6 +207,7 @@
 				:our-iota *iota*
 				:tx-rst (ensure-valid-rst tx-rst *mode*)
 				:rx-rst (ensure-valid-rst rx-rst *mode*))))
+	  (run-full-call-handlers call)
 	  (print-qrz-info call)
 	  (display-qso-and-prompt-for-options q)))))
 
@@ -256,14 +260,16 @@
 	   (unless (string-empty-p buffer)
 	     (process-entry buffer))
 	   (event-loop ""))
-	  ((eql c #\Tab)
-	   (event-loop (concatenate 'string buffer (string #\Space))))
+	  ((member c '(#\Tab #\Space))
+	   (when (= (length (split-words buffer)) 1)
+	     (run-full-call-handlers buffer))
+	   (event-loop (cats buffer (string #\Space))))
           ((eql c #\Rubout)
 	   (event-loop (drop-last buffer)))
 	  ((eql raw-code 23) ; ^W
 	   (event-loop (kill-last-word buffer)))
           (t
-	   (let ((b (concatenate 'string buffer (string-upcase (string c)))))
+	   (let ((b (cats buffer (string-upcase (string c)))))
 	     (event-loop b))))))
 
 (defun write-state (path)
