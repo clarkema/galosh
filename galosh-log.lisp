@@ -253,7 +253,7 @@
 	   (print-buffer buffer)
 	   (refresh)
 	   (event-loop buffer))
-	  ((eql c #\:)
+	  ((and (eql c #\:) (= (length buffer) 0))
 	   (if (process-command (read-value :prompt ":"))
 	       (event-loop "")))
           ((eql c #\Newline)
