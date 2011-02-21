@@ -149,8 +149,11 @@
 	 (sought (cdr (assoc "sought" options))))
     (if sought
 	(cond ((assoc "offline" options)
-	       (princ (join (offline-qrz-search sought) #\Newline))
-	       (print-logged-qsos sought))
+	       (if (has-offlinedb-p)
+		   (progn (princ (join (offline-qrz-search sought) #\Newline))
+			  (print-logged-qsos sought))
+		   (progn (say "Offline use of galosh qrz requires that you download and install the qrz.com")
+			  (say "database.  See 'man galosh-qrz' or 'info galosh' for more information."))))
 	      ((assoc "raw" options)
 	       (raw-online-qrz-search sought))
 	      (t (online-qrz-search sought)
