@@ -28,7 +28,7 @@
 (defconstant +inv-green+ 1)
 
 (defun init-history-buffer (size)
-  (setf *history* (make-list size :initial-element nil)
+  (setf *history* (make-list size :initial-element "")
 	(cdr (nthcdr (- *history-size* 1) *history*)) *history*
 	*history-head* *history*))
 
@@ -92,7 +92,7 @@
 			  (refresh)
 			  nil)
 			 ((eql c #\Newline)
-			  (history-push buffer)
+			  (history-push (parse-spot buffer))
 			  (display-history)
 			  (r ""))
 			 ((eql c #\Return)
@@ -105,26 +105,64 @@
   (bordeaux-threads:with-lock-held ((slot-value client 'write-lock))
     (princ string (slot-value client 'stream))
     (force-output (slot-value client 'stream))))
-  
+
+;;; ===================================================================
+;;; Spot
+;;; ===================================================================
+(defgeneric format-object (object))
+(defmethod format-object ((object spot))
+  (format nil "~A ~A by ~A at ~A ~A"
+	  (spot-spotted object)
+	  (spot-qrg object)
+	  (spot-spotter object)
+	  (spot-time object)
+	  (spot-comment object)))
+(defmethod format-object ((object t))
+  (format nil "~A~%" object))
+
+
+(defstruct spot
+  spotter
+  spotted
+  qrg
+  time
+  comment
+  qrz)
+
+; Line format (taken from DXSpider's DXCommandmode.pm)
+; return sprintf "DX de %-7.7s%11.1f  %-12.12s %-s $t$loc", "$_[4]:", $_[0], $_[1], $comment;
+(defun parse-spot (string)
+  (cl-ppcre:register-groups-bind (spotter-call spotted-qrg spotted-call comment time)
+				 ("^DX de (.{7})(.{11})  (.{12}) (.+?) (\\d{4}Z)" string)
+				 (return-from parse-spot (make-spot :spotted spotted-call
+								    :qrg spotted-qrg
+								    :spotter spotter-call
+								    :time time
+								    :comment comment)))
+  string)
+
 (defun display-title-bar ()
   (with-color +inv-green+
-    (mvprintw 0 0 (string-right-pad *COLS* (format nil " QRG: ~10a Mode: ~a IOTA: ~a" 'a 'b 'c)))))
+    (mvprintw 0 0 (string-right-pad *COLS* "Galosh Cluster"))))
 
 (defun display-history ()
   (dotimes (i *history-size*)
-    (mvprintw (+ 1 i) 0 (format nil "~a~%" (elt *history-head* i))))
+    (mvprintw (+ 1 i) 0 (format-object (elt *history-head* i))))
   (refresh))
 ;;;
 ;;; User side
 ;;;  
 
-(defun process-user-input ()
+(defun ncurses-main-loop ()
   (let* ((raw-code (getch))
 	 (c (code-char raw-code)))
-    (cond ((eql c #\q)
+    (cond ((= raw-code 410)
+	   (display-history))
+	  ((eql c #\q)
 	   (cluster-write *client* (format nil "q~%")))
 	  (t
-	   (process-user-input)))))
+	   (ncurses-main-loop)))))
+
 
 (defun write-state (path)
   (with-open-file (s path
@@ -166,7 +204,7 @@
 	   (start-interface)
 	   (bordeaux-threads:make-thread #'(lambda ()
 					     (start-cluster-client (get-config "cluster.host") (get-config "cluster.port"))))
-	   (process-user-input))
+	   (ncurses-main-loop))
       (join-all))
       (endwin)
       (write-state state-file)))
