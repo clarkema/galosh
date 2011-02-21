@@ -201,9 +201,9 @@ QSL Methods: eQSL
 @section Getting Started With The qrz.com Offline Database
 
 If you don't already have a database download account with
-@indicateurl{qrz.com}, go to @url{http://www.qrz.com/i/dlcatalog.html} and sign
+@indicateurl{qrz.com}, go to @url{http://www.qrz.com/pd/} and sign
 up.  Once you've signed up, download and unpack the archive described as
-`Smaller update package, no QSL images, for update only'.  In the unpacked
+`Single database file callbkc.dat, with index - sorted by callsign'.  In the unpacked
 files, you should see @file{callbkc.dat} and @file{country.dat}.  These contain
 the raw callsign and country data; for them to be useful to Galosh they must
 first be imported, using @command{galosh import-qrz-db}.
