@@ -1,0 +1,61 @@
+galosh-import-qrz-db(1)
+=======================
+
+NAME
+----
+galosh-import-qrz-db - Import qrz.com database for offline lookups
+
+SYNOPSIS
+--------
+`galosh import-qrz-db` '/path/to/callbkc.dat' '/path/to/country.dat'
+
+DESCRIPTION
+-----------
+Utility command to import the qrz.com offline database, for use by `galosh qrz`
+and other parts of the galosh suite.
+
+See the main Galosh user manual for information on obtaining the database from
+qrz.com.  Once you have downloaded and unzipped the database, simply call
+`galosh import-qrz-db`, passing in the paths to callbkc.dat and country.dat as
+above, and sit back and wait.
+
+By default, the qrz.com database will be imported into an SQLite3 database at
+'$HOME/.galosh/qrz.db'; so it is automatically shared between all your
+repositories.  If you need to change this location, edit your config file and
+set +qrz.offlinedb+ to your preferred path.
+
+Assuming you are editing '.galosh/config' in one of your repositories, and
+want to have a custom database just for that repository:
+--------------------------------------------------------
+[qrz]
+offlinedb = .galosh/qrz.db
+--------------------------------------------------------
+
+EXAMPLES
+--------
+
+--------------------------------------------------------
+$ galosh import-qrz-db callbkc.dat country.dat
+--------------------------------------------------------
+
+FILES
+-----
+
+'$HOME/.galosh/qrz.db'
+
+SEE ALSO
+--------
+`galosh-qrz(1)`
+
+Author
+------
+Written by Mike Clarke <clarkema@galosh.org.uk>.
+
+Documentation
+-------------
+
+Documentation by Mike Clarke.
+
+GALOSH
+------
+Part of the Galosh suite.
