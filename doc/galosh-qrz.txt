@@ -70,7 +70,7 @@ SEE ALSO
 
 Author
 ------
-Written by Mike Clarke <clarkema@clarkema.org>.
+Written by Mike Clarke <clarkema@galosh.org.uk>.
 
 Documentation
 -------------
