@@ -96,7 +96,7 @@
     (refresh)))
 
 (defun print-qrz-info (call)
-  (when (has-config-p "qrz.offlinedb")
+  (when (galosh-qrz:has-offlinedb-p)
     (let ((i 1))
       (dolist (line (galosh-qrz:offline-qrz-search call))
 	(mvprintw i 40 (format nil "~A~%" line))

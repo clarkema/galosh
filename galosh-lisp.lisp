@@ -193,7 +193,9 @@
 			      (list "[core]"
 				    (cats "log = " (namestring (merge-pathnames "log.db" (fatal-get-galosh-dir))))
 				    "[log]"
-				    (cats "attic = " (namestring (merge-pathnames "log.attic" (fatal-get-galosh-dir)))))
+				    (cats "attic = " (namestring (merge-pathnames "log.attic" (fatal-get-galosh-dir))))
+				    "[qrz]"
+				    (cats "offlinedb = " (namestring (merge-pathnames "qrz.db" (merge-pathnames (make-pathname :directory '(:relative ".galosh")) (user-homedir-pathname))))))
 			      #\Newline))
     (setf config (read-stream config s))))
 

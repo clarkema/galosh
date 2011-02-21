@@ -16,7 +16,7 @@
 
 (defpackage :galosh-qrz
   (:use :cl :gl :galosh-qrzcom :clsql :galosh-grep :alexandria)
-  (:export :offline-qrz-search))
+  (:export :has-offlinedb-p :offline-qrz-search))
 (in-package :galosh-qrz)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -35,6 +35,9 @@
 	 (when *qrz-db*
 	   (disconnect :database *qrz-db*)
 	   (setf *qrz-db* nil))))))
+
+(defun has-offlinedb-p ()
+  (and (has-config-p "qrz.offlinedb") (probe-file (get-config "qrz.offlinedb"))))
 
 (defun get-country-translations ()
   (with-transaction (:database *qrz-db*)
