@@ -1,0 +1,43 @@
+galosh-email(1)
+===============
+
+NAME
+----
+galosh-email - E-mail amateur radio operators by callsign
+
+SYNOPSIS
+--------
+`galosh email` [<callsign>]
+
+DESCRIPTION
+-----------
+`galosh email` is a very thin wrapper around `galosh qrz`, which uses the
+qrz.com XML API to look up another operator's e-mail address, which it then
+passes to your chosen mail user agent.
+
+For this to work, you must:
+
+. have set up `galosh qrz` so that it works for XML API queries (i.e., online mode); and
+. be connected to the Internet.
+
+SETUP
+-----
+`galosh qrz` uses qrz.com as its data source for callsign lookups, so you will
+need an account.  For more information on this, see the main Galosh user manual.
+
+SEE ALSO
+--------
+`galosh-qrz(1)`
+
+Author
+------
+Written by Mike Clarke <clarkema@galosh.org.uk>.
+
+Documentation
+-------------
+
+Documentation by Mike Clarke.
+
+GALOSH
+------
+Part of the Galosh suite.
