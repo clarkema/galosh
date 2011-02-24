@@ -6,7 +6,7 @@ install-quicklisp:
 	rm quicklisp.lisp
 
 ensure-deps:
-	sbcl --load quicklisp/setup.lisp --eval "(ql:quickload 'galosh)" --eval "(quit)"
+	sbcl --no-userinit --load quicklisp/setup.lisp --eval "(ql:quickload 'galosh)" --eval "(quit)"
 
 clean:
 	rm -rf quicklisp
