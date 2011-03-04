@@ -1,0 +1,752 @@
+%% galosh -- amateur radio utilities.
+%% Copyright (C) 2011, Michael Clarke, M0PRL
+%% <clarkema -at- clarkema.org>
+%%
+%% This program is free software: you can redistribute it and/or modify
+%% it under the terms of the GNU General Public License Version 3, as
+%% published by the Free Software Foundation.
+%%
+%% This program is distributed in the hope that it will be useful,
+%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%% GNU General Public License for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+%% The data in this document are derived from the offical ARRL list, which
+%% may be found at http://www.arrl.org/country-lists-prefixes, and in text
+%% form at http://www.arrl.org/files/file/dxcclist.txt.
+
+%% Use:
+%%
+%% Building this document requires that you have a working LaTeX system
+%% install; ideally one that provides pdflatex(1).
+%%
+%% Given that, the easiest way to build a document is using the supplied
+%% Makefile:
+%%
+%% $ make dxcc
+%%
+%% If you would like your callsign to appear on the right-hand side of the
+%% header, run make as follows:
+%%
+%% $ CALL=VP8DMH make dxcc
+%%
+%% Or edit the line below:
+\providecommand{\call}{}
+%% \providecommand{\call}{VP8DMH}
+%%
+%% To print on US-style Letter paper rather than A4, comment out the line
+%% containing 'a4paper' below, and uncomment the line containing 'letter'.
+\documentclass[a4paper]{article}
+%% \documentclass[letter]{article}
+
+\usepackage{longtable}
+\usepackage[hmargin=1.5cm,vmargin=3cm]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+
+\begin{document}
+
+\lhead{DXCC Checklist}
+\rhead{\call}
+
+\renewcommand\arraystretch{2}
+\raggedright
+\begin{longtable}{|p{1.5cm}|p{4cm}|l|p{2cm}|p{2cm}|p{2cm}|}
+\hline
+Prefix & Entity & Cont. & Phone & CW & Data \\
+\hline
+\hline
+\endfirsthead
+\hline
+Prefix & Entity & Cont. & Phone & CW & Data \\
+\hline
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+                       & Spratly Is.                                & AS    & & & \\
+\hline
+1A                     & Sov. Mil. Order of Malta                   & EU    & & & \\
+\hline
+3A                     & Monaco                                     & EU    & & & \\
+\hline
+3B6, 7                 & Agalega \& St. Brandon Is.                 & AF    & & & \\
+\hline
+3B8                    & Mauritius                                  & AF    & & & \\
+\hline
+3B9                    & Rodriguez I.                               & AF    & & & \\
+\hline
+3C                     & Equatorial Guinea                          & AF    & & & \\
+\hline
+3C0                    & Annobon I.                                 & AF    & & & \\
+\hline
+3D2                    & Fiji                                       & OC    & & & \\
+\hline
+3D2                    & Conway Reef                                & OC    & & & \\
+\hline
+3D2                    & Rotuma I.                                  & OC    & & & \\
+\hline
+3DA                    & Swaziland                                  & AF    & & & \\
+\hline
+3V                     & Tunisia                                    & AF    & & & \\
+\hline
+3W, XV                 & Viet Nam                                   & AS    & & & \\
+\hline
+3X                     & Guinea                                     & AF    & & & \\
+\hline
+3Y                     & Bouvet                                     & AF    & & & \\
+\hline
+3Y                     & Peter I I.                                 & AN    & & & \\
+\hline
+4J, 4K                 & Azerbaijan                                 & AS    & & & \\
+\hline
+4L                     & Georgia                                    & AS    & & & \\
+\hline
+4O                     & Montenegro                                 & EU    & & & \\
+\hline
+4S                     & Sri Lanka                                  & AS    & & & \\
+\hline
+4U ITU                 & ITU HQ                                     & EU    & & & \\
+\hline
+4U UN                  & United Nations HQ                          & NA    & & & \\
+\hline
+4W                     & Timor-Leste                                & OC    & & & \\
+\hline
+4X, 4Z                 & Israel                                     & AS    & & & \\
+\hline
+5A                     & Libya                                      & AF    & & & \\
+\hline
+5B, C4, P3             & Cyprus                                     & AS    & & & \\
+\hline
+5H-5I                  & Tanzania                                   & AF    & & & \\
+\hline
+5N                     & Nigeria                                    & AF    & & & \\
+\hline
+5R                     & Madagascar                                 & AF    & & & \\
+\hline
+5T                     & Mauritania                                 & AF    & & & \\
+\hline
+5U                     & Niger                                      & AF    & & & \\
+\hline
+5V                     & Togo                                       & AF    & & & \\
+\hline
+5W                     & Samoa                                      & OC    & & & \\
+\hline
+5X                     & Uganda                                     & AF    & & & \\
+\hline
+5Y-5Z                  & Kenya                                      & AF    & & & \\
+\hline
+6V-6W                  & Senegal                                    & AF    & & & \\
+\hline
+6Y                     & Jamaica                                    & NA    & & & \\
+\hline
+7O                     & Yemen                                      & AS    & & & \\
+\hline
+7P                     & Lesotho                                    & AF    & & & \\
+\hline
+7Q                     & Malawi                                     & AF    & & & \\
+\hline
+7T-7Y                  & Algeria                                    & AF    & & & \\
+\hline
+8P                     & Barbados                                   & NA    & & & \\
+\hline
+8Q                     & Maldives                                   & AS/AF & & & \\
+\hline
+8R                     & Guyana                                     & SA    & & & \\
+\hline
+9A                     & Croatia                                    & EU    & & & \\
+\hline
+9G                     & Ghana                                      & AF    & & & \\
+\hline
+9H                     & Malta                                      & EU    & & & \\
+\hline
+9I-9J                  & Zambia                                     & AF    & & & \\
+\hline
+9K                     & Kuwait                                     & AS    & & & \\
+\hline
+9L                     & Sierra Leone                               & AF    & & & \\
+\hline
+9M2, 4                 & West Malaysia                              & AS    & & & \\
+\hline
+9M6, 8                 & East Malaysia                              & OC    & & & \\
+\hline
+9N                     & Nepal                                      & AS    & & & \\
+\hline
+9Q-9T                  & Dem. Rep. of Congo                         & AF    & & & \\
+\hline
+9U                     & Burundi                                    & AF    & & & \\
+\hline
+9V                     & Singapore                                  & AS    & & & \\
+\hline
+9X                     & Rwanda                                     & AF    & & & \\
+\hline
+9Y-9Z                  & Trinidad \& Tobago                         & SA    & & & \\
+\hline
+A2                     & Botswana                                   & AF    & & & \\
+\hline
+A3                     & Tonga                                      & OC    & & & \\
+\hline
+A4                     & Oman                                       & AS    & & & \\
+\hline
+A5                     & Bhutan                                     & AS    & & & \\
+\hline
+A6                     & United Arab Emirates                       & AS    & & & \\
+\hline
+A7                     & Qatar                                      & AS    & & & \\
+\hline
+A9                     & Bahrain                                    & AS    & & & \\
+\hline
+AP                     & Pakistan                                   & AS    & & & \\
+\hline
+B                      & China                                      & AS    & & & \\
+\hline
+BS7                    & Scarborough Reef                           & AS    & & & \\
+\hline
+BV                     & Taiwan                                     & AS    & & & \\
+\hline
+BV9P                   & Pratas I.                                  & AS    & & & \\
+\hline
+C2                     & Nauru                                      & OC    & & & \\
+\hline
+C3                     & Andorra                                    & EU    & & & \\
+\hline
+C5                     & The Gambia                                 & AF    & & & \\
+\hline
+C6                     & Bahamas                                    & NA    & & & \\
+\hline
+C8-9                   & Mozambique                                 & AF    & & & \\
+\hline
+CA-CE                  & Chile                                      & SA    & & & \\
+\hline
+CE0                    & Easter I.                                  & SA    & & & \\
+\hline
+CE0                    & Juan Fernandez Is.                         & SA    & & & \\
+\hline
+CE0                    & San Felix \& San Ambrosio                  & SA    & & & \\
+\hline
+CE9/KC4                & Antarctica                                 & AN    & & & \\
+\hline
+CM, CO                 & Cuba                                       & NA    & & & \\
+\hline
+CN                     & Morocco                                    & AF    & & & \\
+\hline
+CP                     & Bolivia                                    & SA    & & & \\
+\hline
+CT                     & Portugal                                   & EU    & & & \\
+\hline
+CT3                    & Madeira Is.                                & AF    & & & \\
+\hline
+CU                     & Azores                                     & EU    & & & \\
+\hline
+CV-CX                  & Uruguay                                    & SA    & & & \\
+\hline
+CY0                    & Sable I.                                   & NA    & & & \\
+\hline
+CY9                    & St. Paul I.                                & NA    & & & \\
+\hline
+D2-3                   & Angola                                     & AF    & & & \\
+\hline
+D4                     & Cape Verde                                 & AF    & & & \\
+\hline
+D6                     & Comoros                                    & AF    & & & \\
+\hline
+DA-DR                  & Fed. Rep. of Germany                       & EU    & & & \\
+\hline
+DU-DZ                  & Philippines                                & OC    & & & \\
+\hline
+E3                     & Eritrea                                    & AF    & & & \\
+\hline
+E4                     & Palestine                                  & AS    & & & \\
+\hline
+E5                     & N. Cook Is.                                & OC    & & & \\
+\hline
+E5                     & S. Cook Is.                                & OC    & & & \\
+\hline
+E7                     & Bosnia-Herzegovina                         & EU    & & & \\
+\hline
+EA-EH                  & Spain                                      & EU    & & & \\
+\hline
+EA6-EH6                & Balearic Is.                               & EU    & & & \\
+\hline
+EA8-EH8                & Canary Is.                                 & AF    & & & \\
+\hline
+EA9-EH9                & Ceuta \& Melilla                           & AF    & & & \\
+\hline
+EI-EJ                  & Ireland                                    & EU    & & & \\
+\hline
+EK                     & Armenia                                    & AS    & & & \\
+\hline
+EL                     & Liberia                                    & AF    & & & \\
+\hline
+EP-EQ                  & Iran                                       & AS    & & & \\
+\hline
+ER                     & Moldova                                    & EU    & & & \\
+\hline
+ES                     & Estonia                                    & EU    & & & \\
+\hline
+ET                     & Ethiopia                                   & AF    & & & \\
+\hline
+EU-EW                  & Belarus                                    & EU    & & & \\
+\hline
+EX                     & Kyrgyzstan                                 & AS    & & & \\
+\hline
+EY                     & Tajikistan                                 & AS    & & & \\
+\hline
+EZ                     & Turkmenistan                               & AS    & & & \\
+\hline
+F                      & France                                     & EU    & & & \\
+\hline
+FG                     & Guadeloupe                                 & NA    & & & \\
+\hline
+FH                     & Mayotte                                    & AF    & & & \\
+\hline
+FJ                     & Saint Barthelemy                           & NA    & & & \\
+\hline
+FK                     & New Caledonia                              & OC    & & & \\
+\hline
+FK                     & Chesterfield Is.                           & OC    & & & \\
+\hline
+FM                     & Martinique                                 & NA    & & & \\
+\hline
+FO                     & Austral I.                                 & OC    & & & \\
+\hline
+FO                     & Clipperton I.                              & NA    & & & \\
+\hline
+FO                     & French Polynesia                           & OC    & & & \\
+\hline
+FO                     & Marquesas Is.                              & OC    & & & \\
+\hline
+FP                     & St. Pierre \& Miquelon                     & NA    & & & \\
+\hline
+FR/G                   & Glorioso Is.                               & AF    & & & \\
+\hline
+FR/J, E                & Juan de Nova, Europa                       & AF    & & & \\
+\hline
+FR                     & Reunion I.                                 & AF    & & & \\
+\hline
+FR/T                   & Tromelin I.                                & AF    & & & \\
+\hline
+FS                     & Saint Martin                               & NA    & & & \\
+\hline
+FT/W                   & Crozet I.                                  & AF    & & & \\
+\hline
+FT/X                   & Kerguelen Is.                              & AF    & & & \\
+\hline
+FT/Z                   & Amsterdam \& St. Paul Is.                  & AF    & & & \\
+\hline
+FW                     & Wallis \& Futuna Is.                       & OC    & & & \\
+\hline
+FY                     & French Guiana                              & SA    & & & \\
+\hline
+G, GX, M               & England                                    & EU    & & & \\
+\hline
+GD, GT                 & Isle of Man                                & EU    & & & \\
+\hline
+GI, GN                 & Northern Ireland                           & EU    & & & \\
+\hline
+GJ, GH                 & Jersey                                     & EU    & & & \\
+\hline
+GM, GS                 & Scotland                                   & EU    & & & \\
+\hline
+GU, GP                 & Guernsey                                   & EU    & & & \\
+\hline
+GW, GC                 & Wales                                      & EU    & & & \\
+\hline
+H4                     & Solomon Is.                                & OC    & & & \\
+\hline
+H40                    & Temotu Province                            & OC    & & & \\
+\hline
+HA, HG                 & Hungary                                    & EU    & & & \\
+\hline
+HB                     & Switzerland                                & EU    & & & \\
+\hline
+HB0                    & Liechtenstein                              & EU    & & & \\
+\hline
+HC-HD                  & Ecuador                                    & SA    & & & \\
+\hline
+HC8-HD8                & Galapagos Is.                              & SA    & & & \\
+\hline
+HH                     & Haiti                                      & NA    & & & \\
+\hline
+HI                     & Dominican Republic                         & NA    & & & \\
+\hline
+HJ-HK, 5J-5K           & Colombia                                   & SA    & & & \\
+\hline
+HK0                    & Malpelo I.                                 & SA    & & & \\
+\hline
+HK0                    & San Andres \& Providencia                  & NA    & & & \\
+\hline
+HL, 6K-6N              & Republic of Korea                          & AS    & & & \\
+\hline
+HO-HP                  & Panama                                     & NA    & & & \\
+\hline
+HQ-HR                  & Honduras                                   & NA    & & & \\
+\hline
+HS, E2                 & Thailand                                   & AS    & & & \\
+\hline
+HV                     & Vatican                                    & EU    & & & \\
+\hline
+HZ                     & Saudi Arabia                               & AS    & & & \\
+\hline
+I                      & Italy                                      & EU    & & & \\
+\hline
+IS0, IM0               & Sardinia                                   & EU    & & & \\
+\hline
+J2                     & Djibouti                                   & AF    & & & \\
+\hline
+J3                     & Grenada                                    & NA    & & & \\
+\hline
+J5                     & Guinea-Bissau                              & AF    & & & \\
+\hline
+J6                     & St. Lucia                                  & NA    & & & \\
+\hline
+J7                     & Dominica                                   & NA    & & & \\
+\hline
+J8                     & St. Vincent                                & NA    & & & \\
+\hline
+JA-JS, 7J-7N           & Japan                                      & AS    & & & \\
+\hline
+JD1                    & Minami Torishima                           & OC    & & & \\
+\hline
+JD1                    & Ogasawara                                  & AS    & & & \\
+\hline
+JT-JV                  & Mongolia                                   & AS    & & & \\
+\hline
+JW                     & Svalbard                                   & EU    & & & \\
+\hline
+JX                     & Jan Mayen                                  & EU    & & & \\
+\hline
+JY                     & Jordan                                     & AS    & & & \\
+\hline
+K,W,N, AA-AK           & United States of America                   & NA    & & & \\
+\hline
+KG4                    & Guantanamo Bay                             & NA    & & & \\
+\hline
+KH0                    & Mariana Is.                                & OC    & & & \\
+\hline
+KH1                    & Baker \& Howland Is.                       & OC    & & & \\
+\hline
+KH2                    & Guam                                       & OC    & & & \\
+\hline
+KH3                    & Johnston I.                                & OC    & & & \\
+\hline
+KH4                    & Midway I.                                  & OC    & & & \\
+\hline
+KH5                    & Palmyra \& Jarvis Is.                      & OC    & & & \\
+\hline
+KH5K                   & Kingman Reef                               & OC    & & & \\
+\hline
+KH6,7                  & Hawaii                                     & OC    & & & \\
+\hline
+KH7K                   & Kure I.                                    & OC    & & & \\
+\hline
+KH8                    & American Samoa                             & OC    & & & \\
+\hline
+KH8                    & Swains I.                                  & OC    & & & \\
+\hline
+KH9                    & Wake I.                                    & OC    & & & \\
+\hline
+KL,AL, NL,WL           & Alaska                                     & NA    & & & \\
+\hline
+KP1                    & Navassa I.                                 & NA    & & & \\
+\hline
+KP2                    & Virgin Is.                                 & NA    & & & \\
+\hline
+KP3,4                  & Puerto Rico                                & NA    & & & \\
+\hline
+KP5                    & Desecheo I.                                & NA    & & & \\
+\hline
+LA-LN                  & Norway                                     & EU    & & & \\
+\hline
+LO-LW                  & Argentina                                  & SA    & & & \\
+\hline
+LX                     & Luxembourg                                 & EU    & & & \\
+\hline
+LY                     & Lithuania                                  & EU    & & & \\
+\hline
+LZ                     & Bulgaria                                   & EU    & & & \\
+\hline
+OA-OC                  & Peru                                       & SA    & & & \\
+\hline
+OD                     & Lebanon                                    & AS    & & & \\
+\hline
+OE                     & Austria                                    & EU    & & & \\
+\hline
+OF-OI                  & Finland                                    & EU    & & & \\
+\hline
+OH0                    & Aland Is.                                  & EU    & & & \\
+\hline
+OJ0                    & Market Reef                                & EU    & & & \\
+\hline
+OK-OL                  & Czech Republic                             & EU    & & & \\
+\hline
+OM                     & Slovak Republic                            & EU    & & & \\
+\hline
+ON-OT                  & Belgium                                    & EU    & & & \\
+\hline
+OU-OW, OZ              & Denmark                                    & EU    & & & \\
+\hline
+OX                     & Greenland                                  & NA    & & & \\
+\hline
+OY                     & Faroe Is.                                  & EU    & & & \\
+\hline
+P2                     & Papua New Guinea                           & OC    & & & \\
+\hline
+P4                     & Aruba                                      & SA    & & & \\
+\hline
+P5                     & DPR of Korea                               & AS    & & & \\
+\hline
+PA-PI                  & Netherlands                                & EU    & & & \\
+\hline
+PJ2, 4, 9              & Bonaire, Curacao                           & SA    & & & \\
+\hline
+PJ5-8                  & St. Maarten, Saba, St. Eustatius           & NA    & & & \\
+\hline
+PP-PY                  & Brazil                                     & SA    & & & \\
+\hline
+PP0-PY0F               & Fernando de Noronha                        & SA    & & & \\
+\hline
+PP0-PY0S               & St. Peter \& St. Paul Rocks                & SA    & & & \\
+\hline
+PP0-PY0T               & Trindade \& Martim Vaz Is.                 & SA    & & & \\
+\hline
+PZ                     & Suriname                                   & SA    & & & \\
+\hline
+R1FJ                   & Franz Josef Land                           & EU    & & & \\
+\hline
+R1MV                   & Malyj Vysotskij I.                         & EU    & & & \\
+\hline
+S0                     & Western Sahara                             & AF    & & & \\
+\hline
+S2                     & Bangladesh                                 & AS    & & & \\
+\hline
+S5                     & Slovenia                                   & EU    & & & \\
+\hline
+S7                     & Seychelles                                 & AF    & & & \\
+\hline
+S9                     & Sao Tome \& Principe                       & AF    & & & \\
+\hline
+SA-SM                  & Sweden                                     & EU    & & & \\
+\hline
+SN-SR                  & Poland                                     & EU    & & & \\
+\hline
+ST                     & Sudan                                      & AF    & & & \\
+\hline
+SU                     & Egypt                                      & AF    & & & \\
+\hline
+SV-SZ, J4              & Greece                                     & EU    & & & \\
+\hline
+SV/A                   & Mount Athos                                & EU    & & & \\
+\hline
+SV5, J45               & Dodecanese                                 & EU    & & & \\
+\hline
+SV9, J49               & Crete                                      & EU    & & & \\
+\hline
+T2                     & Tuvalu                                     & OC    & & & \\
+\hline
+T30                    & W. Kiribati (Gilbert Is. )                 & OC    & & & \\
+\hline
+T31                    & C. Kiribati (British Phoenix Is.)          & OC    & & & \\
+\hline
+T32                    & E. Kiribati (Line Is.)                     & OC    & & & \\
+\hline
+T33                    & Banaba I. (Ocean I.)                       & OC    & & & \\
+\hline
+T5, 6O                 & Somalia                                    & AF    & & & \\
+\hline
+T7                     & San Marino                                 & EU    & & & \\
+\hline
+T8                     & Palau                                      & OC    & & & \\
+\hline
+TA-TC                  & Turkey                                     & EU/AS & & & \\
+\hline
+TF                     & Iceland                                    & EU    & & & \\
+\hline
+TG, TD                 & Guatemala                                  & NA    & & & \\
+\hline
+TI, TE                 & Costa Rica                                 & NA    & & & \\
+\hline
+TI9                    & Cocos I.                                   & NA    & & & \\
+\hline
+TJ                     & Cameroon                                   & AF    & & & \\
+\hline
+TK                     & Corsica                                    & EU    & & & \\
+\hline
+TL                     & Central Africa                             & AF    & & & \\
+\hline
+TN                     & Congo (Republic of the)                    & AF    & & & \\
+\hline
+TR                     & Gabon                                      & AF    & & & \\
+\hline
+TT                     & Chad                                       & AF    & & & \\
+\hline
+TU                     & Cote d'Ivoire                              & AF    & & & \\
+\hline
+TY                     & Benin                                      & AF    & & & \\
+\hline
+TZ                     & Mali                                       & AF    & & & \\
+\hline
+UA-UI1,3,4,6 RA-RZ     & European Russia                            & EU    & & & \\
+\hline
+UA2                    & Kaliningrad                                & EU    & & & \\
+\hline
+UA-UI8,9,0 RA-RZ       & Asiatic Russia                             & AS    & & & \\
+\hline
+UJ-UM                  & Uzbekistan                                 & AS    & & & \\
+\hline
+UN-UQ                  & Kazakhstan                                 & AS    & & & \\
+\hline
+UR-UZ, EM-EO           & Ukraine                                    & EU    & & & \\
+\hline
+V2                     & Antigua \& Barbuda                         & NA    & & & \\
+\hline
+V3                     & Belize                                     & NA    & & & \\
+\hline
+V4                     & St. Kitts \& Nevis                         & NA    & & & \\
+\hline
+V5                     & Namibia                                    & AF    & & & \\
+\hline
+V6                     & Micronesia                                 & OC    & & & \\
+\hline
+V7                     & Marshall Is.                               & OC    & & & \\
+\hline
+V8                     & Brunei Darussalam                          & OC    & & & \\
+\hline
+VE, VO, VY             & Canada                                     & NA    & & & \\
+\hline
+VK                     & Australia                                  & OC    & & & \\
+\hline
+VK0                    & Heard I.                                   & AF    & & & \\
+\hline
+VK0                    & Macquarie I.                               & OC    & & & \\
+\hline
+VK9C                   & Cocos (Keeling) Is.                        & OC    & & & \\
+\hline
+VK9L                   & Lord Howe I.                               & OC    & & & \\
+\hline
+VK9M                   & Mellish Reef                               & OC    & & & \\
+\hline
+VK9N                   & Norfolk I.                                 & OC    & & & \\
+\hline
+VK9W                   & Willis I.                                  & OC    & & & \\
+\hline
+VK9X                   & Christmas I.                               & OC    & & & \\
+\hline
+VP2E                   & Anguilla                                   & NA    & & & \\
+\hline
+VP2M                   & Montserrat                                 & NA    & & & \\
+\hline
+VP2V                   & British Virgin Is.                         & NA    & & & \\
+\hline
+VP5                    & Turks \& Caicos Is.                        & NA    & & & \\
+\hline
+VP6                    & Pitcairn I.                                & OC    & & & \\
+\hline
+VP6                    & Ducie I.                                   & OC    & & & \\
+\hline
+VP8                    & Falkland Is.                               & SA    & & & \\
+\hline
+VP8, LU                & South Georgia I.                           & SA    & & & \\
+\hline
+VP8, LU                & South Orkney Is.                           & SA    & & & \\
+\hline
+VP8, LU                & South Sandwich Is.                         & SA    & & & \\
+\hline
+VP8, LU, CE9, HF0, 4K1 & South Shetland Is.                         & SA    & & & \\
+\hline
+VP9                    & Bermuda                                    & NA    & & & \\
+\hline
+VQ9                    & Chagos Is.                                 & AF    & & & \\
+\hline
+VR                     & Hong Kong                                  & AS    & & & \\
+\hline
+VU                     & India                                      & AS    & & & \\
+\hline
+VU4                    & Andaman \& Nicobar Is.                     & AS    & & & \\
+\hline
+VU7                    & Lakshadweep Is.                            & AS    & & & \\
+\hline
+XA-XI                  & Mexico                                     & NA    & & & \\
+\hline
+XA4-XI4                & Revillagigedo                              & NA    & & & \\
+\hline
+XT                     & Burkina Faso                               & AF    & & & \\
+\hline
+XU                     & Cambodia                                   & AS    & & & \\
+\hline
+XW                     & Laos                                       & AS    & & & \\
+\hline
+XX9                    & Macao                                      & AS    & & & \\
+\hline
+XY-XZ                  & Myanmar                                    & AS    & & & \\
+\hline
+YA                     & Afghanistan                                & AS    & & & \\
+\hline
+YB-YH                  & Indonesia                                  & OC    & & & \\
+\hline
+YI                     & Iraq                                       & AS    & & & \\
+\hline
+YJ                     & Vanuatu                                    & OC    & & & \\
+\hline
+YK                     & Syria                                      & AS    & & & \\
+\hline
+YL                     & Latvia                                     & EU    & & & \\
+\hline
+YN,H6-7,HT             & Nicaragua                                  & NA    & & & \\
+\hline
+YO-YR                  & Romania                                    & EU    & & & \\
+\hline
+YS, HU                 & El Salvador                                & NA    & & & \\
+\hline
+YT-YU                  & Serbia                                     & EU    & & & \\
+\hline
+YV-YY, 4M              & Venezuela                                  & SA    & & & \\
+\hline
+YV0                    & Aves I.                                    & NA    & & & \\
+\hline
+Z2                     & Zimbabwe                                   & AF    & & & \\
+\hline
+Z3                     & Macedonia                                  & EU    & & & \\
+\hline
+ZA                     & Albania                                    & EU    & & & \\
+\hline
+ZB2                    & Gibraltar                                  & EU    & & & \\
+\hline
+ZC4                    & UK Sov. Bases on Cyprus                    & AS    & & & \\
+\hline
+ZD7                    & St. Helena                                 & AF    & & & \\
+\hline
+ZD8                    & Ascension I.                               & AF    & & & \\
+\hline
+ZD9                    & Tristan da Cunha \& Gough I.               & AF    & & & \\
+\hline
+ZF                     & Cayman Is.                                 & NA    & & & \\
+\hline
+ZK2                    & Niue                                       & OC    & & & \\
+\hline
+ZK3                    & Tokelau Is.                                & OC    & & & \\
+\hline
+ZL-ZM                  & New Zealand                                & OC    & & & \\
+\hline
+ZL7                    & Chatham Is.                                & OC    & & & \\
+\hline
+ZL8                    & Kermadec Is.                               & OC    & & & \\
+\hline
+ZL9                    & Auckland \& Campbell Is.                   & OC    & & & \\
+\hline
+ZP                     & Paraguay                                   & SA    & & & \\
+\hline
+ZR-ZU                  & South Africa                               & AF    & & & \\
+\hline
+ZS8                    & Prince Edward \& Marion Is.                & AF    & & & \\
+\end{longtable}
+
+\footnotetext[1]{Derived from http://www.arrl.org/files/file/dxcclist.txt (May 2009 Edition).}
+
+\end{document}
