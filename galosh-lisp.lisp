@@ -18,6 +18,7 @@
   (:nicknames :gl)
   (:use :cl :clsql :py-configparser :alexandria)
   (:export :*galosh-db*
+	   :with-safe-io-syntax
 	   :split
 	   :split-words
 	   :default-rst-for-mode
@@ -57,6 +58,11 @@
 
 (defparameter *short-month-names*
   '("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sept" "Oct" "Nov" "Dec"))
+
+(defmacro with-safe-io-syntax (&body body)
+  `(with-standard-io-syntax
+     (let ((*read-eval* nil))
+       ,@body)))
 
 (defmacro split (sep seq)
   `(split-sequence:split-sequence ,sep ,seq))
