@@ -42,7 +42,10 @@
 	   :get-config
 	   :check-required-config
 	   :missing-mandatory-configuration-error
-	   :terminate))
+	   :terminate
+	   :deg->rad
+	   :rad->deg
+	   :great-circle-heading))
 
 (in-package :galosh-lisp)
 
@@ -245,3 +248,63 @@
   #+abcl     (   ext:quit      :status status)         ; Armed Bear CL
   #+allegro  (  excl:exit      status :quiet t)        ; Allegro CL
   (cl-user::quit))           ; Many implementations put QUIT in the sandbox CL-USER package.
+
+;;
+;; A simplistic function to convert a Maidenhead locator to a list of
+;; (lat, long) as decimal degrees.  The method is taken from the
+;; Wikipedia page on Maidenhead locators, at
+;; http://en.wikipedia.org/wiki/Maidenhead_Locator_System
+;;
+(defun locator->decdeg (l)
+  "Convert a Maidenhead locator to latitude and longitude as decimal degrees."
+  ;; Field
+  (let ((long (* (- (char-code (char (string-upcase l) 0)) (char-code #\A)) 20))
+	(lat  (* (- (char-code (char (string-upcase l) 1)) (char-code #\A)) 10)))
+    ;; Square
+    (when (> (length l) 2)
+      (setf long (+ long (* (parse-integer (string (char l 2))) 2))
+	    lat  (+ lat     (parse-integer (string (char l 3))))))
+    ;; Subsquare
+    (when (> (length l) 4)
+      (setf long (+ long (* (- (char-code (char (string-upcase l) 4)) (char-code #\A)) 5/60))
+	    lat  (+ lat  (* (- (char-code (char (string-upcase l) 5)) (char-code #\A)) 5/120))))
+    (list (float (- lat 90)) (float (- long 180)))))
+
+(defun rad->deg (x)
+  "Covert radians to decimal degrees."
+  (* x (/ 180 pi)))
+
+(defun deg->rad (x)
+  "Convert decimal degrees to radians."
+  (* x (/ pi  180)))
+
+;;
+;; Calculate the great-circle heading between two points.  Points may
+;; be specificed either as Maidenhead locators or as lists of
+;; (lat long).  The actual work is farmed out to great-circle-heading*
+;; after inputs have been sanitized.
+;;
+;; The algorithm used was taken from:
+;;  http://en.wikipedia.org/wiki/Great-circle_navigation and
+;;  http://www.movable-type.co.uk/scripts/latlong.html
+;;
+(defun great-circle-heading (from to)
+  "Calculate the great-circle heading between two points, specified either as
+   Maidenhead locators or as lists of (lat, long) in decimal degrees."
+  (labels ((convert-grid (o) (if (stringp o)
+				  (locator->decdeg o)
+				  o)))
+    (let ((heading (great-circle-heading* (convert-grid from) (convert-grid to))))
+      (values heading (if (<= 180 heading) (- heading 180) (+ heading 180))))))
+
+(defun great-circle-heading* (from to)
+  (labels ((norm (x) (mod (+ x 360) 360)))
+    (let* ((theta-s (deg->rad (first from)))
+	   (lambda-s (deg->rad (second from)))
+	   (theta-f (deg->rad (first to)))
+	   (lambda-f (deg->rad (second to)))
+	   (delta-long (- lambda-f lambda-s))
+	   (SA (* (cos theta-f) (sin delta-long)))
+	   (SB (- (* (cos theta-s) (sin theta-f))
+		  (* (sin theta-s) (cos theta-f) (cos delta-long)))))
+      (norm (rad->deg (atan SA SB))))))
