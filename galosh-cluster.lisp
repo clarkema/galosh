@@ -23,7 +23,7 @@
 (defvar *history* ())
 (defvar *history-head* nil)
 (defvar *client* nil)
-(defparameter *history-size* 30)
+(defparameter *history-size* 100)
 
 (defconstant +inv-green+ 1)
 
@@ -111,10 +111,10 @@
 ;;; ===================================================================
 (defgeneric format-object (object))
 (defmethod format-object ((object spot))
-  (format nil "~A ~A by ~A at ~A ~A"
-	  (spot-spotted object)
-	  (spot-qrg object)
+  (format nil " ~A ~A ~A at ~A ~A~%"
 	  (spot-spotter object)
+	  (spot-qrg object)
+	  (spot-spotted object)
 	  (spot-time object)
 	  (spot-comment object)))
 (defmethod format-object ((object t))
@@ -143,26 +143,32 @@
 
 (defun display-title-bar ()
   (with-color +inv-green+
-    (mvprintw 0 0 (string-right-pad *COLS* "Galosh Cluster"))))
+    (mvprintw 0 0 (string-right-pad *COLS* " Galosh Cluster"))))
 
 (defun display-history ()
-  (dotimes (i *history-size*)
-    (mvprintw (+ 1 i) 0 (format-object (elt *history-head* i))))
+  (let ((display-lines (- *LINES* 3)))
+    (dotimes (i display-lines)
+      (mvprintw (+ 1 i) 0 (format-object (elt *history-head*
+					      (+ (- *history-size* display-lines) i))))))
   (refresh))
 ;;;
 ;;; User side
 ;;;  
 
+(defun repaint-all ()
+  (display-title-bar)
+  (display-history))
+
 (defun ncurses-main-loop ()
   (let* ((raw-code (getch))
 	 (c (code-char raw-code)))
     (cond ((= raw-code 410)
-	   (display-history))
+	   (repaint-all)
+	   (ncurses-main-loop))
 	  ((eql c #\q)
 	   (cluster-write *client* (format nil "q~%")))
 	  (t
 	   (ncurses-main-loop)))))
-
 
 (defun write-state (path)
   (with-open-file (s path
