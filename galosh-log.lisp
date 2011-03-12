@@ -85,12 +85,14 @@
 (defun print-qso (q)
   (with-qso-accessors q
     (mvprintw 1 0 (string-right-pad 40 (format nil "~a ~a ~a ~a ~a ~a"
-					       q-qso-date q-time-on q-hiscall
+					       (subseq q-qso-date 2) (subseq q-time-on 0 4) q-hiscall
 					       q-qrg      q-rx-rst  q-tx-rst)))
-    (mvprintw 2 0 (string-right-pad 40 (format nil "    IOTA: ~a MODE: ~a GRID: ~a" q-his-iota q-mode q-his-grid)))
-    (mvprintw 3 0 (string-right-pad 40 (format nil "    Name: ~a" q-name)))
-    (mvprintw 4 0 (string-right-pad 40 (format nil "    Comment: ~a" q-comment)))
-    (mvprintw 5 0 (string-right-pad 40 (format nil "    Follow up? ~a" q-followup)))
+    (mvprintw 2 0 (string-right-pad 40 (format nil "    IOTA: ~6@A  MODE: ~A"
+					       (n->es q-his-iota)
+					       (n->es q-mode))))
+    (mvprintw 3 0 (string-right-pad 40 (format nil "    Name: ~a" (n->es q-name))))
+    (mvprintw 4 0 (string-right-pad 40 (format nil "    Comment: ~a" (n->es q-comment))))
+    (mvprintw 5 0 (string-right-pad 40 (format nil "    Follow up? ~A  GRID: ~6@A" q-followup (n->es q-his-grid))))
     (with-color +inv-green+
       (mvprintw 6 0 (string-right-pad *COLS* " g:grid i:iota c:comment C:call n:name f:followup")))
     (refresh)))

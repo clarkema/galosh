@@ -26,6 +26,7 @@
 	   :sane-callsign-p
 	   :empty-string-p
 	   :string-right-pad
+	   :n->es
 	   :cats
 	   :join
 	   :say
@@ -82,6 +83,9 @@
   (if (< (length str) target-width)
       (concatenate 'string str (make-string (- target-width (length str)) :initial-element padding-element))
       str))
+
+(defun n->es (string)
+  (if string string ""))
 
 (defmacro cats (&rest strings)
   `(concatenate 'string ,@strings))
