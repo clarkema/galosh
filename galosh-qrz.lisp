@@ -86,44 +86,30 @@
 		(svref *country-by-id* r)
 		(warn (format nil "Invalid country for ~A (~A)" c r))))))
 
+;;;
+;;; Offline searching
+;;;
+
 (defun offline-qrz-search (call)
-  (with-qrz-db ((get-config "qrz.offlinedb"))
-    (let* ((c (string-upcase call))
-	   (r (first (select 'qrz-record :where [= 'call c] :limit 1 :caching nil :flatp t :database *qrz-db*))))
-      (when r
-	(list
-	 (format nil "~A, ~A" (string-upcase (qrz-lastname r)) (string-capitalize (qrz-firstname r)))
-	 (string-capitalize (qrz-mailstreet r))
-	 (string-capitalize (qrz-mailcity r))
-	 (if (= (qrz-country-id r) 271)
-	     (format nil "~A (~A)" (gethash (qrz-mailstate r) *us-state-code->name*) (qrz-mailstate r))
-	     (string-capitalize (qrz-mailstate r)))
-	 (format nil "~A" (qrz-country-name r)))))))
+  (flet ((u (x) (string-upcase x))
+	 (c (x) (string-capitalize x)))
+    (declare (inline u c))
+    (with-qrz-db ((get-config "qrz.offlinedb"))
+      (let ((r (first (select 'qrz-record :where [= 'call (u call)] :limit 1
+			      :caching nil :flatp t :database *qrz-db*))))
+	(when r
+	  (list
+	   (format nil "~A, ~A" (u (qrz-lastname r)) (c (qrz-firstname r)))
+	   (c (qrz-mailstreet r))
+	   (c (qrz-mailcity r))
+	   (if (= (qrz-country-id r) 271)
+	       (format nil "~A (~A)" (gethash (qrz-mailstate r) *us-state-code->name*) (qrz-mailstate r))
+	       (c (qrz-mailstate r)))
+	   (qrz-country-name r)))))))
 
-(defun raw-online-qrz-search (call)
-  (let* ((client (make-instance 'qrzcom-client
-				:username (get-config "qrz.user")
-				:password (get-config "qrz.password")))
-	 (result (details-by-call client call)))
-    (if result
-	(loop for k being each hash-key of result using (hash-value v)
-	     do (format t "~A:~A~A~%" k #\Tab v)))
-    result))
-
-(defun print-logged-qsos (term)
-  (let ((q (grep-hiscall term)))
-    (when q
-      (format t "~%QSOs:~%~A" q))))
-
-(defun princ-unless-nil (obj &key (fl nil))
-  (unless (null obj)
-    (princ obj)
-    (if fl
-	(fresh-line))))
-
-(defun prepend-newline (string)
-  (unless (zerop (length string))
-      (cats (format nil "~%") string)))
+;;;
+;;; Online searching
+;;;
 
 (defun section-qsl (result)
   (flet ((r (key) (gethash key result)))
@@ -172,6 +158,31 @@
 		    (princ-unless-nil (prepend-newline (funcall section result))))
 		  (list #'section-qth #'section-qsl))))))
 
+(defun raw-online-qrz-search (call)
+  (let* ((client (make-instance 'qrzcom-client
+				:username (get-config "qrz.user")
+				:password (get-config "qrz.password")))
+	 (result (details-by-call client call)))
+    (if result
+	(loop for k being each hash-key of result using (hash-value v)
+	     do (format t "~A:~A~A~%" k #\Tab v)))
+    result))
+
+(defun print-logged-qsos (term)
+  (let ((q (grep-hiscall term)))
+    (when q
+      (format t "~%QSOs:~%~A" q))))
+
+(defun princ-unless-nil (obj &key (fl nil))
+  (unless (null obj)
+    (princ obj)
+    (if fl
+	(fresh-line))))
+
+(defun prepend-newline (string)
+  (unless (zerop (length string))
+      (cats (format nil "~%") string)))
+
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
       (getopt:getopt argv '(("offline" :none) ("raw" :none)))
@@ -186,6 +197,7 @@
 	(cond ((assoc "offline" options)
 	       (if (has-offlinedb-p)
 		   (progn (princ (join (offline-qrz-search sought) #\Newline))
+			  (fresh-line)
 			  (print-logged-qsos sought))
 		   (progn (say "Offline use of galosh qrz requires that you download and install the qrz.com")
 			  (say "database.  See 'man galosh-qrz' or 'info galosh' for more information."))))
