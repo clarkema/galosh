@@ -281,7 +281,7 @@
     (list (float (- lat 90)) (float (- long 180)))))
 
 (defun rad->deg (x)
-  "Covert radians to decimal degrees."
+  "Convert radians to decimal degrees."
   (* x (/ 180 pi)))
 
 (defun deg->rad (x)
