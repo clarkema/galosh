@@ -112,7 +112,8 @@
    (make-translation :slot-name 'q-time-on :field-name "time_on")
    (make-translation :slot-name 'q-time-off :field-name "time_off")
    (make-translation :slot-name 'q-operator :field-name "operator")
-   (make-translation :slot-name 'q-followup :field-name "galosh_followup")))
+   (make-translation :slot-name 'q-followup :field-name "galosh_followup"
+		     :qso->adif #'(lambda (x) (sqlite->adifbool x)))))
 
 (defparameter *slot-name->adif* (make-hash-table))
 (defparameter *adif->slot-name* (make-hash-table))
@@ -185,6 +186,11 @@
       1
       0))
 
+(defun sqlite->adifbool (int)
+  (if (= int 1)
+      "True"
+      "False"))
+
 (defun read-record (stream)
   (if (eql (discard-until-tag stream) :EOF)
       :EOF
@@ -194,6 +200,7 @@
 	     qso)
 	  (let ((value (read-value stream tag)))
 	    (case (tag-name tag)
+	      (:galosh_id (setf (q-id qso) (parse-integer value)))
 	      (:call (setf (q-hiscall qso) value))
 	      (:qso_date (setf (q-qso-date qso) value))
 	      (:time_on (setf (q-time-on qso) value))
@@ -205,14 +212,17 @@
 	      (:name (setf (q-name qso) value))
 	      (:comment (setf (q-comment qso) value))
 	      (:iota (setf (q-his-iota qso) value))
-	      (:followup (setf (q-followup qso) (adifbool->sqlite value)))
+	      (:galosh_followup (setf (q-followup qso) (adifbool->sqlite value)))
 	      (:tx_pwr (setf (q-tx-pwr qso) (parse-integer value)))
 	      (:state (setf (q-his-state qso) value))
+	      (:operator (setf (q-operator qso) value))
 	      (:ve_prov (setf (q-his-ve-prov qso) value))
 	      (:band (setf (q-band qso) value))
 	      (:stx (setf (q-stx qso) value))
 	      (:srx (setf (q-srx qso) value))
 	      (:notes ())
+	      (:galosh_our_iota (setf (q-our-iota qso) value))
+	      (:galosh_our_grid (setf (q-our-grid qso) value))
 	      (otherwise (adif-error "unrecognised ADIF field"
 				     :value (tag-name tag)
 				     :line-number *line-number*))))))))
