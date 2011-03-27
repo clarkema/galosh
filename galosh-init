@@ -1,4 +1,4 @@
-#! /bin/sh -
+#! /bin/bash -
 
 if [[ -e ".galosh" && ! -d ".galosh" ]]; then
     rm .galosh
