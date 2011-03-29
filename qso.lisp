@@ -20,7 +20,7 @@
 	   :q-qso-date :q-time-on :q-time-off :q-operator :q-hiscall :q-band :q-qrg :q-mode
 	   :q-tx-rst :q-rx-rst :q-stx :q-srx :q-name :q-his-iota :q-our-iota :q-comment :q-followup :q-tx-pwr
 	   :q-his-state :q-his-ve-prov :as-string :q-his-grid :q-our-grid
-	   :q-toggle-followup))
+	   :q-toggle-followup :q-his-dxcc))
 (in-package :galosh-qso)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -93,6 +93,11 @@
     :documentation "Other station's operator's name"
     :db-type "TEXT"
     :accessor q-name
+    :initform nil)
+   (his-dxcc
+    :documentation "Other station's DXCC entity code"
+    :type integer
+    :accessor q-his-dxcc
     :initform nil)
    (his-state
     :documentation "Other station's US state abbreviation"
@@ -173,6 +178,7 @@
 		    (q-time-off q-time-off)
 		    (q-mode q-mode)
 		    (q-qrg q-qrg)
+		    (q-his-dxcc q-his-dxcc)
 		    (q-band q-band)
 		    (q-tx-rst q-tx-rst)
 		    (q-rx-rst q-rx-rst)

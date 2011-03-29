@@ -23,6 +23,7 @@
 (defparameter *slot-sets* (make-hash-table :test 'equal))
 (setf (gethash "std" *slot-sets*) '(q-band
 				    q-hiscall
+				    q-his-dxcc
 				    q-comment
 				    q-qrg
 				    q-his-state

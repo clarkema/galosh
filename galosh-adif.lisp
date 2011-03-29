@@ -98,6 +98,7 @@
    (make-translation :slot-name 'q-comment :field-name "comment")
    (make-translation :slot-name 'q-qrg :field-name "freq"
                      :qso->adif #'(lambda (x) (format nil "~,6,f" (float (/ x 1000000)))))
+   (make-translation :slot-name 'q-his-dxcc :field-name "dxcc")
    (make-translation :slot-name 'q-his-state :field-name "state")
    (make-translation :slot-name 'q-his-ve-prov :field-name "ve_prov")
    (make-translation :slot-name 'q-his-grid :field-name "gridsquare")
