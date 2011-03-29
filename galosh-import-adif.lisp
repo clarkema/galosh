@@ -23,9 +23,7 @@
 (defun ensure-defaults (qso)
   (default (q-operator qso) (get-config "user.call"))
   (default (q-comment qso) *comment-prefix*)
-  (default (q-band qso) (qrg->band (q-qrg qso)))
-  (if (q-his-iota qso)
-      (setf (q-followup qso) 1)))
+  (default (q-band qso) (qrg->band (q-qrg qso))))
 
 (defun wrap-comment (string)
   (if *comment-prefix*
