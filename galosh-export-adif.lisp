@@ -26,6 +26,7 @@
 				    q-his-dxcc
 				    q-comment
 				    q-qrg
+				    q-prop-mode
 				    q-his-state
 				    q-his-ve-prov
 				    q-his-grid

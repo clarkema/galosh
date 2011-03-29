@@ -20,7 +20,7 @@
 	   :q-qso-date :q-time-on :q-time-off :q-operator :q-hiscall :q-band :q-qrg :q-mode
 	   :q-tx-rst :q-rx-rst :q-stx :q-srx :q-name :q-his-iota :q-our-iota :q-comment :q-followup :q-tx-pwr
 	   :q-his-state :q-his-ve-prov :as-string :q-his-grid :q-our-grid
-	   :q-toggle-followup :q-his-dxcc))
+	   :q-toggle-followup :q-his-dxcc :q-prop-mode))
 (in-package :galosh-qso)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -69,6 +69,11 @@
     :accessor q-mode
     :initform "SSB"
     :initarg :mode)
+   (prop-mode
+    :db-type "TEXT"
+    :accessor q-prop-mode
+    :initform nil
+    :initarg :prop-mode)
    (tx-rst
     :type integer
     :accessor q-tx-rst
@@ -180,6 +185,7 @@
 		    (q-qrg q-qrg)
 		    (q-his-dxcc q-his-dxcc)
 		    (q-band q-band)
+		    (q-prop-mode q-prop-mode)
 		    (q-tx-rst q-tx-rst)
 		    (q-rx-rst q-rx-rst)
 		    (q-comment q-comment)
