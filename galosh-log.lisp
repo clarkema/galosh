@@ -21,6 +21,8 @@
 
 (clsql:enable-sql-reader-syntax) 
 
+(defvar *time-fudge* 0)
+
 (defvar *operator* nil)
 (defvar *qrg*     14260000)
 (defvar *mode*    "SSB")
@@ -34,7 +36,7 @@
 (defun log-date-time ()
   (multiple-value-bind
         (second minute hour date month year)
-      (decode-universal-time (get-universal-time ) 0)
+      (decode-universal-time (+ (get-universal-time ) *time-fudge*) 0)
     (values
      (format nil "~2,'0d~2,'0d~2,'0d" year month date)
      (format nil "~2,'0d~2,'02,'0d~2,'0d" hour minute second))))
