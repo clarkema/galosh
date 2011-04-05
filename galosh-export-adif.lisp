@@ -45,14 +45,22 @@
 			    ("list-fieldsets" :none t)))
     options))
 
+(defun print-header ()
+  (say "Exported from Galosh -- a suite of amateur radio tools for Linux.")
+  (format t "<PROGRAMID:~A>~A <EOR>~%" (length "GALOSH") "GALOSH")
+  (format t "<PROGRAMVERSION:~A>~A <EOR>~%" (length *galosh-version*) *galosh-version*)
+  (say "<EOH>"))
+
 (define-galosh-command galosh-export-adif ()
   (let* ((options (process-options argv))
 	 (set (or (cdr (assoc "fieldset" options)) "std")))
     (if (cdr (assoc "list-fieldsets" options))
 	(format t "~{~:A~%~}~&all~%" (keys *slot-sets*))
-	(mapcar #'(lambda (x)
-		    (princ (qso->adif x
-				      :slots (if (string= set "all")
-						 :all
-						 (gethash set *slot-sets*)))))
-		(reverse (select 'qso :order-by '(([qso_date] :desc)([time_on] :desc)) :flatp t))))))
+	(progn
+	  (print-header)
+	  (mapcar #'(lambda (x)
+		      (princ (qso->adif x
+					:slots (if (string= set "all")
+						   :all
+						   (gethash set *slot-sets*)))))
+		  (reverse (select 'qso :order-by '(([qso_date] :desc)([time_on] :desc)) :flatp t)))))))

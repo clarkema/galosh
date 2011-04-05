@@ -18,6 +18,7 @@
   (:nicknames :gl)
   (:use :cl :clsql :py-configparser :alexandria)
   (:export :*galosh-db*
+	   :*galosh-version*
 	   :with-safe-io-syntax
 	   :split
 	   :split-words
@@ -50,6 +51,8 @@
 	   :great-circle-heading))
 
 (in-package :galosh-lisp)
+
+(defparameter *galosh-version* "pre-alpha")
 
 (defvar *galosh-db* nil)
 
