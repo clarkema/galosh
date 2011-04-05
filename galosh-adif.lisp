@@ -126,13 +126,14 @@
 
 ;;; ===================================================================
 
-(defun package-adif (qso slot-name)
+(defun package-adif (qso slot-name &optional (fs #\Tab))
   (let* ((translator (gethash slot-name *slot-name->adif*))
 	 (value (funcall (t-qso->adif translator) (funcall slot-name qso))))
     (when value
-      (format nil "<~:@(~a~):~a>~a " (t-field-name translator)
+      (format nil "<~:@(~a~):~a>~a~a" (t-field-name translator)
 	      (length (format nil "~a" value))
-	      value))))
+	      value
+	      fs))))
 
 (defun qso->adif (qso &key slots)
   (if (or (null slots) (eq slots :all))
