@@ -128,6 +128,63 @@ efficient logging under busy run conditions, while also offering sufficient
 flexibility to allow the operator to enter additional information for a QSO
 as required.
 
+@section Your First QSO
+
+To get started, run @command{galosh log} within your repository directory.
+Once the logger has started, simply type in a callsign and hit enter twice.  A
+QSO will be added to the log using all of the default information: 59 both ways
+on 14260kHz.
+
+@section Commands
+
+Normally, anything you type in the logger is taken as the start of a log entry.
+The first word is taken as the callsign you are logging, and characters are
+automatically converted to upper-case as you type.
+
+If you start a new entry with a colon, your entry will be interpreted as a
+command rather than a log entry.  Command mode allows you to set information
+such as your frequency and mode, and to quit the application.
+
+@subsection Setting A Different Frequency
+
+Galosh does not currently get frequency information directly from your radio;
+when you want to log on a new frequency, you must tell the logger manually.
+To do this, type:
+
+@example
+:set qrg 7125000
+@end example
+
+Note that the frequency is in Hertz, not kHz.
+
+@subsection Setting Mode And IOTA Information
+
+Mode and IOTA information can be changed in much the same way as the frequency:
+
+@example
+:set mode SSB
+:set mode CW
+:set iota AN-001
+@end example
+
+@section Lesser-used Options
+
+@subsection Time Adjustment
+
+Galosh will log using your computer's idea of UTC.  Should this be wrong,
+ideally it should be corrected at the operating system level.  However, in some
+cases that might not be possible, and so Galosh provides the
+@code{*time-fudge*} option.
+
+@code{*time-fudge*} must be set using a mixin.  The value should be an integer
+number of seconds to be added to the default time.  For example, to log a time
+of 3 hours earlier than your operating system's idea of UTC, add the following to
+@file{galosh-log.mixin}:
+
+@example
+(setf *time-fudge* -10800)
+@end example
+
 @node QRZ
 @chapter QRZ
 
