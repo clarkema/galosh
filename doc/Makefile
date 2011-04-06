@@ -2,8 +2,8 @@ ASCIIDOC=asciidoc
 TEXI2PDF=texi2pdf
 MAKEINFO=makeinfo
 
-DOC_MAN1=$(patsubst %.txt,%.1,*.txt)
-DOC_HTML=$(patsubst %.txt,%.html,*.txt)
+DOC_MAN1=$(patsubst %.txt,%.1,$(wildcard *.txt))
+DOC_HTML=$(patsubst %.txt,%.html,$(wildcard *.txt))
 
 doc: docs
 docs: manual manpages
