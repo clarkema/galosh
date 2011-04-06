@@ -21,23 +21,27 @@
 (clsql:file-enable-sql-reader-syntax)
 
 (defparameter *slot-sets* (make-hash-table :test 'equal))
-(setf (gethash "std" *slot-sets*) '(q-band
-				    q-hiscall
-				    q-his-dxcc
-				    q-comment
-				    q-qrg
-				    q-prop-mode
-				    q-his-state
-				    q-his-ve-prov
-				    q-his-grid
-				    q-his-iota
-				    q-mode
-				    q-qso-date
-				    q-tx-rst
-				    q-rx-rst
-				    q-time-on
-				    q-time-off
-				    q-operator))
+
+(defun add-fieldset (name fields)
+  (setf (gethash name *slot-sets*) fields))
+
+(add-fieldset "std" '(q-band
+		      q-hiscall
+		      q-his-dxcc
+		      q-comment
+		      q-qrg
+		      q-prop-mode
+		      q-his-state
+		      q-his-ve-prov
+		      q-his-grid
+		      q-his-iota
+		      q-mode
+		      q-qso-date
+		      q-tx-rst
+		      q-rx-rst
+		      q-time-on
+		      q-time-off
+		      q-operator))
 
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
