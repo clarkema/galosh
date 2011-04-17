@@ -20,6 +20,9 @@
   (:export :*galosh-db*
 	   :*galosh-version*
 	   :with-safe-io-syntax
+	   :mkstr
+	   :symb
+	   :mkkeyword
 	   :split
 	   :split-words
 	   :default-rst-for-mode
@@ -67,6 +70,16 @@
   `(with-standard-io-syntax
      (let ((*read-eval* nil))
        ,@body)))
+
+(defun mkstr (&rest args)
+  (with-output-to-string (s)
+			 (dolist (a args) (princ a s))))
+
+(defun symb (&rest args)
+  (values (intern (apply #'mkstr args))))
+
+(defun mkkeyword (&rest args)
+  (values (intern (apply #'mkstr args) "KEYWORD")))
 
 (defmacro split (sep seq)
   `(split-sequence:split-sequence ,sep ,seq))

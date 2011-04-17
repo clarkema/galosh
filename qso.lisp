@@ -16,133 +16,70 @@
 
 (defpackage :galosh-qso
   (:use :cl :gl :clsql)
-  (:export :qso :with-qso-accessors :q-id
-	   :q-qso-date :q-time-on :q-time-off :q-operator :q-hiscall :q-band :q-qrg :q-mode
-	   :q-tx-rst :q-rx-rst :q-stx :q-srx :q-name :q-his-iota :q-our-iota :q-comment :q-followup :q-tx-pwr
-	   :q-his-state :q-his-ve-prov :as-string :q-his-grid :q-our-grid
-	   :q-toggle-followup :q-his-dxcc :q-prop-mode))
+  (:export :qso :with-qso-accessors))
 (in-package :galosh-qso)
 
 (clsql:file-enable-sql-reader-syntax)
 
-(def-view-class qso ()
-  ((id 
-    :type integer
-    :db-type "INTEGER" ; Required to make sqlite autoincrement work properly.
-    :db-kind :key
-    :db-constraints :not-null
-    :initarg :id
-    :initform nil
-;    :initform (sequence-next 'qso-ids)
-    :accessor q-id)
-   (qso-date
-    :db-type "TEXT"
-    :accessor q-qso-date
-    :initarg :qso-date)
-   (time-on
-    :db-type "TEXT"
-    :accessor q-time-on
-    :initarg :time-on)
-   (time-off
-    :db-type "TEXT"
-    :accessor q-time-off
-    :initarg :time-off)
-   (operator
-    :db-type "TEXT"
-    :accessor q-operator
-    :initarg :operator
-    :initform nil)
-   (hiscall
-    :db-type "TEXT"
-    :accessor q-hiscall
-    :initarg :hiscall)
-   (band
-    :db-type "TEXT"
-    :initarg :band)
-   (qrg
-    :type integer
-    :accessor q-qrg
-    :initform 0
-    :initarg :qrg)
-   (mode
-    :db-type "TEXT"
-    :accessor q-mode
-    :initform "SSB"
-    :initarg :mode)
-   (prop-mode
-    :db-type "TEXT"
-    :accessor q-prop-mode
-    :initform nil
-    :initarg :prop-mode)
-   (tx-rst
-    :type integer
-    :accessor q-tx-rst
-    :initarg :tx-rst)
-   (rx-rst 
-    :type integer
-    :accessor q-rx-rst
-    :initarg :rx-rst)
-   (stx
-    :db-type "TEXT"
-    :accessor q-stx
-    :initarg :stx)
-   (srx
-    :db-type "TEXT"
-    :accessor q-srx
-    :initarg :srx)
-   (tx-pwr
-    :documentation "Power of this station in Watts"
-    :type integer
-    :accessor q-tx-pwr)
-   (name 
-    :documentation "Other station's operator's name"
-    :db-type "TEXT"
-    :accessor q-name
-    :initform nil)
-   (his-dxcc
-    :documentation "Other station's DXCC entity code"
-    :type integer
-    :accessor q-his-dxcc
-    :initform nil)
-   (his-state
-    :documentation "Other station's US state abbreviation"
-    :db-type "TEXT"
-    :accessor q-his-state
-    :initform nil)
-   (his-ve-prov
-    :documentation "Other station's Candadian province"
-    :db-type "TEXT"
-    :accessor q-his-ve-prov)
-   (his-iota
-    :documentation "Other station's IOTA reference"
-    :db-type "TEXT"
-    :accessor q-his-iota
-    :initform nil)
-   (our-iota
-    :documentation "This station's IOTA reference"
-    :db-type "TEXT"
-    :initarg :our-iota
-    :initform nil
-    :accessor q-our-iota)
-   (comment
-    :db-type "TEXT"
-    :accessor q-comment
-    :initform nil)
-   (followup
-    :type integer
-    :accessor q-followup
-    :initform 0)
-   (his-grid
-    :documentation "Other station's Maidenhead grid reference"
-    :db-type "TEXT"
-    :accessor q-his-grid
-    :initform nil)
-   (our-grid
-    :documentation "This station's Maidenhead grid reference"
-    :db-type "TEXT"
-    :accessor q-our-grid
-    :initform nil))
-  (:base-table "qso"))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun merge-field-defaults (defaults field-spec)
+    (if (null defaults)
+	(if (or (member :type field-spec) (member :db-type field-spec))
+	    field-spec
+	    (append field-spec (list :db-type "TEXT")))
+	(if (member (caar defaults) field-spec)
+	    (merge-field-defaults (cdr defaults) field-spec)
+	    (merge-field-defaults (cdr defaults) (append field-spec (car defaults)))))))
+
+(defmacro accessor-name (name)
+  `(symb "Q-" ,name))
+
+(defmacro def-qso-class (&rest field-defs)
+  (let* ((defaults '((:initform nil)))
+	 (accessor-names nil)
+	 (fields (loop for field in field-defs collect
+		      (cond ((consp field)
+			     (let ((name (first field)))
+			       (push (accessor-name name) accessor-names)
+			       (merge-field-defaults (append
+						      (list `(:initarg ,(mkkeyword name))
+							    (unless (member :noaccessors field)
+							      `(:accessor ,(accessor-name name))))
+						      defaults)
+						     (remove :noaccessors field))))
+			    (t
+			     (push (symb "Q-" field) accessor-names)
+			     `(,field :db-type "TEXT" :accessor ,(accessor-name field)
+				      :initarg ,(mkkeyword field) :initform nil))))))
+    `(progn
+       (def-view-class qso ()
+	 (,@fields)
+	  (:base-table "qso"))
+       (eval-when (:compile-toplevel :load-toplevel :execute)
+	 (export (list ,@(loop for name in accessor-names collect `(quote ,name)))))
+       (defmacro with-qso-accessors (qso &body body)
+	 `(with-accessors ,',(loop for field in accessor-names
+				  collect (list field field))
+	      ,qso
+	    ,@body)))))
+
+(def-qso-class
+    (id
+     :type integer
+     :db-type "INTEGER" ; Required to make sqlite autoincrement work properly.
+     :db-kind :key
+     :db-constraints :not-null)
+    (band :noaccessors)
+    (qrg :type integer :initform 0)
+    (mode :initform "SSB")
+    (tx-rst :type integer :initform 59)
+    (rx-rst :type integer :initform 59)
+    (tx-pwr :type integer)
+    (his-dxcc :type integer)
+    (followup :type integer :initform 0)
+    qso-date time-on time-off operator hiscall
+    prop-mode stx srx name his-state his-ve-prov
+    his-iota our-iota comment his-grid our-grid)
 
 (defun max-qso-id ()
   (first (select [max [id]] :from 'qso :flatp t)))
@@ -164,7 +101,6 @@
 (defun q-toggle-followup (qso)
   (setf (q-followup qso) (if (eql 1 (q-followup qso)) 0 1)))
 
-
 (defun q-band (qso)
   (let ((qrg  (slot-value qso 'qrg))
 	(band (slot-value qso 'band)))
@@ -174,24 +110,3 @@
 
 (defun (setf q-band) (band qso)
   (setf (slot-value qso 'band) band))
-
-(defmacro with-qso-accessors (qso &body body)
-  `(with-accessors ((q-operator q-operator)
-		    (q-hiscall q-hiscall)
-		    (q-qso-date q-qso-date)
-		    (q-time-on q-time-on)
-		    (q-time-off q-time-off)
-		    (q-mode q-mode)
-		    (q-qrg q-qrg)
-		    (q-his-dxcc q-his-dxcc)
-		    (q-band q-band)
-		    (q-prop-mode q-prop-mode)
-		    (q-tx-rst q-tx-rst)
-		    (q-rx-rst q-rx-rst)
-		    (q-comment q-comment)
-		    (q-followup q-followup)
-		    (q-his-grid q-his-grid)
-		    (q-his-iota q-his-iota)
-		    (q-our-iota q-our-iota)
-		    (q-name q-name)) ,qso
-     ,@body))
