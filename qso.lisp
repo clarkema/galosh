@@ -16,7 +16,7 @@
 
 (defpackage :galosh-qso
   (:use :cl :gl :clsql)
-  (:export :qso :with-qso-accessors))
+  (:export :qso :with-qso-accessors :q-toggle-followup :as-string))
 (in-package :galosh-qso)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -69,17 +69,116 @@
      :db-type "INTEGER" ; Required to make sqlite autoincrement work properly.
      :db-kind :key
      :db-constraints :not-null)
-    (band :noaccessors)
+
+    ;; Basics
+    his-call
+    his-operator
+    his-name
+    my-call
+    my-operator
+    my-owner
     (qrg :type integer :initform 0)
+    (band :noaccessors)
     (mode :initform "SSB")
+    qso-date
+    qso-date-off
+    time-on
+    time-off
     (tx-rst :type integer :initform 59)
     (rx-rst :type integer :initform 59)
-    (tx-pwr :type integer)
-    (his-dxcc :type integer)
+    comment
+    notes
+    prop-mode
     (followup :type integer :initform 0)
-    qso-date time-on time-off operator hiscall
-    prop-mode stx srx name his-state his-ve-prov
-    his-iota our-iota comment his-grid our-grid)
+    (swl :type integer :initform 0)
+
+    ;; Conditions
+    (his-power :type integer)
+    (my-power  :type integer)
+    (a-index   :type integer)
+    (k-index   :type integer)
+    sfi ; solar flux
+    my-rig
+
+    (ant-az :type integer)
+    (ant-el :type integer)
+
+    ;; His QTH
+    (his-cq-zone :type integer)
+    (his-itu-zone :type integer)
+    (his-dxcc :type integer)
+    his-country
+    his-state
+    his-county ; cnty
+    his-city ; -> qth in adif
+    his-iota
+    his-iota-island-id
+    his-grid
+    his-latitude
+    his-longitude
+
+    ;; My QTH
+    (my-cq-zone :type integer)
+    (my-itu-zone :type integer)
+    (my-dxcc :type integer)
+    my-country
+    my-county
+    my-state
+    my-city
+    my-street
+    my-postal-code
+    my-iota
+    my-iota-island-id
+    my-grid
+    my-latitude
+    my-longitude
+
+    ;; Memberships
+    his-arrl-section
+    my-arrl-section
+    his-ten-ten
+    my-ten-ten
+
+    ;; Contesting
+    contest-id
+    contest-check
+    contest-class
+    contest-his-wpx-prefix
+    contest-precedence
+    contest-srx
+    contest-srx-string
+    contest-stx
+    contest-stx-string
+
+    ;; QSLing
+    eqsl-rdate
+    eqsl-sdate
+    eqsl-recv
+    eqsl-sent
+    lotw-rdate
+    lotw-sdate
+    lotw-rcvd
+    lotw-sent
+    qsl-rdate
+    qsl-sdate
+    qsl-rcvd
+    qsl-rcvd-via
+    qsl-sent
+    qsl-sent-via
+    qsl-via
+    his-qsl-message
+    my-qsl-message
+
+    ;; Meteor scatter
+    (meteor-max-bursts :type integer)
+    meteor-shower-name
+    meteor-num-bursts
+    meteor-num-pings
+
+    ;; Satellite operating
+    satellite-mode
+    satellite-name)
+
 
 (defun max-qso-id ()
   (first (select [max [id]] :from 'qso :flatp t)))
@@ -90,7 +189,7 @@
 	  (string-right-pad (length (princ-to-string (max-qso-id))) (princ-to-string (q-id q)))
 	  (q-qso-date q)
 	  (q-time-on q)
-	  (q-hiscall q)
+	  (q-his-call q)
 	  (q-qrg q)
 	  (q-mode q)
 	  (q-rx-rst q)

@@ -169,7 +169,7 @@
     result))
 
 (defun print-logged-qsos (term)
-  (let ((q (grep-hiscall term)))
+  (let ((q (grep-his-call term)))
     (when q
       (format t "~%QSOs:~%~A" q))))
 

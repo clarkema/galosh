@@ -21,7 +21,7 @@
 (defvar *comment-prefix* nil)
 
 (defun ensure-defaults (qso)
-  (default (q-operator qso) (get-config "user.call"))
+  (default (q-my-call qso) (get-config "user.call"))
   (default (q-comment qso) *comment-prefix*)
   (default (q-band qso) (qrg->band (q-qrg qso))))
 

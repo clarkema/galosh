@@ -16,7 +16,7 @@
 
 (defpackage :galosh-grep
   (:use :cl :gl :clsql :galosh-qso)
-  (:export :grep :grep-hiscall))
+  (:export :grep :grep-his-call))
 (in-package :galosh-grep)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -25,16 +25,16 @@
   (with-output-to-string (s)
     (let ((liked-term (cats "%" term "%")))
       (do-query ((qso) [SELECT 'qso :WHERE [or
-		 [like 'hiscall liked-term]
+		 [like 'his_call liked-term]
 		 [like 'comment liked-term]
 		 [like 'his_iota liked-term]]]
 		 :database *galosh-db*)
 	(princ (as-string qso) s)))))
 
-(defun grep-hiscall (term)
+(defun grep-his-call (term)
   (with-output-to-string (s)
     (let ((liked-term (cats "%" term "%")))
-      (do-query ((qso) [SELECT 'qso :WHERE [like 'hiscall liked-term]]
+      (do-query ((qso) [SELECT 'qso :WHERE [like 'his_call liked-term]]
 		 :database *galosh-db*)
 	(princ (as-string qso) s)))))
 
