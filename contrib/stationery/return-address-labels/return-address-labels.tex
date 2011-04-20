@@ -1,0 +1,64 @@
+%% galosh -- amateur radio utilities.
+%% Copyright (C) 2011, Michael Clarke, M0PRL
+%% <clarkema -at- clarkema.org>
+%%
+%% This program is free software: you can redistribute it and/or modify
+%% it under the terms of the GNU General Public License Version 3, as
+%% published by the Free Software Foundation.
+%%
+%% This program is distributed in the hope that it will be useful,
+%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%% GNU General Public License for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+%% Use:
+%%
+%% Building this document requires that you have a working LaTeX system
+%% installed; ideally one that provides pdflatex(1).
+%%
+%% Given that, the easiest way to build a document is:
+%%
+%% $ pdflatex return-address-labels.tex
+%%
+%% The settings below are suitable for printing on Avery J8659 Quick Dry
+%% Mini Inkjet Labels (270 to a page of A4.)  To adapt for other label
+%% layouts, just modify the count, margin, and border variables below.
+%%
+
+%% To print on US-style Letter paper rather than A4, comment out the line
+%% containing 'a4paper' below, and uncomment the line containing 'letter'.
+\documentclass[a4paper]{article}
+%% \documentclass[letter]{article}
+
+\usepackage[newdimens]{labels}
+
+\LabelCols=10           % 10 columns of labels
+\LabelRows=27           % 27 rows of labels
+
+\LeftPageMargin=5mm
+\RightPageMargin=4mm
+\TopPageMargin=13mm
+\BottomPageMargin=13mm
+
+\InterLabelColumn=2mm
+\InterLabelRow=0mm
+
+\LeftLabelBorder=1mm
+\RightLabelBorder=1mm
+\TopLabelBorder=1mm
+\BottomLabelBorder=1mm
+% \LabelGridtrue        % Uncomment this line to print a box *outside* the
+                        % label area for the purposes of testing alignment.
+
+\numberoflabels=270     % Total number of labels to print.  You can print
+                        % less than a full page by adjusting this.
+
+\begin{document}
+\addresslabel[\tiny]
+% Modify the line below to reflect your address.  Using a ~ instead of
+% a literal space will tend to lead to better layout in this case.
+{\textbf{Name}\\Addr~1\\Addr~2\\Country.}
+\end{document}
