@@ -20,6 +20,7 @@
   (:export :*galosh-db*
 	   :*galosh-version*
 	   :with-safe-io-syntax
+	   :mklist
 	   :mkstr
 	   :symb
 	   :mkkeyword
@@ -70,6 +71,9 @@
   `(with-standard-io-syntax
      (let ((*read-eval* nil))
        ,@body)))
+
+(defun mklist (obj)
+  (if (listp obj) obj (list obj)))
 
 (defun mkstr (&rest args)
   (with-output-to-string (s)
