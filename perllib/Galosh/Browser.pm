@@ -95,6 +95,10 @@ sub main
     my $tmp_dir = File::Spec->join( $main::galosh_dir, 'tmp' );
     my $fifo    = find_first_tab_fifo( $tmp_dir );
 
+    if ( $url =~ m!^[a-z0-9/]+$! ) {
+        $url = "http://www.qrz.com/db/$url";
+    }
+
     if ( $fifo ) {
         send_command( $fifo, "uri $url" );
     }
@@ -102,6 +106,5 @@ sub main
         spawn_browser( $tmp_dir, $url );
     }
 }
-
 
 1;
