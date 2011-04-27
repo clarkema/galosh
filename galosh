@@ -154,6 +154,12 @@ sub read_config
     close( $fh );
 }
 
+sub cmd_browser
+{
+    use Galosh::Browser;
+    Galosh::Browser::main( @ARGV );
+}
+
 sub cmd_journal
 {
     use Galosh::Journal;
