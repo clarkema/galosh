@@ -26,6 +26,7 @@
 	   :mkkeyword
 	   :split
 	   :split-words
+	   :last1
 	   :default-rst-for-mode
 	   :valid-callsign-char-p
 	   :sane-callsign-p
@@ -95,6 +96,10 @@
     (apply #'split-sequence:split-sequence  #\Space
 	   (string-trim '(#\Space #\Tab #\Newline) seq)
 	   (nreverse options))))
+
+(defun last1 (lst)
+  (car (last lst)))
+(proclaim '(inline last1))
 
 (defun empty-string-p (str)
   (not (> (length str) 0)))
