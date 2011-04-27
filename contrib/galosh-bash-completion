@@ -38,7 +38,7 @@ _galosh_qrz()
 _galosh_export_adif()
 {
     local cur="${COMP_WORDS[COMP_CWORD]}"
-    local opts="--fieldset --list-fieldsets"
+    local opts="--fieldset --list-fieldsets --match"
 
     COMPREPLY=( $(compgen -W "$opts" -- $cur ) )
     return 0
