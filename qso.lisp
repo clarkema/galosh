@@ -16,10 +16,11 @@
 
 (defpackage :galosh-qso
   (:use :cl :gl :clsql)
-  (:export :qso :with-qso-accessors :q-toggle-followup :as-string))
+  (:export :qso :with-qso-accessors :q-toggle-followup :as-string :*qso-slot-accessors*))
 (in-package :galosh-qso)
 
 (clsql:file-enable-sql-reader-syntax)
+(defvar *slot-accessors* ())
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun merge-field-defaults (defaults field-spec)
@@ -57,6 +58,7 @@
 	  (:base-table "qso"))
        (eval-when (:compile-toplevel :load-toplevel :execute)
 	 (export (list ,@(loop for name in accessor-names collect `(quote ,name)))))
+       (setf *qso-slot-accessors* (list ,@(loop for name in accessor-names collect `(quote ,name))))
        (defmacro with-qso-accessors (qso &body body)
 	 `(with-accessors ,',(loop for field in accessor-names
 				  collect (list field field))

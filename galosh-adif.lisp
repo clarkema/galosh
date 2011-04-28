@@ -24,7 +24,8 @@
 	   :adif-error-message
 	   :adif-error-value
 	   :adif-error-line-number
-	   :qso->adif)
+	   :qso->adif
+	   :*standard-slots*)
   (:shadow :read-char))
 (in-package :galosh-adif)
 
@@ -92,29 +93,107 @@
 
 (defparameter *slot-translations*
   (list
-   (make-translation :slot-name 'q-id :field-name "galosh_id")
-   (make-translation :slot-name 'q-band :field-name "band")
+   (make-translation :slot-name 'q-id :field-name "app_galosh_id")
    (make-translation :slot-name 'q-his-call :field-name "call")
-   (make-translation :slot-name 'q-comment :field-name "comment")
+   (make-translation :slot-name 'q-his-operator :field-name "app_galosh_his_operator")
+   (make-translation :slot-name 'q-his-name :field-name "name")
+   (make-translation :slot-name 'q-my-call :field-name "station_callsign")
+   (make-translation :slot-name 'q-my-operator :field-name "operator")
+   (make-translation :slot-name 'q-my-owner :field-name "owner_callsign")
    (make-translation :slot-name 'q-qrg :field-name "freq"
                      :qso->adif #'(lambda (x) (format nil "~,6,f" (float (/ x 1000000)))))
-   (make-translation :slot-name 'q-his-dxcc :field-name "dxcc")
-   (make-translation :slot-name 'q-prop-mode :field-name "prop_mode")
-   (make-translation :slot-name 'q-his-state :field-name "state")
-   (make-translation :slot-name 'q-his-grid :field-name "gridsquare")
-   (make-translation :slot-name 'q-my-grid :field-name "my_gridsquare")
-   (make-translation :slot-name 'q-his-iota :field-name "iota")
-   (make-translation :slot-name 'q-my-iota :field-name "my_iota")
+   (make-translation :slot-name 'q-band :field-name "band")
    (make-translation :slot-name 'q-mode :field-name "mode")
-   (make-translation :slot-name 'q-his-name :field-name "name")
    (make-translation :slot-name 'q-qso-date :field-name "qso_date")
-   (make-translation :slot-name 'q-tx-rst :field-name "rst_sent")
-   (make-translation :slot-name 'q-rx-rst :field-name "rst_rcvd")
+   (make-translation :slot-name 'q-qso-date-off :field-name "qso_date_off")
    (make-translation :slot-name 'q-time-on :field-name "time_on")
    (make-translation :slot-name 'q-time-off :field-name "time_off")
-   (make-translation :slot-name 'q-my-call :field-name "station_callsign")
-   (make-translation :slot-name 'q-followup :field-name "galosh_followup"
-		     :qso->adif #'(lambda (x) (sqlite->adifbool x)))))
+   (make-translation :slot-name 'q-tx-rst :field-name "rst_sent")
+   (make-translation :slot-name 'q-rx-rst :field-name "rst_rcvd")
+   (make-translation :slot-name 'q-comment :field-name "comment")
+   (make-translation :slot-name 'q-notes :field-name "notes")
+   (make-translation :slot-name 'q-prop-mode :field-name "prop_mode")
+   (make-translation :slot-name 'q-followup :field-name "app_galosh_followup"
+		     :qso->adif #'(lambda (x) (sqlite->adifbool x)))
+   (make-translation :slot-name 'q-swl :field-name "swl"
+		     :qso->adif #'(lambda (x) (sqlite->adifbool x)))
+   (make-translation :slot-name 'q-his-power :field-name "rx_pwr")
+   (make-translation :slot-name 'q-my-power :field-name "tx_pwr")
+   (make-translation :slot-name 'q-a-index :field-name "a_index")
+   (make-translation :slot-name 'q-k-index :field-name "k_index")
+   (make-translation :slot-name 'q-sfi :field-name "sfi")
+   (make-translation :slot-name 'q-my-rig :field-name "my_rig")
+   (make-translation :slot-name 'q-ant-az :field-name "ant_az")
+   (make-translation :slot-name 'q-ant-el :field-name "ant_el")
+   ;; His QTH
+   (make-translation :slot-name 'q-his-cq-zone :field-name "cqz")
+   (make-translation :slot-name 'q-his-itu-zone :field-name "ituz")
+   (make-translation :slot-name 'q-his-dxcc :field-name "dxcc")
+   (make-translation :slot-name 'q-his-country :field-name "country")
+   (make-translation :slot-name 'q-his-state :field-name "state")
+   (make-translation :slot-name 'q-his-county :field-name "cnty")
+   (make-translation :slot-name 'q-his-city :field-name "qth")
+   (make-translation :slot-name 'q-his-iota :field-name "iota")
+   (make-translation :slot-name 'q-his-iota-island-id :field-name "iota_island_id")
+   (make-translation :slot-name 'q-his-grid :field-name "gridsquare")
+   (make-translation :slot-name 'q-his-latitude :field-name "lat")
+   (make-translation :slot-name 'q-his-longitude :field-name "lon")
+   ;; My QTH
+   (make-translation :slot-name 'q-my-cq-zone :field-name "my_cq_zone")
+   (make-translation :slot-name 'q-my-itu-zone :field-name "my_itu_zone")
+   (make-translation :slot-name 'q-my-dxcc :field-name "app_galosh_my_dxcc")
+   (make-translation :slot-name 'q-my-country :field-name "my_country")
+   (make-translation :slot-name 'q-my-state :field-name "my_state")
+   (make-translation :slot-name 'q-my-county :field-name "my_cnty")
+   (make-translation :slot-name 'q-my-city :field-name "my_city")
+   (make-translation :slot-name 'q-my-street :field-name "my_street")
+   (make-translation :slot-name 'q-my-postal-code :field-name "my_postal_code")
+   (make-translation :slot-name 'q-my-iota :field-name "my_iota")
+   (make-translation :slot-name 'q-my-iota-island-id :field-name "my_iota_island_id")
+   (make-translation :slot-name 'q-my-grid :field-name "my_gridsquare")
+   (make-translation :slot-name 'q-my-latitude :field-name "my_lat")
+   (make-translation :slot-name 'q-my-longitude :field-name "my_lon")
+   ;; Memberships
+   (make-translation :slot-name 'q-his-arrl-section :field-name "arrl_sect")
+   (make-translation :slot-name 'q-my-arrl-section :field-name "app_galosh_my_arrl_section")
+   (make-translation :slot-name 'q-his-ten-ten :field-name "ten_ten")
+   (make-translation :slot-name 'q-my-ten-ten :field-name "app_galosh_my_ten_ten")
+   ;; Contesting
+   (make-translation :slot-name 'q-contest-id :field-name "contest_id")
+   (make-translation :slot-name 'q-contest-check :field-name "check")
+   (make-translation :slot-name 'q-contest-class :field-name "class")
+   (make-translation :slot-name 'q-contest-his-wpx-prefix :field-name "pfx")
+   (make-translation :slot-name 'q-contest-precedence :field-name "precedence")
+   (make-translation :slot-name 'q-contest-srx :field-name "srx")
+   (make-translation :slot-name 'q-contest-srx-string :field-name "srx_string")
+   (make-translation :slot-name 'q-contest-stx :field-name "stx")
+   (make-translation :slot-name 'q-contest-stx-string :field-name "stx_string")
+   ;; QSLing
+   (make-translation :slot-name 'q-eqsl-rdate :field-name "eqsl_qslrdate")
+   (make-translation :slot-name 'q-eqsl-sdate :field-name "eqsl_qslsdate")
+   (make-translation :slot-name 'q-eqsl-recv :field-name "eqsl_qsl_rcvd")
+   (make-translation :slot-name 'q-eqsl-sent :field-name "eql_qsl_sent")
+   (make-translation :slot-name 'q-lotw-rdate :field-name "lotw_qslrdate")
+   (make-translation :slot-name 'q-lotw-sdate :field-name "lotw_qslsdate")
+   (make-translation :slot-name 'q-lotw-rcvd :field-name "lotw_qsl_rcvd")
+   (make-translation :slot-name 'q-lotw-sent :field-name "lotw_qsl_sent")
+   (make-translation :slot-name 'q-qsl-rdate :field-name "qslrdate")
+   (make-translation :slot-name 'q-qsl-sdate :field-name "qslsdate")
+   (make-translation :slot-name 'q-qsl-rcvd :field-name "qsl_rcvd")
+   (make-translation :slot-name 'q-qsl-rcvd-via :field-name "qsl_rcvd_via")
+   (make-translation :slot-name 'q-qsl-sent :field-name "qsl_sent")
+   (make-translation :slot-name 'q-qsl-sent-via :field-name "qsl_sent_via")
+   (make-translation :slot-name 'q-qsl-via :field-name "qsl_via")
+   (make-translation :slot-name 'q-his-qsl-message :field-name "app_galosh_his_qsl_message")
+   (make-translation :slot-name 'q-my-qsl-message :field-name "qslmsg")
+   ;; Meteor scatter
+   (make-translation :slot-name 'q-meteor-max-bursts :field-name "max_bursts")
+   (make-translation :slot-name 'q-meteor-shower-name :field-name "ms_shower")
+   (make-translation :slot-name 'q-meteor-num-bursts :field-name "nr_bursts")
+   (make-translation :slot-name 'q-meteor-num-pings :field-name "nr_pings")
+   ;; Satellite operating
+   (make-translation :slot-name 'q-satellite-mode :field-name "sat_mode")
+   (make-translation :slot-name 'q-satellite-name :field-name "sat_name")))
 
 (defparameter *slot-name->adif* (make-hash-table))
 (defparameter *adif->slot-name* (make-hash-table))
@@ -122,6 +201,11 @@
 	    (setf (gethash (t-slot-name tr) *slot-name->adif*) tr)
 	    (setf (gethash (t-field-name tr) *adif->slot-name*) tr))
 	*slot-translations*)
+
+(defun private-field-p (slot-name)
+  (search "app_galosh" (t-field-name (gethash slot-name *slot-name->adif*))))
+
+(defparameter *standard-slots* (remove-if #'private-field-p *qso-slot-accessors*))
 
 ;;; ===================================================================
 
@@ -184,14 +268,14 @@
     (+ (* 1000000 mhz) khz)))
 
 (defun adifbool->sqlite (string)
-  (if (string= string "True")
+  (if (string= string "Y")
       1
       0))
 
 (defun sqlite->adifbool (int)
   (if (= int 1)
-      "True"
-      "False"))
+      "Y"
+      "N"))
 
 (defun read-record (stream)
   (if (eql (discard-until-tag stream) :EOF)
@@ -202,7 +286,7 @@
 	     qso)
 	  (let ((value (read-value stream tag)))
 	    (case (tag-name tag)
-	      (:galosh_id (setf (q-id qso) (parse-integer value)))
+	      (:app_galosh_id (setf (q-id qso) (parse-integer value)))
 	      (:call (setf (q-his-call qso) value))
 	      (:qso_date (setf (q-qso-date qso) value))
 	      (:time_on (setf (q-time-on qso) value))
@@ -216,9 +300,10 @@
 	      (:comment (setf (q-comment qso) value))
 	      (:iota (setf (q-his-iota qso) value))
 	      (:my_iota (setf (q-my-iota qso) value))
-	      (:galosh_followup (setf (q-followup qso) (adifbool->sqlite value)))
+	      (:app_galosh_followup (setf (q-followup qso) (adifbool->sqlite value)))
 	      (:tx_pwr (setf (q-my-pwr qso) (parse-integer value)))
 	      (:state (setf (q-his-state qso) value))
+	      (:swl (setf (q-swl qso) (adifbool->sqlite value)))
 	      (:ve_prov (setf (q-his-state qso) value))
 	      (:operator (setf (q-my-operator qso) value))
 	      (:station_callsign (setf (q-my-call qso) value))
