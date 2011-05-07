@@ -18,7 +18,7 @@
 
 # This file provides bash completion support for Galosh.
 
-_GALOSH_COMMANDS="browser cluster help lisp-repl log grep export-adif import-adif import-qrz-db qrz recompile-all update"
+_GALOSH_COMMANDS="browser cluster help lisp-repl log grep export-adif import-adif import-qrz-db qrz qsl recompile-all update"
 
 _galosh_help()
 {
