@@ -37,7 +37,30 @@ This file documents the `Galosh' a suite of amateur radio utilities, version
 @node Introduction
 @chapter Introduction
 
-Galosh is a suite 
+Galosh is a suite of related utilities to ease the lives of amateur
+radio operators.  Currently, Galosh provides applications to manage your
+log and deal with the QSLing process.  As time goes on, the suite will
+be expanded to support an increasing range of activities within the
+hobby.
+
+Galosh has a strong focus on efficient offline operation, and is aimed
+at users who are comfortable with, and prefer to work using, the
+command-line.  The suite is designed to be user-modifiable at every
+level, and you are encouraged to tinker and make Galosh do what
+@emph{you} want.  The full source-code is, of course, available, but
+beyond that, individual applications offer a hook system called
+`mixins'.  This allows you to attach your own code to applications and
+modify their behaviour.
+
+@section Get Involved!
+
+What to get involved?  Galosh is mostly written in Common Lisp, with a
+bit of Perl in places.  Code, documentation, and some graphical design
+work are all required, as are suggestions of different use-cases.  To
+get started, fork the project on Github
+(@indicateurl{http://github.com/clarkema/galosh}), where you can also
+open issues or feature requests.  Alternatively, e-mail the author at
+@email{mike@@galosh.org.uk}.
 
 @node Installation
 @chapter Installation
