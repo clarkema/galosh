@@ -10,3 +10,6 @@ ensure-deps:
 
 clean:
 	rm -rf quicklisp
+
+install-debian-packages:
+	aptitude install curl sbcl sqlite3

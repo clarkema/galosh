@@ -28,6 +28,7 @@ This file documents the `Galosh' a suite of amateur radio utilities, version
 @contents
 @menu
 * Introduction::
+* Installation::
 * Configuration::
 * Logging::
 * QRZ::
@@ -37,6 +38,72 @@ This file documents the `Galosh' a suite of amateur radio utilities, version
 @chapter Introduction
 
 Galosh is a suite 
+
+@node Installation
+@chapter Installation
+
+At this stage in its development, Galosh is not intended to be @emph{installed}
+as such, but run directly from a @command{git} checkout.  To get up and
+running, you only need to have @command{git} and @command{make} installed.
+
+@example
+$ git clone git://github.com/clarkema/galosh.git
+$ cd galosh
+$ sudo make install-debian-packages
+$ make install-quicklisp
+@end example
+
+Provided that you are running Debian GNU/Linux, this will install any
+packages you are currently missing, then download Quicklisp and set it
+up to manage Lisp systems within the checkout directory.
+
+If you're not running Debian, you'll have to inspect the Makefile to
+work out what you need, and install the equivalent packages on your
+system.
+
+Once all the dependencies are installed, ensure that the main
+@command{galosh} script is in your @env{PATH}, either by adding the
+checkout directory to your @env{PATH} directly, or by symlinking the
+@command{galosh} command into a directory that is already in your
+@env{PATH}.
+
+@section Bash Completion (Optional)
+
+One final optional step is to add Bash completion support.  Galosh
+provides a Bash completion file in
+@file{contrib/galosh-bash-completion}.  To have completion work for you,
+this file needs to be sourced, one way or another, when @command{bash}
+starts.  There are many ways of achieving this.  One possibility is make
+a directory such as @file{$HOME/local/etc/bash_completion.d} to hold
+your personal Bash completion files, and then add something like this to
+your @file{.bashrc}:
+
+@example
+#####################
+# Enable completion if possible
+#####################
+if [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+
+    LOCAL_COMPLETION_DIR=$HOME/local/etc/bash_completion.d
+
+    if [ -d $LOCAL_COMPLETION_DIR -a -r $LOCAL_COMPLETION_DIR -a \
+            -x $LOCAL_COMPLETION_DIR ]; then
+        for i in $LOCAL_COMPLETION_DIR/*; do
+            [[ $@{i##*/@} != @@(*~|*.bak|*.swp|\#*\#|*.dpkg*|.rpm*) ]] &&
+                [ \( -f $i -o -h $i \) -a -r $i ] && . $i
+        done
+    fi
+
+    unset LOCAL_COMPLETION_DIR
+    unset i
+fi
+@end example
+
+@noindent
+With this in place, symlink @file{contrib/galosh-bash-completion} into@*
+@file{$HOME/local/etc/bash_completion.d}.  Next time you restart your
+shell, you should have completion of @command{galosh} commands.
 
 @node Configuration
 @chapter Configuration
