@@ -1,6 +1,6 @@
 ;;;; galosh -- amateur radio utilities.
 ;;;; Copyright (C) 2010, 2011 Michael Clarke, M0PRL
-;;;; <clarkema -at- clarkema.org>
+;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
 ;;;; it under the terms of the GNU General Public License Version 3, as
