@@ -2,6 +2,7 @@
 @c %**start of header
 @setfilename galosh.info
 @settitle Galosh
+@paragraphindent 0
 @c %** end of header
 
 @copying
@@ -49,12 +50,12 @@ command-line.  The suite is designed to be user-modifiable at every
 level, and you are encouraged to tinker and make Galosh do what
 @emph{you} want.  The full source-code is, of course, available, but
 beyond that, individual applications offer a hook system called
-`mixins'.  This allows you to attach your own code to applications and
+@dfn{mixins}.  This allows you to attach your own code to applications and
 modify their behaviour.
 
 @section Get Involved!
 
-What to get involved?  Galosh is mostly written in Common Lisp, with a
+Want to get involved?  Galosh is mostly written in Common Lisp, with a
 bit of Perl in places.  Code, documentation, and some graphical design
 work are all required, as are suggestions of different use-cases.  To
 get started, fork the project on Github
@@ -76,13 +77,17 @@ $ sudo make install-debian-packages
 $ make install-quicklisp
 @end example
 
-Provided that you are running Debian GNU/Linux, this will install any
-packages you are currently missing, then download Quicklisp and set it
-up to manage Lisp systems within the checkout directory.
+Provided that you are running Debian GNU/Linux, this will:
+@enumerate
+@item install any packages you are currently missing; and
+@item download Quicklisp and set it up to manage Lisp systems within
+      the checkout directory.
+@end enumerate
 
-If you're not running Debian, you'll have to inspect the Makefile to
-work out what you need, and install the equivalent packages on your
-system.
+If you're not running Debian, you'll have to perform the `make
+install-debian-packages' stage manually by inspecting the Makefile to
+work out what you need and installing the equivalent packages on your
+system.  Don't forget to run @code{make install-quicklisp} afterwards.
 
 Once all the dependencies are installed, ensure that the main
 @command{galosh} script is in your @env{PATH}, either by adding the
@@ -92,8 +97,13 @@ checkout directory to your @env{PATH} directly, or by symlinking the
 
 @section Bash Completion (Optional)
 
-One final optional step is to add Bash completion support.  Galosh
-provides a Bash completion file in
+Adding Bash completion support is fully optional, but offers you the
+convenience of being able to tab-complete Galosh command-names and
+options within your shell.  For example, with completion enabled, you
+can simply type @command{galosh} and press tab twice to get a list of
+all available Galosh commands.
+
+Galosh provides a Bash completion file in
 @file{contrib/galosh-bash-completion}.  To have completion work for you,
 this file needs to be sourced, one way or another, when @command{bash}
 starts.  There are many ways of achieving this.  One possibility is make
@@ -131,7 +141,7 @@ shell, you should have completion of @command{galosh} commands.
 @node Configuration
 @chapter Configuration
 
-Galosh is designed to be as flexible as possible, and is configurable on many
+Galosh is designed to be as flexible as possible and is configurable on many
 levels.  Unfortunately, the cost of this rich configurability is that is can
 sometimes be difficult to know where and how to make changes.  This chapter
 gives an overview of Galosh's configuration options.
@@ -172,11 +182,11 @@ Galosh is designed as a suite of separate but related commands.  As such, many
 of the Galosh commands might need access to shared data; from configuration up
 to your full QSO log.  However, you might well want to maintain multiple logs
 for different purposes; perhaps an `everyday' log and a `contest' log, or a
-distinct log for a special event station.  It would be inconvenient if dealing
-with different log or different rigs, or different configuration for any other
-purpose entailed passing log and configuration details to every Galosh command
-you wanted to run.  To avoid this, Galosh uses the concept of @dfn{repositories},
-in a similar fashion to version control systems like @command{git}, upon which
+distinct log for a special event station.  It would be inconvenient if
+dealing with different logs, rigs, or configurations for any other purpose
+entailed passing explicit details to every Galosh command you wanted to
+run.  To avoid this, Galosh uses the concept of @dfn{repositories}, in a
+similar fashion to version control systems like @command{git}, upon which
 Galosh is in many ways modelled.
 
 @strong{Most uses of Galosh require you to be in a repository.}
