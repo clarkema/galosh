@@ -21,7 +21,7 @@
 
 (defpackage :galosh-qrz
   (:use :cl :gl :galosh-qrzcom :clsql :galosh-grep :alexandria)
-  (:export :has-offlinedb-p :offline-qrz-search))
+  (:export :has-offlinedb-p :offline-qrz-search :qrz-search))
 (in-package :galosh-qrz)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -182,6 +182,12 @@ Returns nil if there is no offline database."
 			(princ-unless-nil (prepend-newline (funcall section call result))))
 		    (list #'section-qth #'section-qsl)))
 	  (princ-unless-nil (prepend-newline (section-entity call)))))))
+
+(defun qrz-search (call)
+  (let ((client (make-instance 'qrzcom-client
+			       :username (get-config "qrz.user")
+			       :password (get-config "qrz.password"))))
+    (details-by-call client call)))
 
 (defun raw-online-qrz-search (call)
   (let* ((client (make-instance 'qrzcom-client
