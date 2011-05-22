@@ -179,7 +179,7 @@ my $options_successful = GetOptions(
 
 my $command = $ARGV[0] || 'help';
 
-my $sub_name      = "cmd_$command";
+(my $sub_name     = "cmd_$command") =~ s/-/_/g;
 my $package_name  = "galosh-$command";
 my $compiled_path = File::Spec->join( $compiled_dir, $package_name );
 
