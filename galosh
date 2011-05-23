@@ -117,6 +117,7 @@ sub cmd_compile
                             '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
                             '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
                             '--require', $target_command,
+                            '--eval', qq#(handler-case (${target_command}::buildapp-init) (t ()))#,
                             '--entry',   "${target_command}::main",
                             '--output',  $output_path ) );
     }
