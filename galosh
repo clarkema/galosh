@@ -45,9 +45,6 @@ sub find_galosh_dir
     elsif ( get_context() ) {
         $galosh_dir = get_context();
     }
-    else {
-        die( "Couldn't find context directory." );
-    }
 
     # The trailing slash below is required to make the resulting path usable
     # with Lisp's merge-pathnames; if it's missing the last element of the path
@@ -55,7 +52,9 @@ sub find_galosh_dir
     # representing just a file name.
     # FIXME: Find a more portable way to add the correct separator for the
     # current platform.
-    $ENV{'GALOSH_DIR'} = File::Spec->rel2abs( $galosh_dir ) . "/";
+    if ( $galosh_dir ) {
+        $ENV{'GALOSH_DIR'} = File::Spec->rel2abs( $galosh_dir ) . "/";
+    }
 }
 
 ######################################################################

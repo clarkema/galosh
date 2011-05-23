@@ -153,7 +153,6 @@
 	    (error 'missing-galosh-dir-error :text
 		   "GALOSH_DIR is not defined.")))))
 
-
 (defun fatal-get-galosh-dir ()
   (handler-case
       (get-galosh-dir :raise-error t)
@@ -199,16 +198,19 @@
 
 (defun set-defaults (config)
   (let ((home-galosh-dir (merge-pathnames (make-pathname :directory '(:relative ".galosh"))
-					  (user-homedir-pathname))))
+					  (user-homedir-pathname)))
+	(context (get-galosh-dir)))
     (with-input-from-string (s (join
-				(list "[core]"
-				      (cats "log = " (namestring (merge-pathnames "log.db" (fatal-get-galosh-dir))))
-				      (cats "cty-xml = " (namestring (merge-pathnames "cty.xml" home-galosh-dir)))
-				      (cats "cty-lisp = " (namestring (merge-pathnames "cty.lisp" home-galosh-dir)))
-				      "[log]"
-				      (cats "attic = " (namestring (merge-pathnames "log.attic" (fatal-get-galosh-dir))))
-				      "[qrz]"
-				      (cats "offlinedb = " (namestring (merge-pathnames "qrz.db" home-galosh-dir))))
+				(remove-if #'null (list "[core]"
+							(if context
+							    (cats "log = " (namestring (merge-pathnames "log.db" context))))
+							(cats "cty-xml = " (namestring (merge-pathnames "cty.xml" home-galosh-dir)))
+							(cats "cty-lisp = " (namestring (merge-pathnames "cty.lisp" home-galosh-dir)))
+							"[log]"
+							(if context
+							    (cats "attic = " (namestring (merge-pathnames "log.attic" context))))
+							"[qrz]"
+							(cats "offlinedb = " (namestring (merge-pathnames "qrz.db" home-galosh-dir)))))
 				#\Newline))
       (setf config (read-stream config s)))))
 
@@ -232,10 +234,12 @@
     (coerce (get-option *config* section option) 'simple-string)))
 
 (defun init-config ()
-  (let ((global-config (merge-pathnames (make-pathname :directory '(:relative ".galosh") :name "config") (user-homedir-pathname)))
-	(repository-config (make-pathname :directory (fatal-get-galosh-dir) :name "config")))
+  (let ((global-config (merge-pathnames (make-pathname :directory '(:relative ".galosh") :name "config") (user-homedir-pathname))))
     (setf *config* (set-defaults (make-config)))
-    (read-files *config* (list global-config repository-config))))
+    (read-files *config* (list global-config))
+    (handler-case
+	(read-files *config* (list (make-pathname :directory (get-galosh-dir :raise-error t) :name "config")))
+      (t ()))))
 
 (defmacro define-galosh-command (name (&key (required-configuration nil)) &body body)
   (let* ((mixin-name (string-downcase (string name)))
