@@ -8,4 +8,5 @@
 		 #:drakma
 		 #:cxml
 		 #:getopt
-		 #:py-configparser))
+		 #:py-configparser
+		 #:fiveam))

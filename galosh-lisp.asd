@@ -3,5 +3,11 @@
 		 #:split-sequence
 		 #:py-configparser
 		 #:alexandria
-		 #:cl-ppcre)
-    :components ((:file "galosh-lisp")))
+		 #:cl-ppcre
+		 ;; For -entity.lisp
+		 #:cxml)
+    :components ((:file "galosh-lisp-package")
+		 (:file "galosh-lisp"
+			:depends-on ("galosh-lisp-package"))
+		 (:file "galosh-entity"
+			:depends-on ("galosh-lisp"))))

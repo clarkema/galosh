@@ -14,47 +14,6 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(defpackage :galosh-lisp
-  (:nicknames :gl)
-  (:use :cl :clsql :py-configparser :alexandria)
-  (:export :*galosh-db*
-	   :*galosh-version*
-	   :with-safe-io-syntax
-	   :mklist
-	   :mkstr
-	   :symb
-	   :mkkeyword
-	   :split
-	   :split-words
-	   :last1
-	   :default-rst-for-mode
-	   :valid-callsign-char-p
-	   :sane-callsign-p
-	   :empty-string-p
-	   :string-right-pad
-	   :n->es
-	   :cats
-	   :join
-	   :say
-	   :keys
-	   :default
-	   :with-galosh-db
-	   :define-galosh-command
-	   :get-galosh-dir
-	   :fatal-get-galosh-dir
-	   :missing-galosh-db-error
-	   :missing-galosh-dir-error
-	   :qrg->band
-	   :human-date
-	   :has-config-p
-	   :get-config
-	   :check-required-config
-	   :missing-mandatory-configuration-error
-	   :terminate
-	   :deg->rad
-	   :rad->deg
-	   :great-circle-heading))
-
 (in-package :galosh-lisp)
 
 (defparameter *galosh-version* "pre-alpha")
@@ -86,6 +45,10 @@
 (defun mkkeyword (&rest args)
   (values (intern (apply #'mkstr args) "KEYWORD")))
 
+(defun single (list)
+  (and (consp list) (not (cdr list))))
+(proclaim '(inline single))
+
 (defmacro split (sep seq)
   `(split-sequence:split-sequence ,sep ,seq))
 
@@ -111,6 +74,12 @@
 
 (defun n->es (string)
   (if string string ""))
+
+(defun es->n (string)
+  (if (empty-string-p string)
+      nil
+      string))
+(proclaim '(inline es->n))
 
 (defmacro cats (&rest strings)
   `(concatenate 'string ,@strings))
@@ -229,15 +198,19 @@
 (defvar *config* nil)
 
 (defun set-defaults (config)
-  (with-input-from-string (s (join
-			      (list "[core]"
-				    (cats "log = " (namestring (merge-pathnames "log.db" (fatal-get-galosh-dir))))
-				    "[log]"
-				    (cats "attic = " (namestring (merge-pathnames "log.attic" (fatal-get-galosh-dir))))
-				    "[qrz]"
-				    (cats "offlinedb = " (namestring (merge-pathnames "qrz.db" (merge-pathnames (make-pathname :directory '(:relative ".galosh")) (user-homedir-pathname))))))
-			      #\Newline))
-    (setf config (read-stream config s))))
+  (let ((home-galosh-dir (merge-pathnames (make-pathname :directory '(:relative ".galosh"))
+					  (user-homedir-pathname))))
+    (with-input-from-string (s (join
+				(list "[core]"
+				      (cats "log = " (namestring (merge-pathnames "log.db" (fatal-get-galosh-dir))))
+				      (cats "cty-xml = " (namestring (merge-pathnames "cty.xml" home-galosh-dir)))
+				      (cats "cty-lisp = " (namestring (merge-pathnames "cty.lisp" home-galosh-dir)))
+				      "[log]"
+				      (cats "attic = " (namestring (merge-pathnames "log.attic" (fatal-get-galosh-dir))))
+				      "[qrz]"
+				      (cats "offlinedb = " (namestring (merge-pathnames "qrz.db" home-galosh-dir))))
+				#\Newline))
+      (setf config (read-stream config s)))))
 
 (defun check-required-config (variables)
   (dolist (ropt variables)
