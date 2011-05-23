@@ -143,9 +143,11 @@
 (proclaim '(inline valid-callsign-char-p))
 
 (defun sane-callsign-p (call)
-  (if (and (not (empty-string-p call)) (every #'valid-callsign-char-p call))
-      call
-      nil))
+  (let ((sane nil))
+    (dolist (section (split #\/ call))
+      (if (cl-ppcre:scan "^[A-Z0-9]{1,2}[0-9][A-Z0-9]*$" section)
+	  (setf sane t)))
+    sane))
 
 (define-condition missing-galosh-db-error (error)
   ((text :initarg :text :reader text)))

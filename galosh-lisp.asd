@@ -2,5 +2,6 @@
     :depends-on (#:clsql
 		 #:split-sequence
 		 #:py-configparser
-		 #:alexandria)
+		 #:alexandria
+		 #:cl-ppcre)
     :components ((:file "galosh-lisp")))
