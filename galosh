@@ -88,6 +88,21 @@ HELP
     }
 }
 
+sub cmd_lisp_repl
+{
+    exec( "sbcl", ( '--noinform',
+                    '--no-userinit',
+                    '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
+                    '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
+                    '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
+                    '--eval', qq{(ql-impl-util:call-with-quiet-compilation
+                                    #'(lambda () (mapcar #'(lambda (p) (asdf:oos 'asdf:load-op p :verbose nil))
+                                                         '("galosh-lisp" "swank"))))},
+                    '--eval', "(swank:create-server)",
+                    '--end-toplevel-options',
+                    @ARGV, ));
+}
+
 sub cmd_compile
 {
     my $target_command = "galosh-$ARGV[1]";
