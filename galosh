@@ -16,6 +16,7 @@ use Getopt::Long qw(:config require_order);
 
 umask 0077;
 
+our $clublog_api_key = 'a5a1046e08eebc5fdef1f45ebf2ad049e914c850';
 our $context_dir     = File::Spec->join( File::Spec->curdir(), ".galosh" );
 our $home_galosh_dir = File::Spec->join( File::HomeDir->my_home, ".galosh" );
 our $compiled_dir    = File::Spec->join( $home_galosh_dir, "compiled" );
@@ -164,6 +165,12 @@ sub cmd_journal
 {
     use Galosh::Journal;
     Galosh::Journal::main();
+}
+
+sub cmd_update
+{
+    use Galosh::Update;
+    Galosh::Update::main();
 }
 
 ######################################################################
