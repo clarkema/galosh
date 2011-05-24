@@ -95,6 +95,14 @@ checkout directory to your @env{PATH} directly, or by symlinking the
 @command{galosh} command into a directory that is already in your
 @env{PATH}.
 
+Galosh makes use of various sources of data from the Internet.  Once
+@command{galosh} is in your path, the final step is to download the
+most recent versions of these data:
+
+@example
+$ galosh update
+@end example
+
 @section Bash Completion (Optional)
 
 Adding Bash completion support is fully optional, but offers you the
