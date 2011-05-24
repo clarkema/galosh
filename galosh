@@ -205,6 +205,11 @@ my $command = $ARGV[0] || 'help';
 my $package_name  = "galosh-$command";
 my $compiled_path = File::Spec->join( $compiled_dir, $package_name );
 
+# Ensure $HOME/.galosh exists -- sub-commands will assume its presence
+unless ( -e $home_galosh_dir && -d $home_galosh_dir ) {
+    mkdir ( $home_galosh_dir );
+}
+
 if ( $sub_name eq 'cmd_init' ) {
     cmd_init()
 }
