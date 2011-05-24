@@ -105,13 +105,15 @@
 	   (if (= (qrz-country-id r) 271)
 	       (format nil "~A (~A)" (gethash (qrz-mailstate r) *us-state-code->name*) (qrz-mailstate r))
 	       (c (qrz-mailstate r)))
-	   (qrz-country-name r)))))))
+	   (qrz-country-name r)
+	   (prepend-newline (section-entity call nil))))))))
 
 ;;;
 ;;; Online searching
 ;;;
 
-(defun section-qsl (result)
+(defun section-qsl (call result)
+  (declare (ignore call))
   (flet ((r (key) (gethash key result)))
     (with-output-to-string (*standard-output*)
       (when-let ((qsl-via (r "qslmgr")))
@@ -123,7 +125,14 @@
 		   ", "))
       (fresh-line))))
 
-(defun section-qth (result)
+(defun section-entity (call result)
+  (declare (ignore result))
+  (with-output-to-string (*standard-output*)
+    (when-let ((e (get-entity call)))
+      (format t "Entity      : ~A~%" (entity-name e)))))
+
+(defun section-qth (call result)
+  (declare (ignore call))
   (flet ((r (key) (gethash key result)))
     (with-output-to-string (*standard-output*)
       (when-let ((lat (r "lat"))
@@ -155,8 +164,8 @@
 		  (string-capitalize (r "addr2"))
 		  (string-upcase (r "country")))
 	  (mapcar (lambda (section)
-		    (princ-unless-nil (prepend-newline (funcall section result))))
-		  (list #'section-qth #'section-qsl))))))
+		    (princ-unless-nil (prepend-newline (funcall section call result))))
+		  (list #'section-entity #'section-qth #'section-qsl))))))
 
 (defun raw-online-qrz-search (call)
   (let* ((client (make-instance 'qrzcom-client
@@ -189,6 +198,9 @@
     (if (third leftover)
 	(concatenate 'list options `(("sought" . ,(third leftover))))
 	options)))
+
+(defun buildapp-init ()
+  (load-entity-information))
 
 (define-galosh-command galosh-qrz (:required-configuration '("qrz.user" "qrz.password"))
   (let* ((options (process-options argv))
