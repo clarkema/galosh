@@ -185,7 +185,7 @@ added to the search results.  Returns either the matching entity, or nil."
     (proclaim '(inline txt))
     (make-instance 'entity
 		   :prefix    (txt "call")
-		   :name      (txt "entity")
+		   :name      (string-capitalize (txt "entity"))
 		   :adif      (txt "adif")
 		   :cq-zone   (txt "cqz")
 		   :itu-zone  (txt "ituz")
