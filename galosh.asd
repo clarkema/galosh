@@ -10,4 +10,5 @@
 		 #:getopt
 		 #:py-configparser
 		 #:fiveam
-		 #:jpl-queues))
+		 #:jpl-queues
+		 #:screamer))
