@@ -26,6 +26,7 @@
 	   :with-galosh-db
 	   :define-galosh-command
 	   :get-galosh-dir
+	   :get-time-fudge
 	   :fatal-get-galosh-dir
 	   :missing-galosh-db-error
 	   :missing-galosh-dir-error

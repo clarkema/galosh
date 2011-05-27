@@ -121,6 +121,12 @@
 (define-condition missing-galosh-db-error (error)
   ((text :initarg :text :reader text)))
 
+(let ((time-fudge :not-set))
+  (defun get-time-fudge ()
+    (when (eq time-fudge :not-set)
+	(setf time-fudge (parse-integer (get-config "core.time_fudge"))))
+    time-fudge))
+
 (defmacro with-galosh-db ((db &key (make-default t)) &body body)
   (with-gensyms (dbfile default-p)
     `(let ((,dbfile ,db)
@@ -204,6 +210,7 @@
 				(remove-if #'null (list "[core]"
 							(if context
 							    (cats "log = " (namestring (merge-pathnames "log.db" context))))
+							"time_fudge = 0"
 							(cats "cty-xml = " (namestring (merge-pathnames "cty.xml" home-galosh-dir)))
 							(cats "cty-lisp = " (namestring (merge-pathnames "cty.lisp" home-galosh-dir)))
 							"[log]"
