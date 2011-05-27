@@ -11,7 +11,8 @@ docs: manual manpages
 manpages: $(DOC_MAN1) $(DOC_HTML)
 
 %.1: %.txt
-	a2x -d manpage -f manpage $<
+	mkdir -p man1
+	a2x -D man1 -d manpage -f manpage $<
 
 %.html: %.txt
 	$(ASCIIDOC) $<

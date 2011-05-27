@@ -81,6 +81,7 @@ See 'galosh help COMMAND' for more information on a specific command.
 HELP
 
     if ( defined $command ) {
+        $ENV{'MANPATH'} = File::Spec->join( $FindBin::RealBin, "doc" );
         exec( "man galosh-$command" );
     }
     else {
