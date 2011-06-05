@@ -1,6 +1,6 @@
 install-quicklisp:
 	curl -O http://beta.quicklisp.org/quicklisp.lisp
-	sbcl --load quicklisp --eval "(quicklisp-quickstart:install :path \"$(CURDIR)/quicklisp/\")" \
+	sbcl --no-userinit --load quicklisp --eval "(quicklisp-quickstart:install :path \"$(CURDIR)/quicklisp/\")" \
 							--eval "(ql:quickload 'galosh)" \
 							--eval "(quit)"
 	rm quicklisp.lisp
@@ -13,3 +13,6 @@ clean:
 
 install-debian-packages:
 	aptitude install curl sbcl sqlite3
+
+test:
+	prove
