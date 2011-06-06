@@ -65,7 +65,7 @@
 (proclaim '(inline last1))
 
 (defun empty-string-p (str)
-  (not (> (length str) 0)))
+  (zerop (length str)))
 
 (defun string-right-pad (target-width str &key (padding-element #\Space))
   (if (< (length str) target-width)
