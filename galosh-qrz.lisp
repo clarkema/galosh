@@ -14,6 +14,11 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+;;;; This file contains both library functions, designed for use by other
+;;;; parts of the suite such as the logger and qsl modules; and the code
+;;;; of the qrz module itself, implemented as a thin layer on top of the
+;;;; library.
+
 (defpackage :galosh-qrz
   (:use :cl :gl :galosh-qrzcom :clsql :galosh-grep :alexandria)
   (:export :has-offlinedb-p :offline-qrz-search))
@@ -49,6 +54,9 @@
 	      '("VI" "Virgin Islands") '("WA" "Washington") '("WV" "West Virginia")
 	      '("WI" "Wisconsin") '("WY" "Wyoming")))
 
+;;;; ===================================================================
+;;;; Utilities
+;;;; ===================================================================
 (defmacro with-qrz-db ((db) &body body)
   (with-gensyms (dbfile)
     `(let ((,dbfile ,db))
@@ -60,8 +68,20 @@
 	   (disconnect :database *qrz-db*)
 	   (setf *qrz-db* nil))))))
 
-(defun has-offlinedb-p ()
-  (and (has-config-p "qrz.offlinedb") (probe-file (get-config "qrz.offlinedb"))))
+(defun princ-unless-nil (obj &key (fl nil))
+  (unless (null obj)
+    (princ obj)
+    (if fl
+	(fresh-line))))
+
+(defun prepend-newline (string)
+  (unless (empty-string-p string)
+    (format nil "~%~A" string)))
+
+(defun print-logged-qsos (term)
+  (let ((q (grep-his-call term)))
+    (when q
+      (format t "~%QSOs:~%~A" q))))
 
 (defun get-country-translations ()
   (with-transaction (:database *qrz-db*)
@@ -72,46 +92,36 @@
 	(setf (svref result id) (string-capitalize name)))
       result)))
 
-(defun bulk-offline-qrz-search (call)
-  (declare (optimize (speed 3)
-		     (compilation-speed 0)))
-  (let* ((c (string-upcase call))
-	 (r (or (first (select [country_id] 
-			       :from [amateur] :where [= 'call c] 
-			       :limit 1 :caching nil :flatp t :field-names nil :database *qrz-db*))
-		0)))
-    (declare (fixnum r))
-    (format t "~A:~c~A~%" c #\Tab
-	    (if (< r (length *country-by-id*))
-		(svref *country-by-id* r)
-		(warn (format nil "Invalid country for ~A (~A)" c r))))))
-
-;;;
-;;; Offline searching
-;;;
+;;;; ===================================================================
+;;;; Public interface
+;;;; ===================================================================
+(defun has-offlinedb-p ()
+  (and (has-config-p "qrz.offlinedb") (probe-file (get-config "qrz.offlinedb"))))
 
 (defun offline-qrz-search (call)
+  "Search for a callsign in the QRZ.com offline database, if installed.
+Returns a list of (\"Lastname, Firstname\" \"Street\" \"City\" \"State\" \"Country\").
+Returns nil if there is no offline database."
   (flet ((u (x) (string-upcase x))
 	 (c (x) (string-capitalize x)))
     (declare (inline u c))
-    (with-qrz-db ((get-config "qrz.offlinedb"))
-      (let ((r (first (select 'qrz-record :where [= 'call (u call)] :limit 1
-			      :caching nil :flatp t :database *qrz-db*))))
-	(when r
-	  (list
-	   (format nil "~A, ~A" (u (qrz-lastname r)) (c (qrz-firstname r)))
-	   (c (qrz-mailstreet r))
-	   (c (qrz-mailcity r))
-	   (if (= (qrz-country-id r) 271)
-	       (format nil "~A (~A)" (gethash (qrz-mailstate r) *us-state-code->name*) (qrz-mailstate r))
-	       (c (qrz-mailstate r)))
-	   (qrz-country-name r)
-	   (prepend-newline (section-entity call nil))))))))
+    (when (has-offlinedb-p)
+      (with-qrz-db ((get-config "qrz.offlinedb"))
+       (let ((r (first (select 'qrz-record :where [= 'call (u call)] :limit 1
+			       :caching nil :flatp t :database *qrz-db*))))
+	 (when r
+	   (list
+	    (format nil "~A, ~A" (u (qrz-lastname r)) (c (qrz-firstname r)))
+	    (c (qrz-mailstreet r))
+	    (c (qrz-mailcity r))
+	    (if (= (qrz-country-id r) 271)
+		(format nil "~A (~A)" (gethash (qrz-mailstate r) *us-state-code->name*) (qrz-mailstate r))
+		(c (qrz-mailstate r)))
+	    (qrz-country-name r))))))))
 
-;;;
-;;; Online searching
-;;;
-
+;;;; ===================================================================
+;;;; Online searching
+;;;; ===================================================================
 (defun section-qsl (call result)
   (declare (ignore call))
   (flet ((r (key) (gethash key result)))
@@ -125,7 +135,7 @@
 		   ", "))
       (fresh-line))))
 
-(defun section-entity (call result)
+(defun section-entity (call &optional result)
   (declare (ignore result))
   (with-output-to-string (*standard-output*)
     (when-let ((e (get-entity call)))
@@ -153,19 +163,25 @@
 	(format t "IOTA        : ~A~&" iota)))))
 
 (defun online-qrz-search (call)
-  (let* ((client (make-instance 'qrzcom-client
-				:username (get-config "qrz.user")
-				:password (get-config "qrz.password")))
-	 (result (details-by-call client call)))
-    (if result
-	(flet ((r (key) (gethash key result)))
-	  (format t "~A, ~A~%" (string-upcase (r "name")) (string-capitalize (r "fname")))
-	  (format t "~A~&~A~&~A~&" (string-capitalize (r "addr1"))
-		  (string-capitalize (r "addr2"))
-		  (string-upcase (r "country")))
-	  (mapcar (lambda (section)
-		    (princ-unless-nil (prepend-newline (funcall section call result))))
-		  (list #'section-entity #'section-qth #'section-qsl))))))
+  (with-output-to-string (*standard-output*)
+    (let* ((client (make-instance 'qrzcom-client
+				  :username (get-config "qrz.user")
+				  :password (get-config "qrz.password")))
+	   (result (details-by-call client call)))
+      (if result
+	  (flet ((r (key) (gethash key result)))
+	    (format t "~A, ~A~%" (string-upcase (r "name")) (string-capitalize (r "fname")))
+	    (format t "~A~&~A~&" (string-capitalize (r "addr1"))
+		    (string-capitalize (r "addr2")))
+	    (if (= (parse-integer (r "ccode")) 271)
+		(format t "~A (~A)~&" (gethash (r "state") *us-state-code->name*) (r "state"))
+		(princ (r "state")))
+	    (format t "~A~%" (string-upcase (r "country")))
+	    (princ-unless-nil (prepend-newline (section-entity call)))
+	    (mapcar #'(lambda (section)
+			(princ-unless-nil (prepend-newline (funcall section call result))))
+		    (list #'section-qth #'section-qsl))))
+      (princ-unless-nil (prepend-newline (section-entity call))))))
 
 (defun raw-online-qrz-search (call)
   (let* ((client (make-instance 'qrzcom-client
@@ -177,21 +193,9 @@
 	     do (format t "~A:~A~A~%" k #\Tab v)))
     result))
 
-(defun print-logged-qsos (term)
-  (let ((q (grep-his-call term)))
-    (when q
-      (format t "~%QSOs:~%~A" q))))
-
-(defun princ-unless-nil (obj &key (fl nil))
-  (unless (null obj)
-    (princ obj)
-    (if fl
-	(fresh-line))))
-
-(defun prepend-newline (string)
-  (unless (zerop (length string))
-      (cats (format nil "~%") string)))
-
+;;;; ===================================================================
+;;;; Program wrapper
+;;;; ===================================================================
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
       (getopt:getopt argv '(("offline" :none) ("raw" :none)))
@@ -210,16 +214,13 @@
 	       (if (has-offlinedb-p)
 		   (progn (princ (join (offline-qrz-search sought) #\Newline))
 			  (fresh-line)
+			  (princ (prepend-newline (section-entity sought)))
 			  (print-logged-qsos sought))
 		   (progn (say "Offline use of galosh qrz requires that you download and install the qrz.com")
 			  (say "database.  See 'man galosh-qrz' or 'info galosh' for more information."))))
 	      ((assoc "raw" options)
 	       (raw-online-qrz-search sought))
-	      (t (online-qrz-search sought)
+	      (t (princ (online-qrz-search sought))
 		 (print-logged-qsos sought)))
-	(with-qrz-db ((get-config "qrz.offlinedb"))
-	  (setf *country-by-id* (get-country-translations))
-	  (with-transaction (:database *qrz-db*)
-	    (do ((sought (read-line *standard-input* nil :eof) (read-line *standard-input* nil :eof)))
-		((equal sought :eof) nil)
-	      (bulk-offline-qrz-search sought)))))))
+	(format *error-output* "Fatal: No call given.~%"))))
+
