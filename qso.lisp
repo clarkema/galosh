@@ -16,7 +16,8 @@
 
 (defpackage :galosh-qso
   (:use :cl :gl :clsql)
-  (:export :qso :with-qso-accessors :q-toggle-followup :as-string :*qso-slot-accessors*))
+  (:export :qso :with-qso-accessors :q-toggle-followup :as-string :*qso-slot-accessors*
+	   :qso-datetime))
 (in-package :galosh-qso)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -211,3 +212,14 @@
 
 (defun (setf q-band) (band qso)
   (setf (slot-value qso 'band) band))
+
+(defun qso-datetime (qso)
+  (let ((date (q-qso-date qso))
+	(time (q-time-on qso)))
+    (format nil "~A-~A-~AT~A:~A:~A+00:00"
+	    (subseq date 0 4)
+	    (subseq date 4 6)
+	    (subseq date 6 8)
+	    (subseq time 0 2)
+	    (subseq time 2 4)
+	    (subseq time 4 6))))

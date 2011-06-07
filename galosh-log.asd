@@ -2,6 +2,7 @@
     :depends-on (#:galosh-lisp
 		 #:galosh-qso
 		 #:galosh-qrz
+		 #:getopt
 		 #:clsql
 		 #:cl-ncurses
 		 #:alexandria)

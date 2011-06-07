@@ -299,11 +299,34 @@
   (print-history)
   (event-loop ""))
 
+(defun complete-missing-entities ()
+  (with-transaction ()
+    (do-query ((qso) [SELECT 'qso :WHERE [null 'his_dxcc]])
+      (let ((entity (get-entity (q-his-call qso) (qso-datetime qso) :error-p nil)))
+	(setf (q-his-dxcc qso) (entity-adif entity))
+	(update-records-from-instance qso)
+	(format t "Updated ~A to ~A (~A)~%" (as-string qso) (entity-adif entity) (entity-name entity))))))
+
+(defun process-options (argv)
+  (multiple-value-bind (leftover options)
+      (getopt:getopt argv '(("complete-missing-entities" :none t)))
+    (declare (ignore leftover))
+    options))
+
+(defun get-option (name options &key (default nil default-p))
+  (if-let ((option (cdr (assoc name options))))
+	  option
+	  (if default-p default nil)))
+
 (define-galosh-command galosh-log (:required-configuration '("user.call"))
-  (let ((state-file (make-pathname :directory (fatal-get-galosh-dir) :name "galosh-log" :type "state"))
+  (let ((options (process-options argv))
+	(state-file (make-pathname :directory (fatal-get-galosh-dir) :name "galosh-log" :type "state"))
 	(*operator* (get-config "user.call")))
-    (read-state state-file)
-    (unwind-protect
-	 (start-interface)
-      (endwin)
-      (write-state state-file))))
+    (cond ((get-option "complete-missing-entities" options)
+	   (complete-missing-entities))
+	  (t
+	   (read-state state-file)
+	   (unwind-protect
+		(start-interface)
+	     (endwin)
+	     (write-state state-file))))))

@@ -26,6 +26,15 @@ _galosh_import_qrz_db()
     return 0
 }
 
+_galosh_log()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local opts="--complete-missing-entities"
+
+    COMPREPLY=( $(compgen -W "$opts" -- $cur ) )
+    return 0
+}
+
 _galosh_qrz()
 {
     local cur="${COMP_WORDS[COMP_CWORD]}"

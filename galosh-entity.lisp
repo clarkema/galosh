@@ -41,7 +41,7 @@
 (defclass entity ()
   ((prefix    :initarg :prefix    :accessor entity-prefix    :initform nil)
    (name      :initarg :name      :accessor entity-name      :initform nil)
-   (adif      :initarg :adif      :accessor entity-adif      :initform nil)
+   (adif      :initarg :adif            :initform nil)
    (cq-zone   :initarg :cq-zone   :accessor entity-cq-zone   :initform nil)
    (itu-zone  :initarg :itu-zone  :accessor entity-itu-zone  :initform nil)
    (continent :initarg :continent :accessor entity-continent :initform nil)
@@ -49,6 +49,11 @@
    (longitude :initarg :longitude :accessor entity-longitude :initform nil)
    (start     :initarg :start     :accessor entity-start     :initform nil)
    (end       :initarg :end       :accessor entity-end       :initform nil)))
+
+(defmethod entity-name ((o t)) "UNKNOWN")
+(defmethod entity-adif ((o entity))
+  (parse-integer (slot-value o 'adif)))
+(defmethod entity-adif ((o t)) nil)
 
 (defmethod print-object ((object entity) stream)
   (print-unreadable-object (object stream :type t :identity t)
@@ -251,7 +256,7 @@ added to the search results.  Returns either the matching entity, or nil."
 			 :name "Invalid2" :adif "1000")))))
 
 
-(defun get-entity (call &optional (datetime (get-datetime)))
+(defun get-entity (call &optional (datetime (get-datetime)) &key (error-p t))
   (setf call (string-upcase (string-trim '(#\Space #\Tab) call)))
   (if (entity-information-available-p)
       (labels ((gett (call)
@@ -276,8 +281,10 @@ added to the search results.  Returns either the matching entity, or nil."
 				  (when (> ratio (cadr best))
 				    (setf best (list result ratio))))))
 			    (if (null (car best))
-				(error 'entity-not-found-error :call
-				       call)
+				(if error-p
+				    (error 'entity-not-found-error :call
+					   call)
+				    nil)
 				(car best))))))))
 	(if (sane-callsign-p call)
 	    (if-let ((it (get-invalid call datetime)))
