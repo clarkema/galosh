@@ -66,20 +66,27 @@
 ;;; ===================================================================
 ;;; Display functions
 ;;; ===================================================================
+(defun print-skeleton ()
+  (display-title-bar)
+  (display-status-bar)
+  (display-help-bar)
+  (refresh))
+
 (defun print-buffer (buffer &optional (prompt ""))
   (mvprintw (- *LINES* 1) 0 (format nil "~a~a~%" prompt buffer))
   (refresh))
 
 (defun print-history ()
   (let* ((history-size (- *LINES* 9)) ; 9 = 5 for qso, 3 status bars, 1 entry line
+	 (history-start 7)
 	 (q (reverse (select 'qso
 			     :order-by '(([qso_date] :desc)([time_on] :desc))
 			     :limit history-size
 			     :caching nil
 			     :flatp t)))
 	 (q-length (length q)))
-    (dotimes (i q-length)
-      (mvprintw (- *LINES* (- (+ history-size 2) i)) 0 (format nil "~a~%" (as-string (elt q i))))))
+    (dotimes (i history-size)
+      (mvprintw (+ history-start i) 0 (format nil "~a~%" (if (< i q-length) (as-string (elt q i)) "")))))
   (refresh))
 
 (defun print-qso (q)
@@ -87,14 +94,12 @@
     (mvprintw 1 0 (string-right-pad 40 (format nil "~a ~a ~a ~a ~a ~a"
 					       (subseq q-qso-date 2) (subseq q-time-on 0 4) q-his-call
 					       q-qrg      q-rx-rst  q-tx-rst)))
-    (mvprintw 2 0 (string-right-pad 40 (format nil "    IOTA: ~6@A  MODE: ~A"
+    (mvprintw 2 0 (string-right-pad 40 (format nil "    IOTA: ~6@A  Mode: ~A"
 					       (n->es q-his-iota)
 					       (n->es q-mode))))
     (mvprintw 3 0 (string-right-pad 40 (format nil "    Name: ~a" (n->es q-his-name))))
     (mvprintw 4 0 (string-right-pad 40 (format nil "    Comment: ~a" (n->es q-comment))))
-    (mvprintw 5 0 (string-right-pad 40 (format nil "    Follow up? ~A  GRID: ~6@A" q-followup (n->es q-his-grid))))
-    (with-color +inv-green+
-      (mvprintw 6 0 (string-right-pad *COLS* " g:grid i:iota c:comment C:call n:name f:followup")))
+    (mvprintw 5 0 (string-right-pad 40 (format nil "    Follow up? ~A  Grid: ~6@A" q-followup (n->es q-his-grid))))
     (refresh)))
 
 (defun print-qrz-info (call)
@@ -114,6 +119,10 @@
     (mvprintw (- *LINES* 2) 0
 	      (string-right-pad *COLS*
 				(format nil "---Galosh Logger: ~A" *default-database*)))))
+
+(defun display-help-bar ()
+  (with-color +inv-green+
+    (mvprintw 6 0 (string-right-pad *COLS* " g:grid i:iota c:comment C:call n:name f:followup"))))
 
 (defun prompt (p)
   (mvprintw (1- *LINES*) 0 (format nil "~a~%" p))
@@ -175,6 +184,10 @@
   (print-qso qso)
   (prompt "> ")
   (case-with-char (code-char (getch)) qso
+		  (:func (code-char 410)
+			 #'(lambda ()
+			     (print-skeleton)
+			     (print-history)))
 		  (#\g q-his-grid "Grid: ")
 		  (#\i q-his-iota "IOTA: " (:ucase-p t))
 		  (#\c q-comment  "Comment: ")
@@ -242,16 +255,14 @@
 	  ((string-equal place "iota") (setf *iota* (string-upcase value))))))
 
 (defun event-loop (buffer)
-  (display-title-bar)
-  (display-status-bar)
+  (print-skeleton)
   (print-buffer buffer)
   (refresh)
   (let* ((raw-code (getch))
 	 (c (code-char raw-code)))
     (cond ((equal raw-code 410)
-	   (display-title-bar)
+	   (print-skeleton)
 	   (print-history)
-	   (display-status-bar)
 	   (print-buffer buffer)
 	   (refresh)
 	   (event-loop buffer))
