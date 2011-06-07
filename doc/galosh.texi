@@ -279,12 +279,14 @@ Mode and IOTA information can be changed in much the same way as the frequency:
 
 @subsection Time Adjustment
 
-Galosh will log using your computer's idea of UTC.  Should this be wrong,
-ideally it should be corrected at the operating system level.  However, in some
-cases that might not be possible, and so Galosh provides the
-@code{core.time_fudge} option.  For example, to log a time of 3 hours
-earlier than your operating system's idea of UTC, set
-@code{core.time_fudge} to @code{-10800}.
+Galosh will log using your computer's idea of UTC.  Should this be
+wrong, ideally it should be corrected at the operating system level.
+However, in some cases that might not be possible, and so Galosh
+provides the @code{core.time_fudge} option.  This allows you to specify
+an integer number of seconds to be added to the operating system's idea
+of UTC.  For example, to log a time of 3 hours earlier than
+would otherwise be the case set @code{core.time_fudge} to
+@code{-10800}.
 
 @node QRZ
 @chapter QRZ
