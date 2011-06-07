@@ -9,4 +9,5 @@
 		 #:cxml
 		 #:getopt
 		 #:py-configparser
-		 #:fiveam))
+		 #:fiveam
+		 #:jpl-queues))

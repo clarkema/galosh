@@ -5,7 +5,8 @@
 		 #:cl-ncurses
 		 #:cl-ppcre
 		 #:alexandria
-		 #:usocket)
+		 #:usocket
+		 #:jpl-queues)
     :components ((:file "galosh-utils")
 		 (:file "galosh-ncurses")
 		 (:file "galosh-cluster"

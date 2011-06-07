@@ -16,7 +16,7 @@
 
 (defpackage :galosh-cluster
   (:use :cl :gl :clsql
-	:gu :cl-ncurses :alexandria :usocket))
+	:gu :cl-ncurses :alexandria :usocket :jpl-queues))
 (in-package :galosh-cluster)
 
 (clsql:file-enable-sql-reader-syntax)
@@ -26,6 +26,8 @@
 (defvar *history-head* nil)
 (defvar *client* nil)
 (defparameter *history-size* 100)
+
+(defvar *announce-queue* nil)
 
 (defconstant +inv-green+ 1)
 (defconstant +red+ 2)
@@ -41,7 +43,7 @@
 
 (defun new-entity-p (call)
   (let ((sought (entity-adif (get-entity call nil :error-p nil))))
-    (first (select [count[*]] :from 'qso :where [= 'his_dxcc sought] :flatp t))))
+    (zerop (first (select [count[*]] :from 'qso :where [= 'his_dxcc sought] :flatp t)))))
 
 ;;; ===================================================================
 ;;; Spot
@@ -56,16 +58,15 @@
 
 (defgeneric format-object (object))
 (defmethod format-object ((object spot))
-  (values (format nil " ~A ~A ~A ~A ~A ~A ~A ~A~%"
+  (values (format nil " ~A ~A ~A ~A ~A ~A ~A~%"
 		  (string-downcase(spot-time object))
 		  (string-right-pad 7 (spot-spotter object))
 		  (spot-spotted object)
-		  (string-right-pad 33 (entity-name (get-entity (spot-spotter object))))
-		  (string-right-pad 33 (entity-name (get-entity (spot-spotted object))))
+		  (string-right-pad 33 (entity-name (get-entity (spot-spotter object) nil :error-p nil)))
+		  (string-right-pad 33 (entity-name (get-entity (spot-spotted object) nil :error-p nil)))
 		  (spot-qrg object)
-		  (spot-comment object)
-		  (new-entity-p (spot-spotted object)))
-	  (if (zerop (new-entity-p (spot-spotted object))) +red+ 0)))
+		  (spot-comment object))
+	  (if (new-entity-p (spot-spotted object)) +red+ 0)))
 
 (defmethod format-object ((object t))
   (values
@@ -77,13 +78,28 @@
 (defun parse-spot (string)
   (cl-ppcre:register-groups-bind (spotter-call spotted-qrg spotted-call comment time)
       ("^DX de (.{7})(.{11})  (.{12}) (.+?) (\\d{4}Z)" string)
-    (return-from parse-spot (make-spot :spotted spotted-call
-				       :qrg spotted-qrg
-				       :spotter (string-trim '(#\: #\Space) spotter-call)
-				       :time time
-				       :comment comment)))
+    (let ((spot (make-spot :spotted spotted-call
+			   :qrg spotted-qrg
+			   :spotter (string-trim '(#\: #\Space) spotter-call)
+			   :time time
+			   :comment comment)))
+      (run-spot-hooks spot)
+      (return-from parse-spot spot)))
   string)
-  
+
+(defun festival-expand-string (string)
+  (cl-ppcre:regex-replace-all "&" string "and"))
+
+(defun festival-worker ()
+  (let ((message (dequeue *announce-queue*)))
+    (unless (eq message 'terminate)
+      (with-input-from-string (stream (festival-expand-string message))
+	(sb-ext:run-program "festival" (list "--tts")
+			    :input stream
+			    :wait t
+			    :search (sb-ext:posix-getenv "PATH")))
+      (festival-worker))))
+
 ;;; ===================================================================
 ;;; Cluster client
 ;;; ===================================================================
@@ -170,6 +186,13 @@
 	  (mvprintw (+ 1 i) 0 line)))))
   (refresh))
 
+(defun run-spot-hooks (spot)
+  (when (new-entity-p (spot-spotted spot))
+    (enqueue (format nil "~A: ~A. New DXCC."
+		     (spot-spotted spot)
+		     (entity-name (get-entity (spot-spotted spot) nil :error-p nil)))
+	     *announce-queue*)))
+
 ;;;
 ;;; User side
 ;;;  
@@ -185,7 +208,8 @@
 	   (repaint-all)
 	   (ncurses-main-loop))
 	  ((eql c #\q)
-	   (cluster-write *client* (format nil "q~%")))
+	   (cluster-write *client* (format nil "q~%"))
+	   (enqueue 'terminate *announce-queue*))
 	  (t
 	   (ncurses-main-loop)))))
 
@@ -231,6 +255,9 @@
 	 (progn
 	   (init-history-buffer *history-size*)
 	   (start-interface)
+	   (setf *announce-queue* (make-instance 'synchronized-queue :queue
+						 (make-instance 'unbounded-fifo-queue)))
+	   (bordeaux-threads:make-thread #'festival-worker)
 	   (bordeaux-threads:make-thread #'(lambda ()
 					     (start-cluster-client (get-config "cluster.host") (get-config "cluster.port"))))
 	   (ncurses-main-loop))
