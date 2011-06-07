@@ -175,13 +175,13 @@ Returns nil if there is no offline database."
 		    (string-capitalize (r "addr2")))
 	    (if (= (parse-integer (r "ccode")) 271)
 		(format t "~A (~A)~&" (gethash (r "state") *us-state-code->name*) (r "state"))
-		(princ (r "state")))
-	    (format t "~A~%" (string-upcase (r "country")))
+		(princ-unless-nil (r "state")))
+	    (format t "~&~A~%" (string-upcase (r "country")))
 	    (princ-unless-nil (prepend-newline (section-entity call)))
 	    (mapcar #'(lambda (section)
 			(princ-unless-nil (prepend-newline (funcall section call result))))
-		    (list #'section-qth #'section-qsl))))
-      (princ-unless-nil (prepend-newline (section-entity call))))))
+		    (list #'section-qth #'section-qsl)))
+	  (princ-unless-nil (prepend-newline (section-entity call)))))))
 
 (defun raw-online-qrz-search (call)
   (let* ((client (make-instance 'qrzcom-client
