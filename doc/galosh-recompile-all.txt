@@ -1,0 +1,33 @@
+galosh-recompile-all(1)
+=======================
+
+NAME
+----
+galosh-recompile-all - Automatically recompile any compiled Galosh commands.
+
+SYNOPSIS
+--------
+`galosh recompile-all`
+
+DESCRIPTION
+-----------
+Automatically recompile any Galosh commands you have chosen to compile,
+without requiring you to specify each one individually.  See the
+`galosh-compile(1)' for details on the compilation process.
+
+SEE ALSO
+--------
+`galosh-compile(1)`
+
+Author
+------
+Written by Mike Clarke <mike -at- galosh.org.uk>.
+
+Documentation
+-------------
+
+Documentation by Mike Clarke.
+
+GALOSH
+------
+Part of the Galosh suite.

@@ -6,6 +6,7 @@ use 5.010;
 use FindBin;
 use lib "$FindBin::RealBin/perllib";
 
+use File::Glob     ':glob';
 use File::Spec;
 use File::HomeDir;
 
@@ -141,6 +142,16 @@ sub cmd_config
         while ( my ($k, $v) = each %$config ) {
             print "$k = $v\n"
         }
+    }
+}
+
+sub cmd_recompile_all
+{
+    my @executables = bsd_glob( "$compiled_dir/galosh-*" );
+    for my $executable (@executables) {
+        my ($command) = $executable =~ m!galosh-([a-z0-9]+)$!;
+        print "Recompiling $command...\n";
+        system( "galosh compile $command ");
     }
 }
 

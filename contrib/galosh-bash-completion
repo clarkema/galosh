@@ -60,7 +60,7 @@ _galosh()
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
 
-    commands="browser cluster lisp-repl log grep export-adif import-adif import-qrz-db qrz update"
+    commands="browser cluster lisp-repl log grep export-adif import-adif import-qrz-db qrz recompile-all update"
 
     while [ $c -lt $COMP_CWORD ]; do
         i="${COMP_WORDS[c]}"
