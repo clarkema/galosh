@@ -19,6 +19,8 @@
 	:gu :cl-ncurses :alexandria :usocket))
 (in-package :galosh-cluster)
 
+(clsql:file-enable-sql-reader-syntax)
+
 (setf *print-circle* t)
 (defvar *history* ())
 (defvar *history-head* nil)
@@ -26,6 +28,7 @@
 (defparameter *history-size* 100)
 
 (defconstant +inv-green+ 1)
+(defconstant +red+ 2)
 
 (defun init-history-buffer (size)
   (setf *history* (make-list size :initial-element "")
@@ -35,6 +38,51 @@
 (defun history-push (string)
   (setf (car *history-head*) string
 	*history-head* (cdr *history-head*)))
+
+(defun new-entity-p (call)
+  (let ((sought (entity-adif (get-entity call nil :error-p nil))))
+    (first (select [count[*]] :from 'qso :where [= 'his_dxcc sought] :flatp t))))
+
+;;; ===================================================================
+;;; Spot
+;;; ===================================================================
+(defstruct spot
+  spotter
+  spotted
+  qrg
+  time
+  comment
+  qrz)
+
+(defgeneric format-object (object))
+(defmethod format-object ((object spot))
+  (values (format nil " ~A ~A ~A ~A ~A ~A ~A ~A~%"
+		  (string-downcase(spot-time object))
+		  (string-right-pad 7 (spot-spotter object))
+		  (spot-spotted object)
+		  (string-right-pad 33 (entity-name (get-entity (spot-spotter object))))
+		  (string-right-pad 33 (entity-name (get-entity (spot-spotted object))))
+		  (spot-qrg object)
+		  (spot-comment object)
+		  (new-entity-p (spot-spotted object)))
+	  (if (zerop (new-entity-p (spot-spotted object))) +red+ 0)))
+
+(defmethod format-object ((object t))
+  (values
+   (format nil "~A~%" object)
+   0))
+
+; Line format (taken from DXSpider's DXCommandmode.pm)
+; return sprintf "DX de %-7.7s%11.1f  %-12.12s %-s $t$loc", "$_[4]:", $_[0], $_[1], $comment;
+(defun parse-spot (string)
+  (cl-ppcre:register-groups-bind (spotter-call spotted-qrg spotted-call comment time)
+      ("^DX de (.{7})(.{11})  (.{12}) (.+?) (\\d{4}Z)" string)
+    (return-from parse-spot (make-spot :spotted spotted-call
+				       :qrg spotted-qrg
+				       :spotter (string-trim '(#\: #\Space) spotter-call)
+				       :time time
+				       :comment comment)))
+  string)
   
 ;;; ===================================================================
 ;;; Cluster client
@@ -51,7 +99,7 @@
 (defun cluster-connect (client)
   (let* ((sb-impl::*default-external-format* :ascii))
     (setf (slot-value client 'socket) (usocket:socket-connect (slot-value client 'host)
-							    (parse-integer (slot-value client 'port))))
+							      (parse-integer (slot-value client 'port))))
     (setf (slot-value client 'stream) (usocket:socket-stream (slot-value client 'socket)))
     client))
 	 
@@ -68,7 +116,9 @@
 		 (cluster-write client (format nil "~A~%" (get-config "cluster.user")))
 		 (return-from cluster-login t))
 	       (handler-bind ((sb-int:stream-decoding-error
-			       #'(lambda (c) (invoke-restart 'attempt-resync))))
+			       #'(lambda (c)
+				   (declare (ignore c))
+				   (invoke-restart 'attempt-resync))))
 		 (let ((c (read-char s nil :EOF)))
 		   (cond 
 		     ((eq c :EOF) nil)
@@ -106,40 +156,6 @@
     (princ string (slot-value client 'stream))
     (force-output (slot-value client 'stream))))
 
-;;; ===================================================================
-;;; Spot
-;;; ===================================================================
-(defgeneric format-object (object))
-(defmethod format-object ((object spot))
-  (format nil " ~A ~A ~A at ~A ~A~%"
-	  (spot-spotter object)
-	  (spot-qrg object)
-	  (spot-spotted object)
-	  (spot-time object)
-	  (spot-comment object)))
-(defmethod format-object ((object t))
-  (format nil "~A~%" object))
-
-
-(defstruct spot
-  spotter
-  spotted
-  qrg
-  time
-  comment
-  qrz)
-
-; Line format (taken from DXSpider's DXCommandmode.pm)
-; return sprintf "DX de %-7.7s%11.1f  %-12.12s %-s $t$loc", "$_[4]:", $_[0], $_[1], $comment;
-(defun parse-spot (string)
-  (cl-ppcre:register-groups-bind (spotter-call spotted-qrg spotted-call comment time)
-				 ("^DX de (.{7})(.{11})  (.{12}) (.+?) (\\d{4}Z)" string)
-				 (return-from parse-spot (make-spot :spotted spotted-call
-								    :qrg spotted-qrg
-								    :spotter spotter-call
-								    :time time
-								    :comment comment)))
-  string)
 
 (defun display-title-bar ()
   (with-color +inv-green+
@@ -148,9 +164,12 @@
 (defun display-history ()
   (let ((display-lines (- *LINES* 3)))
     (dotimes (i display-lines)
-      (mvprintw (+ 1 i) 0 (format-object (elt *history-head*
-					      (+ (- *history-size* display-lines) i))))))
+      (multiple-value-bind (line colour) (format-object (elt *history-head*
+							    (+ (- *history-size* display-lines) i)))
+	(with-color colour
+	  (mvprintw (+ 1 i) 0 line)))))
   (refresh))
+
 ;;;
 ;;; User side
 ;;;  
@@ -192,7 +211,8 @@
   (noecho)
   (when (has-colors)
     (start-color)
-    (init-pair +inv-green+ COLOR_BLACK COLOR_GREEN))
+    (init-pair +inv-green+ COLOR_BLACK COLOR_GREEN)
+    (init-pair +red+ COLOR_RED COLOR_BLACK))
   (display-title-bar)
   (refresh))
 
@@ -200,6 +220,9 @@
   (dolist (thread (sb-thread:list-all-threads))
     (unless (equal sb-thread:*current-thread* thread)
       (sb-thread:join-thread thread))))
+
+(defun buildapp-init ()
+  (load-entity-information))
 
 (define-galosh-command galosh-cluster (:required-configuration '("cluster.host" "cluster.port" "cluster.user"))
   (let ((state-file (make-pathname :directory (fatal-get-galosh-dir) :name "galosh-cluster" :type "state")))
@@ -212,5 +235,5 @@
 					     (start-cluster-client (get-config "cluster.host") (get-config "cluster.port"))))
 	   (ncurses-main-loop))
       (join-all))
-      (endwin)
-      (write-state state-file)))
+    (endwin)
+    (write-state state-file)))
