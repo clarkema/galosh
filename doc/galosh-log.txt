@@ -1,0 +1,40 @@
+galosh-log(1)
+=============
+
+NAME
+----
+galosh-log - Manage your amateur radio log
+
+SYNOPSIS
+--------
+`galosh log` [<options>]
+
+DESCRIPTION
+-----------
+Manage your amateur radio log.
+
+`galosh log` is the heart of the Galosh suite; it allows you to quickly
+and easily create new log entries, with as much or as little detail as is
+appropriate.
+
+OPTIONS
+-------
+--complete-missing-entities::
+    Fill in DXCC entity information for any entries in your log that lack it.
+
+SEE ALSO
+--------
+`galosh-qsl(1)`
+
+Author
+------
+Written by Mike Clarke <mike -at- galosh.org.uk>.
+
+Documentation
+-------------
+
+Documentation by Mike Clarke.
+
+GALOSH
+------
+Part of the Galosh suite.
