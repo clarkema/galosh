@@ -114,7 +114,7 @@
 (defun sane-callsign-p (call)
   (let ((sane nil))
     (dolist (section (split #\/ call))
-      (if (cl-ppcre:scan "^[A-Z0-9]{1,2}[0-9][A-Z0-9]*$" section)
+      (if (cl-ppcre:scan "^[A-Z0-9]{1,3}[0-9][A-Z0-9]*$" section)
 	  (setf sane t)))
     sane))
 
