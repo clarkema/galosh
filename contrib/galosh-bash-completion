@@ -18,6 +18,16 @@
 
 # This file provides bash completion support for Galosh.
 
+_GALOSH_COMMANDS="browser cluster help lisp-repl log grep export-adif import-adif import-qrz-db qrz recompile-all update"
+
+_galosh_help()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+
+    COMPREPLY=( $(compgen -W "$_GALOSH_COMMANDS" -- $cur ) )
+    return 0
+}
+
 _galosh_import_qrz_db()
 {
     local cur="${COMP_WORDS[COMP_CWORD]}"
@@ -55,12 +65,11 @@ _galosh_export_adif()
 
 _galosh()
 {
-    local i c=1 command cur commands
+    local i c=1 command cur
 
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
 
-    commands="browser cluster lisp-repl log grep export-adif import-adif import-qrz-db qrz recompile-all update"
 
     while [ $c -lt $COMP_CWORD ]; do
         i="${COMP_WORDS[c]}"
@@ -71,7 +80,7 @@ _galosh()
     done
 
     if [ -z "$command" ]; then
-        COMPREPLY=( $(compgen -W "$commands" -- $cur ) )
+        COMPREPLY=( $(compgen -W "$_GALOSH_COMMANDS" -- $cur ) )
         return 0
     fi
 
