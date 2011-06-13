@@ -5,7 +5,8 @@
 		 #:clsql
 		 #:cl-ncurses
 		 #:alexandria
-		 #:screamer)
+		 #:screamer
+		 #:st-json)
     :components ((:file "galosh-ncurses")
 		 (:file "galosh-qsl"
 			:depends-on ("galosh-ncurses"))))

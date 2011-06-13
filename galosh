@@ -188,6 +188,12 @@ sub cmd_browser
     Galosh::Browser::main( @ARGV );
 }
 
+sub cmd_create_qsl
+{
+    use Galosh::CreateQSL;
+    Galosh::CreateQSL::main();
+}
+
 sub cmd_journal
 {
     use Galosh::Journal;

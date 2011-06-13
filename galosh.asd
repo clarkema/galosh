@@ -11,4 +11,5 @@
 		 #:py-configparser
 		 #:fiveam
 		 #:jpl-queues
-		 #:screamer))
+		 #:screamer
+		 #:st-json))

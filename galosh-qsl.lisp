@@ -16,7 +16,7 @@
 
 (screamer:define-screamer-package :galosh-qsl
   (:use :cl :gl :clsql
-	:galosh-qso :cl-ncurses :alexandria))
+	:galosh-qso :cl-ncurses :alexandria :st-json))
 (in-package :galosh-qsl)
 
 (clsql:enable-sql-reader-syntax) 
@@ -220,6 +220,25 @@
   (mvprintw (1- *LINES*) 0 (format nil "~a~%" p))
   (refresh))
 
+(defun create-qsl (qso)
+  (let ((info (make-hash-table)))
+    (setf (gethash "his-call" info) (q-his-call qso)
+	  (gethash "my-call" info)  (q-my-call qso)
+	  (gethash "qso-date" info) (human-date (q-qso-date qso))
+	  (gethash "time-on" info)  (subseq (q-time-on qso) 0 4)
+	  (gethash "qrg" info)      (format nil "~,3f" (float (/ (q-qrg qso) 1000000)))
+	  (gethash "mode" info)     (q-mode qso)
+	  (gethash "tx-rst" info)   (q-tx-rst qso)
+	  (gethash "my-grid" info)  (q-my-grid qso)
+	  (gethash "my-itu-zone" info)   (q-my-itu-zone qso)
+	  (gethash "my-cq-zone" info)    (q-my-cq-zone qso))
+    (let ((worker-handle (sb-ext:run-program "galosh" (list "create-qsl")
+					      :wait nil
+					      :search (sb-ext:posix-getenv "PATH")
+					      :input :stream)))
+      (write-json info (sb-ext:process-input worker-handle))
+      (close (sb-ext:process-input worker-handle)))))
+
 (defun manage-qso-event-loop (qso)
   (sb-ext:run-program "galosh" (list "browser" (cats "http://www.qrz.com/db/" (q-his-call qso)))
 		      :wait nil
@@ -231,6 +250,7 @@
 	       (case-with-char (code-char (getch)) qso
 			       (#\C q-his-cq-zone "CQ Zone: " (:integer-p t))
 			       (#\I q-his-itu-zone "ITU Zone: " (:integer-p t))
+			       (#\i q-his-iota "IOTA: ")
 			       (#\D q-his-dxcc "DXCC: " (:integer-p t))
 			       (#\G q-his-grid "Grid: ")
 			       (:func #\r #'(lambda () (mark-qsl-received q)))
@@ -239,6 +259,7 @@
 			       (:func #\z #'(lambda () (sb-ext:run-program "galosh" (list "browser" (cats "http://www.qrz.com/db/" (q-his-call q)))
 									   :wait nil
 									   :search (sb-ext:posix-getenv "PATH"))))
+			       (:func #\p #'(lambda () (create-qsl q)))
 			       (:exit #\Esc :cancel)
 			       (:default (again q)))))
       (again qso))))
