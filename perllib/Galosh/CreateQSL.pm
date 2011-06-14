@@ -34,7 +34,7 @@ sub main
     open( my $template, '<', '/home/clarkema/git/galosh/qsl/qsl-single.tex' ) or die $!;
 
     my $tmp = File::Temp->new(
-        DIR => $temp_dir,
+        DIR    => $temp_dir,
         SUFFIX => '.tex' );
 
     print $tmp latex_variables( from_json( <STDIN> ) );
@@ -48,7 +48,7 @@ sub main
     $tmp->flush;
     $tmp->sync;
 
-    warn( system( "pdflatex $texname" ) );
+    system( "pdflatex $texname" );
     system( "evince $pdfname" );
 
     close( $template );
@@ -57,8 +57,9 @@ sub main
 sub latex_variables
 {
     my $info = shift;
-    
-    return <<END;
+    my $first = $info->[0];
+
+    my $header = <<END;
 \\documentclass[a4paper]{article}
 \\pagestyle{empty}
 \\usepackage{amsmath}
@@ -76,16 +77,24 @@ sub latex_variables
 \\newcommand{\\emptycontact}{\\vphantom{\$\\dfrac b b\$} & & & & & \\\\}
 \\newcommand{\\contactlines}{
     \\hline
-    \\contactline{$info->{'qso-date'}}{$info->{'time-on'}}{$info->{'qrg'}}{$info->{'mode'}}{$info->{'tx-rst'}}
-    \\hline
-    \\emptycontact
-    \\hline}
-\\newcommand{\\QsoHisCall}{$info->{'his-call'}}
-\\newcommand{\\QsoMyCall}{$info->{'my-call'}}
-\\newcommand{\\QsoMyITU}{$info->{'my-itu-zone'}}
-\\newcommand{\\QsoMyCQ}{$info->{'my-cq-zone'}}
-\\newcommand{\\QsoMyGrid}{$info->{'my-grid'}}
 END
+    foreach my $qso (@$info) {
+        $header .= "\\contactline{$qso->{'qso-date'}}{$qso->{'time-on'}}{$qso->{'qrg'}}{$qso->{'mode'}}{$qso->{'tx-rst'}}";
+        $header .= "\\hline";
+    }
+
+    $header .= <<END;
+    %\\emptycontact
+    %\\hline
+    }
+\\newcommand{\\QsoHisCall}{$first->{'his-call'}}
+\\newcommand{\\QsoMyCall}{$first->{'my-call'}}
+\\newcommand{\\QsoMyITU}{$first->{'my-itu-zone'}}
+\\newcommand{\\QsoMyCQ}{$first->{'my-cq-zone'}}
+\\newcommand{\\QsoMyGrid}{$first->{'my-grid'}}
+END
+
+    return $header;
 }
 
 1;
