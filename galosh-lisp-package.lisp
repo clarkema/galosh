@@ -21,6 +21,7 @@
 	   :cats
 	   :join
 	   :say
+	   :open-in-browser
 	   :keys
 	   :default
 	   :with-galosh-db

@@ -95,6 +95,11 @@
   (princ obj stream)
   (fresh-line stream))
 
+(defun open-in-browser (call)
+  (sb-ext:run-program "galosh" (list "browser" (mkstr "http://www.qrz.com/db/" call))
+		      :wait nil
+		      :search (sb-ext:posix-getenv "PATH")))
+
 (defmacro default (place value)
   `(if (null ,place)
        (setf ,place ,value)))
