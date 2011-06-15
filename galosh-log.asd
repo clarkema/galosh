@@ -6,8 +6,7 @@
 		 #:clsql
 		 #:cl-ncurses
 		 #:alexandria)
-    :components ((:file "galosh-utils")
-		 (:file "galosh-ncurses")
+    :components ((:file "galosh-ncurses")
 		 (:file "galosh-adif")
 		 (:file "galosh-log"
-			:depends-on ("galosh-utils" "galosh-ncurses" "galosh-adif"))))
+			:depends-on ("galosh-ncurses" "galosh-adif"))))

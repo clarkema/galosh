@@ -17,7 +17,6 @@
 (defpackage :galosh-adif
   (:use :cl
 	:gl
-	:gu
 	:galosh-qso)
   (:export :map-over-qsos
 	   :adif-error

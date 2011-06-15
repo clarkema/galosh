@@ -16,7 +16,7 @@
 
 (defpackage :galosh-log
   (:use :cl :gl :clsql
-	:galosh-qso :gu :cl-ncurses :alexandria))
+	:galosh-qso :cl-ncurses :alexandria))
 (in-package :galosh-log)
 
 (clsql:enable-sql-reader-syntax) 
@@ -31,22 +31,6 @@
 ;;; ===================================================================
 ;;; Utilities
 ;;; ===================================================================
-(defun log-date-time ()
-  (multiple-value-bind
-        (second minute hour date month year)
-      (decode-universal-time (+ (get-universal-time ) (get-time-fudge)) 0)
-    (values
-     (format nil "~2,'0d~2,'0d~2,'0d" year month date)
-     (format nil "~2,'0d~2,'02,'0d~2,'0d" hour minute second))))
-
-(defun log-date ()
-  (multiple-value-bind (date) (log-date-time)
-    date))
-
-(defun log-time ()
-  (multiple-value-bind (date time) (log-date-time)
-    (declare (ignore date))
-    time))
 
 (defun ensure-valid-rst (val mode)
   (cond ((stringp val)
@@ -57,11 +41,6 @@
 	   (parse-integer rst)))
 	((integerp val) val)
 	(t (default-rst-for-mode mode))))
-
-(defun drop-last (str)
-  (if (> (length str) 1)
-      (subseq str 0 (- (length str) 1))
-      ""))
 
 ;;; ===================================================================
 ;;; Display functions
@@ -128,31 +107,31 @@
   (mvprintw (1- *LINES*) 0 (format nil "~a~%" p))
   (refresh))
 
-(defun read-value (&key prompt ucase-p capitalize-p value-required-p (buffer ""))
+(defun read-value (&key prompt ucase-p capitalize-p value-required-p integer-p (buffer ""))
   (default buffer "")
   (labels ((optional-ucase (c) (if ucase-p
 				   (string-upcase (string c))
 				   (string c)))
 	   (optional-capitalize (s) (if capitalize-p (string-capitalize s) s))
+	   (optional-integer (s) (if integer-p (parse-integer s :junk-allowed t) s))
 	   (r (buffer)
-	     (progn (print-buffer buffer prompt)
-		    (let* ((raw-code (getch))
-			   (c (code-char raw-code)))
-		      (cond ((eql c #\Newline)
-			     (if (string-empty-p buffer)
-				 (if value-required-p
-				     (r buffer)
-				     nil)
-				 (optional-capitalize buffer)))
-			    ((eql c #\Tab)
-			     (r (concatenate 'string buffer (string #\Space))))
-			    ((eql c #\Rubout)
-			     (r (drop-last buffer)))
-			    ((eql raw-code 23) ; ^W
-			     (r (kill-last-word buffer)))
-			    (t
-			     (let ((b (concatenate 'string buffer (optional-ucase c))))
-			       (r b))))))))
+	     (print-buffer buffer prompt)
+	     (let ((c (code-char (getch))))
+	       (cond ((eql c #\Newline)
+		      (if (empty-string-p buffer)
+			  (if value-required-p
+			      (r buffer)
+			      nil)
+			  (optional-integer (optional-capitalize buffer))))
+		     ((eql c #\Tab)
+		      (r (concatenate 'string buffer (string #\Space))))
+		     ((eql c #\Rubout)
+		      (r (drop-last buffer)))
+		     ((eql c (code-char 23)) ; ^W
+		      (r (kill-last-word buffer)))
+		     (t
+		      (let ((b (mkstr buffer (optional-ucase c))))
+			(r b)))))))
     (r buffer)))
 
 (defmacro case-with-char (char value &body body)
@@ -184,10 +163,9 @@
   (print-qso qso)
   (prompt "> ")
   (case-with-char (code-char (getch)) qso
-		  (:func (code-char 410)
-			 #'(lambda ()
-			     (print-skeleton)
-			     (print-history)))
+		  (:func +resize+ #'(lambda ()
+				      (print-history)
+				      (print-skeleton)))
 		  (#\g q-his-grid "Grid: ")
 		  (#\i q-his-iota "IOTA: " (:ucase-p t))
 		  (#\c q-comment  "Comment: ")
@@ -227,12 +205,11 @@
 	  (display-qso-and-prompt-for-options q)))))
 
 (defun process-command (string)
-  (let ((verb (first (split-words string))))
-    (cond
-      ((string-equal verb "d") (cmd-delete-qso string))
-      ((string-equal verb "set") (cmd-set string))
-      ((string-equal verb "q") nil)
-      (t t))))
+  (given (first (split-words string)) #'string-equal
+    ("d"   (cmd-delete-qso string))
+    ("set" (cmd-set string))
+    ("q"    nil)
+    (t t)))
 
 (defun cmd-delete-qso (string)
   (let* ((tokens (split-words string))
@@ -247,12 +224,12 @@
   t)
 
 (defun cmd-set (string)
-  (let* ((tokens (split-words string))
-	 (place (second tokens))
-	 (value (third tokens)))
-    (cond ((string-equal place "qrg") (setf *qrg* (parse-integer value :junk-allowed t)))
-	  ((string-equal place "mode") (setf *mode* (string-upcase value)))
-	  ((string-equal place "iota") (setf *iota* (string-upcase value))))))
+  (destructuring-bind (set place value) (split-words string :first 3)
+    (declare (ignore set))
+    (given place #'string-equal
+      ("qrg"  (setf *qrg* (parse-integer value :junk-allowed t)))
+      ("mode" (setf *mode* (string-upcase value)))
+      ("iota" (setf *iota* (string-upcase value))))))
 
 (defun event-loop (buffer)
   (print-skeleton)
@@ -260,7 +237,7 @@
   (refresh)
   (let* ((raw-code (getch))
 	 (c (code-char raw-code)))
-    (cond ((equal raw-code 410)
+    (cond ((eql c +resize+)
 	   (print-skeleton)
 	   (print-history)
 	   (print-buffer buffer)
@@ -270,7 +247,7 @@
 	   (if (process-command (read-value :prompt ":"))
 	       (event-loop "")))
           ((eql c #\Newline)
-	   (unless (string-empty-p buffer)
+	   (unless (empty-string-p buffer)
 	     (process-entry buffer))
 	   (event-loop ""))
 	  ((member c '(#\Tab #\Space))

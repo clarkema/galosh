@@ -16,7 +16,7 @@
 
 (defpackage :galosh-cluster
   (:use :cl :gl :clsql
-	:gu :cl-ncurses :alexandria :usocket :jpl-queues))
+	:cl-ncurses :alexandria :usocket :jpl-queues))
 (in-package :galosh-cluster)
 
 (clsql:file-enable-sql-reader-syntax)

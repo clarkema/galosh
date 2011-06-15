@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2010 Michael Clarke, M0PRL
+;;;; Copyright (C) 2010, 2011 Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -19,6 +19,8 @@
 
 (in-package :cl-ncurses)
 
+(defconstant +resize+ (code-char 410))
+
 (defmacro with-attr (attr &body body)
   (alexandria:with-gensyms (attribute)
   `(let ((,attribute ,attr))
@@ -32,4 +34,4 @@
   `(with-attr (color-pair ,color)
      ,@body))
 
-(export '(with-attr with-color))
+(export '(+resize+ with-attr with-color))

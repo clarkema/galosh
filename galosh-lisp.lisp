@@ -179,6 +179,23 @@
 		(nth (- (parse-integer date :start 4 :end 6) 1) *short-month-names*)
 		(subseq date 0 4)))))
 
+(defun log-date-time ()
+  (multiple-value-bind
+        (second minute hour date month year)
+      (decode-universal-time (+ (get-universal-time ) (get-time-fudge)) 0)
+    (values
+     (format nil "~2,'0d~2,'0d~2,'0d" year month date)
+     (format nil "~2,'0d~2,'02,'0d~2,'0d" hour minute second))))
+
+(defun log-date ()
+  (multiple-value-bind (date) (log-date-time)
+    date))
+
+(defun log-time ()
+  (multiple-value-bind (date time) (log-date-time)
+    (declare (ignore date))
+    time))
+
 (defun qrg->band (qrg)
   (labels ((between (lower upper)
 	     (and (>= qrg lower) (<= qrg upper))))
@@ -348,3 +365,24 @@
 	   (SB (- (* (cos theta-s) (sin theta-f))
 		  (* (sin theta-s) (cos theta-f) (cos delta-long)))))
       (norm (rad->deg (atan SA SB))))))
+
+(defmacro given (keyform test &body clauses)
+  (with-gensyms (k)
+    (let ((acc '(cond)))
+      (dolist (form clauses)
+	(if (eq (car form) t)
+	    (setf acc (append acc `((t ,@(cdr form)))))
+	    (setf acc (append acc `(((funcall ,test ,k ,(car form)) ,@(cdr form)))))))
+      (append `(let ((,k ,keyform)))
+		 (list acc)))))
+
+(defun drop-last (str)
+  (if (> (length str) 1)
+      (subseq str 0 (- (length str) 1))
+      ""))
+
+(defun kill-last-word (str)
+  (let ((index (position #\Space (string-right-trim '(#\Space #\Tab #\Newline) str) :from-end t)))
+    (if index
+	(values (subseq str 0 (+ index 1)) (subseq str (+ index 1)))
+	(values "" nil))))

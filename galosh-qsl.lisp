@@ -22,30 +22,7 @@
 (clsql:enable-sql-reader-syntax) 
 
 (defconstant +inv-green+ 1)
-(defvar *time-fudge* 14400)
 (defvar *tagged-qsos* nil)
-
-(defun log-date-time ()
-  (multiple-value-bind
-        (second minute hour date month year)
-      (decode-universal-time (+ (get-universal-time ) *time-fudge*) 0)
-    (values
-     (format nil "~2,'0d~2,'0d~2,'0d" year month date)
-     (format nil "~2,'0d~2,'02,'0d~2,'0d" hour minute second))))
-
-(defun log-date ()
-  (multiple-value-bind (date) (log-date-time)
-    date))
-
-(defun log-time ()
-  (multiple-value-bind (date time) (log-date-time)
-    (declare (ignore date))
-    time))
-
-(defun drop-last (str)
-  (if (> (length str) 1)
-      (subseq str 0 (- (length str) 1))
-      ""))
 
 (defun clear-partial-area ()
   (dotimes (i (- *LINES* 1))
@@ -151,24 +128,23 @@
 	   (optional-capitalize (s) (if capitalize-p (string-capitalize s) s))
 	   (optional-integer (s) (if integer-p (parse-integer s :junk-allowed t) s))
 	   (r (buffer)
-	     (progn (print-buffer buffer prompt)
-		    (let* ((raw-code (getch))
-			   (c (code-char raw-code)))
-		      (cond ((eql c #\Newline)
-			     (if (empty-string-p buffer)
-				 (if value-required-p
-				     (r buffer)
-				     nil)
-				 (optional-integer (optional-capitalize buffer))))
-			    ((eql c #\Tab)
-			     (r (concatenate 'string buffer (string #\Space))))
-			    ((eql c #\Rubout)
-			     (r (drop-last buffer)))
-			    ((eql raw-code 23) ; ^W
-			     (r (kill-last-word buffer)))
-			    (t
-			     (let ((b (concatenate 'string buffer (optional-ucase c))))
-			       (r b))))))))
+	     (print-buffer buffer prompt)
+	     (let ((c (code-char (getch))))
+	       (cond ((eql c #\Newline)
+		      (if (empty-string-p buffer)
+			  (if value-required-p
+			      (r buffer)
+			      nil)
+			  (optional-integer (optional-capitalize buffer))))
+		     ((eql c #\Tab)
+		      (r (concatenate 'string buffer (string #\Space))))
+		     ((eql c #\Rubout)
+		      (r (drop-last buffer)))
+		     ((eql c (code-char 23)) ; ^W
+		      (r (kill-last-word buffer)))
+		     (t
+		      (let ((b (mkstr buffer (optional-ucase c))))
+			(r b)))))))
     (r buffer)))
 
 (defmacro case-with-char (char value &body body)
@@ -298,10 +274,9 @@
 	   (select-qso-event-loop buffer qso-list)))))
 
 (defun process-command (string)
-  (let ((verb (first (split-words string))))
-    (cond
-      ((string-equal verb "q") nil)
-      (t t))))
+  (given (first (split-words string)) #'string-equal
+    ("q" nil)
+    (t t)))
 
 (defun select-call-event-loop (buffer)
   (print-buffer buffer)

@@ -33,6 +33,10 @@
 	   :missing-galosh-dir-error
 	   :qrg->band
 	   :human-date
+	   :log-date-time
+	   :log-date
+	   :log-time
+	   :drop-last
 	   :has-config-p
 	   :get-config
 	   :check-required-config
@@ -56,4 +60,7 @@
 	   :entity-information-available-p
 	   :get-entity
 	   :entity-not-found-error
-	   :load-entity-information))
+	   :load-entity-information
+	   :given
+	   :drop-last
+	   :kill-last-word))
