@@ -7,5 +7,6 @@
 		 #:alexandria
 		 #:usocket
 		 #:jpl-queues)
-    :components ((:file "galosh-cluster"
+    :components ((:file "galosh-ncurses")
+		 (:file "galosh-cluster"
 			:depends-on ("galosh-ncurses"))))
