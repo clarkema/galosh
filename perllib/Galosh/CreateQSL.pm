@@ -92,6 +92,8 @@ END
 \\newcommand{\\QsoMyITU}{$first->{'my-itu-zone'}}
 \\newcommand{\\QsoMyCQ}{$first->{'my-cq-zone'}}
 \\newcommand{\\QsoMyGrid}{$first->{'my-grid'}}
+\\newcommand{\\QsoMyAddress}{$first->{'my-address'}}
+\\newcommand{\\confirmation}{I am pleased to confirm our QSO@{[ scalar( @$info ) == 1 ? '' : 's' ]}:}
 END
 
     return $header;

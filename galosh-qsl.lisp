@@ -209,7 +209,10 @@
 	      (gethash "tx-rst" info)   (q-tx-rst qso)
 	      (gethash "my-grid" info)  (n->es (q-my-grid qso))
 	      (gethash "my-itu-zone" info)   (n->es (q-my-itu-zone qso))
-	      (gethash "my-cq-zone" info)    (n->es (q-my-cq-zone qso)))
+	      (gethash "my-cq-zone" info)    (n->es (q-my-cq-zone qso))
+	      (gethash "my-address" info)    (if (fboundp 'qsl-address)
+						 (qsl-address qso)
+						 ""))
 	(push info full-card)))
     (let ((worker-handle (sb-ext:run-program "galosh" (list "create-qsl")
 					      :wait nil
