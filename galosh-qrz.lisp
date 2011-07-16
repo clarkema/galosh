@@ -173,7 +173,7 @@ Returns nil if there is no offline database."
 	    (format t "~A, ~A~%" (string-upcase (r "name")) (string-capitalize (r "fname")))
 	    (format t "~A~&~A~&" (string-capitalize (r "addr1"))
 		    (string-capitalize (r "addr2")))
-	    (if (= (parse-integer (r "ccode")) 271)
+	    (if (and (r "ccode") (= (parse-integer (r "ccode")) 271))
 		(format t "~A (~A)~&" (gethash (r "state") *us-state-code->name*) (r "state"))
 		(princ-unless-nil (r "state")))
 	    (format t "~&~A~%" (string-upcase (r "country")))
