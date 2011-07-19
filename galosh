@@ -54,7 +54,8 @@ sub find_galosh_dir
     # FIXME: Find a more portable way to add the correct separator for the
     # current platform.
     if ( $galosh_dir ) {
-        $ENV{'GALOSH_DIR'} = File::Spec->rel2abs( $galosh_dir ) . "/";
+        $galosh_dir = File::Spec->rel2abs( $galosh_dir ) . "/";
+        $ENV{'GALOSH_DIR'} = $galosh_dir;
     }
 }
 
