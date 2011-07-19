@@ -212,7 +212,7 @@ Returns nil if there is no offline database."
 (defun buildapp-init ()
   (load-entity-information))
 
-(define-galosh-command galosh-qrz (:required-configuration '("qrz.user" "qrz.password"))
+(define-galosh-command galosh-qrz ()
   (let* ((options (process-options argv))
 	 (sought (cdr (assoc "sought" options))))
     (if sought
@@ -226,7 +226,12 @@ Returns nil if there is no offline database."
 			  (say "database.  See 'man galosh-qrz' or 'info galosh' for more information."))))
 	      ((assoc "raw" options)
 	       (raw-online-qrz-search sought))
-	      (t (princ (online-qrz-search sought))
+	      (t (handler-case
+		     (check-required-config '("qrz.user" "qrz.password"))
+		   (missing-mandatory-configuration-error (e)
+		     (format t "~&~A~&" (gl::text e))
+		     (terminate)))
+		 (princ (online-qrz-search sought))
 		 (print-logged-qsos sought)))
 	(format *error-output* "Fatal: No call given.~%"))))
 
