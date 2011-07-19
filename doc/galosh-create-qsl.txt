@@ -1,0 +1,61 @@
+galosh-create-qsl(1)
+====================
+
+NAME
+----
+galosh-create-qsl - Create printable QSL card backs.
+
+DESCRIPTION
+-----------
+`galosh create-qsl` reads a JSON data-structure from STDIN and uses
+LaTeX to create a PDF file suitable for printing on the back of a QSL
+card.  This command is primarily plumbing, intended to be called by
+`galosh qsl`.  However, it can also be used to create nicely laid-out
+QSL card backs from your own scripts.
+
+USAGE
+-----
+    galosh create-qsl <<EOF
+      [ {
+          "my-cq-zone"  : 13,
+          "my-itu-zone" : 71,
+          "my-grid"     : "HD15sr",
+          "to-call"     : "TORADIO",
+          "my-call"     : "VP8DMH"
+        },
+        {
+          "qso-date" : "26-Mar-2011",
+          "time-on"  : "1840",
+          "mode"     : "SSB",
+          "qrg"      : "18.125",
+          "his-call" : "I1HYW"
+        } ]
+    EOF
+
+`galosh create-qsl` reads JSON from STDIN.  The data should be provided
+as an array of hashes (or "objects", in JSON terminology).  The first
+object is special, and contains metadata that apply to the card as a
+whole rather than to an individual QSO.  Valid fields are shown in the
+example above.  One additional field is recognized: "swl".  If this
+field is set to any value, the card is taken to be a response to an SWL
+report rather than confirmation of a 2-way QSO.
+
+All objects after the first represent QSOs.  Currently only 3 fit
+comfortably on a standard QSL card -- it's up to you to check this.
+
+SEE ALSO
+--------
+`galosh-qsl(1)`
+
+Author
+------
+Written by Mike Clarke <mike -at- galosh.org.uk>.
+
+Documentation
+-------------
+
+Documentation by Mike Clarke.
+
+GALOSH
+------
+Part of the Galosh suite.

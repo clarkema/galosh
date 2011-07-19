@@ -26,12 +26,20 @@ use JSON;
 sub main
 {
     local $/ = undef; # Slurp mode on
+    my $temp_dir;
 
-    my $temp_dir = File::Temp->newdir(
-        DIR => File::Spec->join( $main::galosh_dir, 'tmp' ) );
+    my $context_temp = File::Spec->join( $main::galosh_dir, 'tmp' );
+    if ( $main::galosh_dir and -e $context_temp ) {
+       $temp_dir = File::Temp->newdir( DIR => $context_temp );
+    }
+    else {
+        $temp_dir = File::Temp->newdir( DIR => File::Spec->tmpdir() );
+    }
+
     local $CWD = $temp_dir;
 
-    open( my $template, '<', '/home/clarkema/git/galosh/qsl/qsl-single.tex' ) or die $!;
+    open( my $template, '<', '/home/clarkema/git/galosh/qsl/qsl-single.tex' )
+        or die $!;
 
     my $tmp = File::Temp->new(
         DIR    => $temp_dir,
