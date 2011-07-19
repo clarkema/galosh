@@ -1,2 +1,7 @@
+doc/*.html
+doc/man1
+doc/*.info
+doc/*.pdf
+doc/*.t2d
 *.fasl
 quicklisp
