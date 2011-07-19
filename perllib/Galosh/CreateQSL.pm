@@ -42,8 +42,6 @@ sub main
 
     my $texname = $tmp->filename;
     (my $pdfname = $texname) =~ s/tex$/pdf/;
-    warn( "texname: $texname" );
-    warn( "pdfname: $pdfname" );
 
     $tmp->flush;
     $tmp->sync;
@@ -57,7 +55,8 @@ sub main
 sub latex_variables
 {
     my $info = shift;
-    my $first = $info->[0];
+    my $meta = shift @$info;
+    my $swl = $meta->{'swl'};
 
     my $header = <<END;
 \\documentclass[a4paper]{article}
@@ -78,23 +77,40 @@ sub latex_variables
 \\newcommand{\\contactlines}{
     \\hline
 END
+
     foreach my $qso (@$info) {
-        $header .= "\\contactline{$qso->{'qso-date'}}{$qso->{'time-on'}}{$qso->{'qrg'}}{$qso->{'mode'}}{$qso->{'tx-rst'}}";
+        if ( $swl ) {
+            $header .= "\\contactline{$qso->{'his-call'}}{$qso->{'qso-date'}}{$qso->{'time-on'}}{$qso->{'qrg'}}{$qso->{'mode'}}";
+        }
+        else {
+            $header .= "\\contactline{$qso->{'qso-date'}}{$qso->{'time-on'}}{$qso->{'qrg'}}{$qso->{'mode'}}{$qso->{'tx-rst'}}";
+        }
+
         $header .= "\\hline";
     }
 
     $header .= <<END;
-    %\\emptycontact
-    %\\hline
     }
-\\newcommand{\\QsoHisCall}{$first->{'his-call'}}
-\\newcommand{\\QsoMyCall}{$first->{'my-call'}}
-\\newcommand{\\QsoMyITU}{$first->{'my-itu-zone'}}
-\\newcommand{\\QsoMyCQ}{$first->{'my-cq-zone'}}
-\\newcommand{\\QsoMyGrid}{$first->{'my-grid'}}
-\\newcommand{\\QsoMyAddress}{$first->{'my-address'}}
-\\newcommand{\\confirmation}{I am pleased to confirm our QSO@{[ scalar( @$info ) == 1 ? '' : 's' ]}:}
+\\newcommand{\\QsoRadio}{@{[ $meta->{'swl'} ? 'TO SWL' : 'QSO WITH' ]}}
+\\newcommand{\\QsoHisCall}{$meta->{'to-call'}}
+\\newcommand{\\QsoMyCall}{$meta->{'my-call'}}
+\\newcommand{\\QsoMyITU}{$meta->{'my-itu-zone'}}
+\\newcommand{\\QsoMyCQ}{$meta->{'my-cq-zone'}}
+\\newcommand{\\QsoMyGrid}{$meta->{'my-grid'}}
+\\newcommand{\\QsoMyAddress}{$meta->{'my-address'}}
+\\newcommand{\\confirmation}{@{[ $meta->{'swl'}
+    ? 'I am pleased to confirm your SWL report'
+    : 'I am pleased to confirm our QSO'
+    . ( scalar( @$info ) == 1 ? '' : 's' ) ]}:}
+
 END
+
+    if ( $swl ) {
+        $header .= "\\newcommand{\\contacthead}{\\vphantom{\\rule{0pt}{12pt}}\\bf\\quad Worked \\quad & \\bf\\quad Date \\quad & \\bf\\ Time (UTC)\\ &\\bf\\quad MHz\\quad&\\bf\\ Mode\\ &\\bf QSL \\\\}\n";
+    }
+    else {
+        $header .= "\\newcommand{\\contacthead}{\\vphantom{\\rule{0pt}{12pt}}\\bf\\quad Date \\quad & \\bf\\ Time (UTC)\\ &\\bf\\quad MHz\\quad&\\bf\\ Mode\\ &\\bf\\ RST \\ & \\bf QSL \\\\}\n";
+    }
 
     return $header;
 }
