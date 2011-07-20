@@ -19,6 +19,7 @@
 
 (in-package :cl-ncurses)
 
+(defconstant +ctrl-w+ (code-char 23))
 (defconstant +resize+ (code-char 410))
 
 (defmacro with-attr (attr &body body)
@@ -34,4 +35,26 @@
   `(with-attr (color-pair ,color)
      ,@body))
 
-(export '(+resize+ with-attr with-color))
+(defun read-value (&key prompt ucase-p capitalize-p value-required-p integer-p (buffer ""))
+  (labels ((optional-ucase (c) (if ucase-p
+				   (string-upcase (string c))
+				   (string c)))
+	   (optional-capitalize (s) (if capitalize-p (string-capitalize s) s))
+	   (optional-integer (s) (if integer-p (parse-integer s :junk-allowed t) s))
+	   (r (buffer)
+	     (funcall prompt buffer)
+	     (let ((c (code-char (getch))))
+	       (gl:given c #'equal
+		 (#\Newline
+		  (if (gl:empty-string-p buffer)
+		      (if value-required-p
+			  (r buffer)
+			  nil)
+		      (optional-integer (optional-capitalize buffer))))
+		 (#\Tab (r (gl:mkstr buffer #\Space)))
+		 (#\Rubout (r (gl:drop-last buffer)))
+		 (+ctrl-w+ (r (gl:kill-last-word buffer)))
+		 (t (r (gl:mkstr buffer (optional-ucase c))))))))
+    (r buffer)))
+
+(export '(+ctrl-w+ +resize+ with-attr with-color read-value))
