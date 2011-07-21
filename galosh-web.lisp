@@ -256,7 +256,7 @@ body {
 ;			  (create-regex-dispatcher "^/[a-z\\d]+\\d+[a-z]+$" #'(lambda () (log-details :cols *limited-columns*)))
 			  'dispatch-easy-handlers
 			  'default-dispatcher))
-  (start (make-instance 'acceptor :port port)))
+  (start (make-instance 'acceptor :address "127.0.0.1" :port port)))
 
 (define-galosh-command galosh-web (:required-configuration '("user.call"))
   (let* ((port (parse-integer (third argv)))
