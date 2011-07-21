@@ -194,6 +194,8 @@
 	   (when (= (length (split-words buffer)) 1)
 	     (run-full-call-handlers buffer))
 	   (event-loop (mkstr buffer #\Space)))
+	  ((eql c #\Esc)
+	   (event-loop buffer))
           ((eql c #\Rubout)
 	   (event-loop (drop-last buffer)))
 	  ((eql c +ctrl-w+)
