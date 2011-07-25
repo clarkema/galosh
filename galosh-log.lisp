@@ -16,17 +16,35 @@
 
 (defpackage :galosh-log
   (:use :cl :gl :clsql
-	:galosh-qso :cl-ncurses :alexandria))
+	:galosh-qso :cl-ncurses :alexandria :drakma))
 (in-package :galosh-log)
 
 (clsql:enable-sql-reader-syntax) 
 
 (defvar *operator* nil)
-(defvar *qrg*     14260000)
-(defvar *mode*    "SSB")
-(defvar *iota*    nil)
+(defvar *iota*     nil)
 
 (defconstant +inv-green+ 1)
+
+(let ((qrg 14260000)
+      (qrg-lock (bordeaux-threads:make-lock)))
+  (defun qrg ()
+    (bordeaux-threads:with-lock-held (qrg-lock)
+      qrg))
+  (defun (setf qrg) (value)
+    (bordeaux-threads:with-lock-held (qrg-lock)
+      (if (integerp value)
+	  (setf qrg value)
+	  (setf qrg (parse-integer value :junk-allowed t))))))
+
+(let ((mode "SSB")
+      (mode-lock (bordeaux-threads:make-lock)))
+  (defun mode ()
+    (bordeaux-threads:with-lock-held (mode-lock)
+      mode))
+  (defun (setf mode) (value)
+    (bordeaux-threads:with-lock-held (mode-lock)
+      (setf mode value))))
 
 ;;; ===================================================================
 ;;; Utilities
@@ -49,7 +67,7 @@
 	       `(mvprintw ,y ,x (string-right-pad *COLS* ,@body))))
     (with-color +inv-green+
       ;; Title bar
-      (bar 0 0 (format nil " QRG: ~10a Mode: ~a IOTA: ~a" *qrg* *mode* *iota*))
+      (bar 0 0 (format nil " QRG: ~10a Mode: ~a IOTA: ~a" (qrg) (mode) *iota*))
       ;; Status bar
       (bar (- *LINES* 2) 0 (format nil "---Galosh Logger: ~A" *default-database*))
       ;; Help bar
@@ -141,11 +159,11 @@
 				:his-call call
 				:qso-date (log-date)
 				:time-on  (log-time)
-				:mode *mode*
-				:qrg *qrg*
+				:mode (mode)
+				:qrg (qrg)
 				:my-iota *iota*
-				:tx-rst (ensure-valid-rst tx-rst *mode*)
-				:rx-rst (ensure-valid-rst rx-rst *mode*))))
+				:tx-rst (ensure-valid-rst tx-rst (mode))
+				:rx-rst (ensure-valid-rst rx-rst (mode)))))
 	  (run-full-call-handlers call)
 	  (display-qso-and-prompt-for-options q)))))
 
@@ -172,9 +190,9 @@
   (destructuring-bind (set place value) (split-words string :first 3)
     (declare (ignore set))
     (given place #'string-equal
-      ("qrg"  (setf *qrg* (parse-integer value :junk-allowed t)))
-      ("mode" (setf *mode* (string-upcase value)))
-      ("iota" (setf *iota* (string-upcase value))))))
+	   ("qrg"  (setf (qrg) value))
+	   ("mode" (setf (mode) (string-upcase value)))
+	   ("iota" (setf *iota* (string-upcase value))))))
 
 (defun event-loop (buffer)
   (paint-skeleton)
@@ -210,8 +228,8 @@
 		     :if-does-not-exist :create
 		     :if-exists :supersede)
     (with-standard-io-syntax
-      (print `(setf *qrg*  ,*qrg*)  s)
-      (print `(setf *mode* ,*mode*) s)
+      (print `(setf (qrg)  ,(qrg))  s)
+      (print `(setf (mode) ,(mode)) s)
       (print `(setf *iota* ,*iota*) s))))
 
 (defun read-state (path)
@@ -227,6 +245,7 @@
     (start-color)
     (init-pair +inv-green+ COLOR_BLACK COLOR_GREEN))
   (paint-history)
+  (bordeaux-threads:make-thread #'rig-poller)
   (event-loop ""))
 
 (defun complete-missing-entities ()
@@ -236,6 +255,22 @@
 	(setf (q-his-dxcc qso) (entity-adif entity))
 	(update-records-from-instance qso)
 	(format t "Updated ~A to ~A (~A)~%" (as-string qso) (entity-adif entity) (entity-name entity))))))
+
+;;; Try and start the rig polling thread.  If it fails (most likely because
+;;; we aren't running or can't find the rig server) let the thread silently
+;;; die.  The (ignore-errors) wrapper simply stops an ugly error message
+;;; from appearing when the user quits -log.
+(defun rig-poller ()
+  (ignore-errors
+    (multiple-value-bind (body status) (http-request "http://localhost:8001/")
+      ;; Checking for change prevents an unneccesary ncurses update every
+      ;; half-second when nothing has happened.
+      (when (not (= body (qrg)))
+	(setf (qrg) body)
+	(paint-skeleton)
+	(refresh)))
+    (sleep 0.5)
+    (rig-poller)))
 
 (defun process-options (argv)
   (multiple-value-bind (leftover options)

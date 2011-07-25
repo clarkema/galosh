@@ -4,6 +4,8 @@
 		 #:galosh-qrz
 		 #:getopt
 		 #:clsql
+		 #:bordeaux-threads
+		 #:drakma
 		 #:cl-ncurses
 		 #:alexandria)
     :components ((:file "galosh-ncurses")
