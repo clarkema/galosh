@@ -1,7 +1,8 @@
 (asdf:defsystem #:galosh
     :depends-on (#:hunchentoot
+		 #:parenscript
 		 #:clsql-sqlite3
-		 #:yaclml
+		 #:cl-markup
 		 #:cl-ncurses
 		 #:split-sequence
 		 #:vecto

@@ -3,8 +3,9 @@
 		 #:galosh-qrzcom
 		 #:getopt
 		 #:clsql
-		 #:yaclml
+		 #:cl-markup
 		 #:hunchentoot
+		 #:parenscript
 		 #:alexandria)
     :components ((:file "qso")
 		 (:file "galosh-web"
