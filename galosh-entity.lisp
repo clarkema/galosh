@@ -52,7 +52,8 @@
 
 (defmethod entity-name ((o t)) "UNKNOWN")
 (defmethod entity-adif ((o entity))
-  (parse-integer (slot-value o 'adif)))
+  (when (slot-value o 'adif)
+    (parse-integer (slot-value o 'adif))))
 (defmethod entity-adif ((o t)) nil)
 
 (defmethod print-object ((object entity) stream)
