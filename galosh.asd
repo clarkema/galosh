@@ -13,4 +13,5 @@
 		 #:fiveam
 		 #:jpl-queues
 		 #:screamer
-		 #:st-json))
+		 #:st-json
+		 #:swank))
