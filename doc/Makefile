@@ -20,7 +20,7 @@ manpages: $(DOC_MAN1) $(DOC_HTML)
 manual: galosh.pdf galosh.info
 
 galosh.pdf: galosh.texi
-	$(TEXI2PDF) $< --tidy --output $@
+	$(TEXI2PDF) $< --clean --output $@
 
 galosh.info: galosh.texi
 	$(MAKEINFO) $< --output $@
