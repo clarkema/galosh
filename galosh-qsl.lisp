@@ -179,7 +179,8 @@
 (defun toggle-qso-tag (qso)
   (if (member qso *tagged-qsos*)
       (setf *tagged-qsos* (remove qso *tagged-qsos*))
-      (setf *tagged-qsos* (append *tagged-qsos* (mklist qso)))))
+      (setf *tagged-qsos* (append *tagged-qsos* (mklist qso))))
+  qso)
 
 ;;
 ;; Note that edit really belongs as a macrolet within manage-qso-event-loop.
