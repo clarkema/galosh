@@ -282,8 +282,7 @@
   (multiple-value-bind (leftover options)
       (getopt:getopt argv '(("mark-queued-as-sent" :none t)
 			    ("match" :optional)))
-    (declare (ignore leftover))
-    options))
+    (values options leftover)))
 
 (defun start-interface ()
   (initscr)
@@ -306,10 +305,20 @@
 			      (qsl_sdate ,(log-date)))
 		  :where [= [qsl_sent] "Q"]))
 
+(defun show-waiting ()
+  (let ((date-col 15))
+    (format t "~&Call~vTRequest sent~%" date-col)
+    (do-query ((q) [select 'qso
+	       :caching nil
+	       :where [and [or [= 'qsl_sent "Y"] [= 'qsl_sent "Q"]] [null 'qsl_rcvd]]
+	       :order-by [qsl_sdate]])
+      (format t "~&~A~vT~A~%" (q-his-call q) date-col (or (q-qsl-sdate q) "queued")))))
+
 (define-galosh-command galosh-qsl ()
-  (let* ((options (process-options argv)))
-    (if (get-option "mark-queued-as-sent" options)
-	(mark-queued-as-sent)
-	(unwind-protect
-	     (start-interface)
-	  (endwin)))))
+  (multiple-value-bind (options leftovers) (process-options argv)
+    (given (third leftovers) #'string-equal
+	   ("mark-queued-as-sent" (mark-queued-as-sent))
+	   ("waiting" (show-waiting))
+	   (t (unwind-protect
+		   (start-interface)
+		(endwin))))))
