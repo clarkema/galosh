@@ -54,6 +54,15 @@ _galosh_qrz()
     return 0
 }
 
+_galosh_qsl()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local opts="mark-queued-as-sent waiting"
+
+    COMPREPLY=( $(compgen -W "$opts" -- $cur ) )
+    return 0
+}
+
 _galosh_export_adif()
 {
     local cur="${COMP_WORDS[COMP_CWORD]}"
