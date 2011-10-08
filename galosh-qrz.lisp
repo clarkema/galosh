@@ -184,10 +184,11 @@ Returns nil if there is no offline database."
 	  (princ-unless-nil (prepend-newline (section-entity call)))))))
 
 (defun qrz-search (call)
-  (let ((client (make-instance 'qrzcom-client
-			       :username (get-config "qrz.user")
-			       :password (get-config "qrz.password"))))
-    (details-by-call client call)))
+  (when (and (has-config-p "qrz.user") (has-config-p "qrz.password"))
+    (let ((client (make-instance 'qrzcom-client
+				 :username (get-config "qrz.user")
+				 :password (get-config "qrz.password"))))
+      (details-by-call client call))))
 
 (defun raw-online-qrz-search (call)
   (let* ((client (make-instance 'qrzcom-client
