@@ -331,6 +331,20 @@ under the specified prefix unless overwritten further down the trie."
 	((trie-p *entity-trie*) t)
 	(t nil)))
 
+(defun entity-name->adif (name)
+  (when (entity-information-available-p)
+    (gethash name *entity-name->adif*)))
+
+(defun entity-adif->name (adif)
+  (when (entity-information-available-p)
+    (gethash (if (stringp adif)
+		 (parse-integer adif)
+		 adif) *entity-adif->name*)))
+
+(defun all-entity-names ()
+  (when (entity-information-available-p)
+    (keys *entity-name->adif*)))
+
 (defun get-datetime ()
   (multiple-value-bind
 	(second minute hour date month year)

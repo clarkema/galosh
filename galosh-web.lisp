@@ -39,8 +39,9 @@
 	 (:html :lang "en"
 		(:head
 		 (:meta :charset "utf-8")
-		 (:link :rel "stylesheet" :href "http://clarkema.org/main.css")
-		 (:link :rel "stylesheet" :href "http://clarkema.org/log.css")
+;		 (:link :rel "stylesheet" :href "http://clarkema.org/main.css")
+;		 (:link :rel "stylesheet" :href "http://clarkema.org/log.css")
+		 (:link :rel "stylesheet" :href "http://glo.sh/report.css")
 		 (:title ,title))
 		(:body
 		 (:div :id "header" "Mike Clarke, VP8DMH")
@@ -234,9 +235,60 @@ body {
 		   (raw (qso-details qso))
 		   (raw (qrz-info (q-his-call qso))))))
 
+(define-easy-handler (qsl-options :uri "/qsl-options") (entity band)
+  (standard-page (:title "QSL Options")
+		 (:table :class "qsl-table"
+		  (:thead
+		   (:tr
+		    (:th "DX Call")
+		    (:th "QSO Date")
+		    (:th "QSL Sent?")
+		    (:th "QSL Sent Date")))
+		  (loop for q in (select 'qso :where [and [= 'band band][= 'his_dxcc entity]] :flatp t)
+		       collecting (markup (:tr
+					   (:td (:a :href (mkstr "http://www.qrz.com/db/" (q-his-call q)) (q-his-call q)))
+					   (:td (q-qso-date q))
+					   (:td (q-qsl-sent q))
+					   (:td (q-qsl-sdate q))))))))
+
+(define-easy-handler (report :uri "/report") ()
+  (let ((bands (list "160m" "80m" "60m" "40m" "30m" "20m" "17m" "15m" "12m" "10m" "6m")))
+    (labels ((country-band-worked (cty band)
+	       (first (select [count [*]] :from 'qso :where [and [= 'band band][= 'his_dxcc cty]] :flatp t)))
+	     (country-band-cfmd (cty band)
+	       (first (select [count [*]] :from 'qso :where [and [= 'band band][= 'his_dxcc cty][= 'qsl_rcvd "Y"]] :flatp t)))
+	     (header-row ()
+	       (markup (:tr
+			(:th "Entity")
+			(:th "ADIF")
+			(loop for band in bands
+			   collecting (markup (:th band))))))
+	     (country-row (adif)
+	       (loop for band in bands
+		  collecting (let ((worked (country-band-worked adif band))
+				   (confirmed (country-band-cfmd adif band)))
+			       (cond ((zerop worked)
+				      (markup (:td "")))
+				     ((zerop confirmed)
+				      (markup (:td :class "unconfirmed qsl-stats" (:a :href (format nil "/qsl-options?entity=~A&band=~A" adif band) (mkstr confirmed "/" worked)))))
+				     (t
+				      (markup (:td :class "confirmed qsl-stats" (mkstr confirmed "/" worked)))))))))
+      (when (entity-information-available-p)
+	(standard-page (:title "DXCC Progress")
+		       (:table :class "qsl-table"
+			(:thead (raw (header-row)))
+			(:tbody (loop for i from 1
+				   for v in (sort (all-entity-names) #'string-lessp)
+				   collecting (let ((adif (mkstr (entity-name->adif v))))
+						(markup (:tr
+							 (:td v)
+							 (:td adif)
+							 (country-row adif))))
+				   collecting (when (zerop (rem i 15)) (header-row))))))))))
+
 (define-easy-handler (root :uri "/") (call)
   (let ((total-qsos (first (select [count[*]] :from 'qso :flatp t)))
-	(unique-calls (first (select [count[distinct 'his_call]] :from 'qso :flatp t))))
+	(unique-calls (first (query "select count(distinct his_call) from qso" :flatp t))))
     (standard-page (:title call)
 		   (:h1 "Online Logs")
 		   (:p (fmt "The ~a log contains ~:d QSO~:p, with ~:d unique station~:p. You can search for yours here." (get-config "user.call") total-qsos unique-calls))
@@ -258,8 +310,11 @@ body {
 			  'default-dispatcher))
   (start (make-instance 'acceptor :address "127.0.0.1" :port port)))
 
+(defun buildapp-init ()
+  (load-entity-information))
+
 (define-galosh-command galosh-web (:required-configuration '("user.call"))
-  (let* ((port (parse-integer (third argv)))
+  (let* ((port (parse-integer (or (third argv) "8080")))
 	 (server (start-server :port port)))
     (dolist (thread (sb-thread:list-all-threads))
       (unless (equal sb-thread:*current-thread* thread)

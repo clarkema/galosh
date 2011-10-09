@@ -61,6 +61,9 @@
 	   :get-entity
 	   :entity-not-found-error
 	   :load-entity-information
+	   :entity-name->adif
+	   :entity-adif->name
+	   :all-entity-names
 	   :given
 	   :drop-last
 	   :kill-last-word))
