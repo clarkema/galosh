@@ -12,7 +12,7 @@ manpages: $(DOC_MAN1) $(DOC_HTML)
 
 %.1: %.txt
 	mkdir -p man1
-	a2x -D man1 -d manpage -f manpage $<
+	a2x -D man1 -d manpage -f manpage -L $<
 
 %.html: %.txt
 	$(ASCIIDOC) $<
