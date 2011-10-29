@@ -16,6 +16,7 @@
 
 package Galosh::Browser;
 
+use English;
 use File::Glob ':glob';
 use File::Spec;
 #use IO::Socket::UNIX qw( SOCK_STREAM );
@@ -91,6 +92,8 @@ sub spawn_browser
 
 sub main
 {
+    exit if $OSNAME eq "darwin";
+
     my ($command, $url) = @_;
     my $tmp_dir = File::Spec->join( $main::galosh_dir, 'tmp' );
     my $fifo    = find_first_tab_fifo( $tmp_dir );
