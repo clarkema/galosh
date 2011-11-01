@@ -195,6 +195,10 @@
   (open-in-browser (q-his-call qso))
   (let ((qrz-details (galosh-qrz:qrz-search (q-his-call qso))))
     (labels ((again (q)
+	       ;; This update is in many cases superfluous and wasteful, but it's
+	       ;; here to ensure that what we print with (print-qso-details...)
+	       ;; is _always_ the same as what is in the database.
+	       (update-records-from-instance q)
 	       (print-qso-details q qrz-details)
 	       (prompt "> ")
 	       (given (code-char (getch)) #'char=
