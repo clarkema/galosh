@@ -1,0 +1,46 @@
+galosh-compile(1)
+=================
+
+NAME
+----
+galosh-compile - Compile a Galosh subcommand to increase startup speed.
+
+SYNOPSIS
+--------
+`galosh compile` [<command>]
+
+DESCRIPTION
+-----------
+By default, Lisp-based Galosh commands are loaded from source each time
+the command is run.  Your Lisp implementation probably caches compiled
+versions of most of the dependencies, but this can still result in
+commands being quite slow to start.  The effect is especially noticeable
+with commands that make use of entity data.
+
+To mitigate this, you can choose to compile the Galosh commands you use
+most.  The process will create an executable in $HOME/.galosh/compiled,
+which will be used instead of loading from source.
+
+The advantage is a much faster load time.  The disadvantage is that the
+compiled commands are quite large files, and they will need to be
+recompiled if you:
+
+. update Galosh;
+. make any changes to the source yourself; or
+. update entity data.
+
+SEE ALSO
+--------
+`galosh-recompile(1)`
+
+AUTHOR
+------
+Written by Mike Clarke <mike -at- galosh.org.uk>.
+
+DOCUMENTATION
+-------------
+Documentation by Mike Clarke.
+
+GALOSH
+------
+Part of the Galosh suite.

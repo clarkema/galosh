@@ -108,6 +108,11 @@ sub cmd_lisp_repl
 
 sub cmd_compile
 {
+    unless ( $ARGV[1] ) {
+        print STDERR "Usage: galosh compile COMMAND\n";
+        exit;
+    }
+
     my $target_command = "galosh-$ARGV[1]";
     my $output_path = File::Spec->join( $compiled_dir, $target_command );
 
