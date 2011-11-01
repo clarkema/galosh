@@ -232,7 +232,8 @@
     (with-input-from-string (s (join
 				(remove-if #'null (list "[core]"
 							(if context
-							    (cats "log = " (namestring (merge-pathnames "log.db" context))))
+							  (cats "log = " (namestring (merge-pathnames "log.db" context))))
+							(cats "debug-log = " (namestring (merge-pathnames "debug.log" (if context context home-galosh-dir))))
 							"time_fudge = 0"
 							(cats "cty-xml = " (namestring (merge-pathnames "cty.xml" home-galosh-dir)))
 							(cats "cty-lisp = " (namestring (merge-pathnames "cty.lisp" home-galosh-dir)))
@@ -277,6 +278,13 @@
 		 mixin-global-path
 		 req-config)
     `(defun ,(intern "MAIN" (symbol-name name)) (,(intern "ARGV" (symbol-name name)))
+       (setf (cl-log:log-manager)
+	     (make-instance 'cl-log:log-manager :message-class 'cl-log:formatted-message))
+       (cl-log:start-messenger 'cl-log:text-file-messenger
+			       :filename (get-config "core.debug-log")
+			       :category '(or :warn :error :fatal)
+			       )
+       (setf (logical-pathname-translations "GL") '(("**;*.*.*" ,(mkstr (ql:where-is-system "galosh-lisp") "**/*.*"))))
        (let* ((,req-config ,required-configuration)
 	      (,mixin-name ,(string-downcase (string name)))
 	      (,mixin-repo-path (make-pathname :directory (fatal-get-galosh-dir)
@@ -387,3 +395,15 @@
     (if index
 	(values (subseq str 0 (+ index 1)) (subseq str (+ index 1)))
 	(values "" nil))))
+
+(defmacro log-fatal (&body body) `(cl-log:log-message :fatal ,@body))
+
+(defmacro log-error (err &body body)
+  `(progn
+     (cl-log:log-message :error ,@body)
+     (error ,err)))
+
+(defmacro log-warn  (&body body) `(cl-log:log-message :warn ,@body))
+(defmacro log-info  (&body body) `(cl-log:log-message :info ,@body))
+(defmacro log-debug (&body body) `(cl-log:log-message :debug ,@body))
+(defmacro log-trace (&body body) `(cl-log:log-message :trace ,@body))

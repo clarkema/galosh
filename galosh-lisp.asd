@@ -4,6 +4,7 @@
 		 #:py-configparser
 		 #:alexandria
 		 #:cl-ppcre
+		 #:cl-log
 		 ;; For -entity.lisp
 		 #:cxml)
     :components ((:file "galosh-lisp-package")

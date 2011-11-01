@@ -2,6 +2,7 @@
     :depends-on (#:hunchentoot
 		 #:parenscript
 		 #:clsql-sqlite3
+         #:cl-log
 		 #:cl-markup
 		 #:cl-ncurses
 		 #:split-sequence

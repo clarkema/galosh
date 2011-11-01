@@ -1,6 +1,6 @@
 (defpackage :galosh-lisp
   (:nicknames :gl)
-  (:use :cl :clsql :py-configparser :alexandria)
+  (:use :cl :clsql :py-configparser :alexandria :cl-log)
   (:export :*galosh-db*
 	   :*galosh-version*
 	   :with-safe-io-syntax
@@ -66,4 +66,10 @@
 	   :all-entity-names
 	   :given
 	   :drop-last
-	   :kill-last-word))
+	   :kill-last-word
+	   :log-fatal
+	   :log-error
+	   :log-warn
+	   :log-info
+	   :log-debug
+	   :log-trace))
