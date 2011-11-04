@@ -16,14 +16,16 @@
 
 package Galosh::Update;
 
+use File::Copy;
 use File::Spec;
 use IO::Uncompress::Gunzip qw( gunzip $GunzipError );
 use LWP::UserAgent;
 
 sub main
 {
-    my $cty_xml_url  = "http://www.clublog.org/cty.php?api=$main::clublog_api_key";
-    my $cty_xml_file = File::Spec->join( $main::home_galosh_dir, "cty.xml" );
+    my $cty_xml_url    = "http://www.clublog.org/cty.php?api=$main::clublog_api_key";
+    my $cty_xml_file   = File::Spec->join( $main::home_galosh_dir, "cty.xml" );
+    my $cty_xml_backup = $cty_xml_file . '.old';
 
     my $ua = LWP::UserAgent->new(
         agent     => "galosh update",
@@ -39,7 +41,8 @@ sub main
         gunzip( \$compressed, \$uncompressed )
             or die "Failed to decompress cty.xml: $GunzipError\n";
         
-        open ( my $fh, '>', $cty_xml_file )
+        copy( $cty_xml_file, $cty_xml_backup );
+        open( my $fh, '>', $cty_xml_file )
             or die "Failed to open $cty_xml_file for writing: $!\n";
 
         print $fh $uncompressed;
