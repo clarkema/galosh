@@ -23,6 +23,16 @@
 
 (defconstant +inv-green+ 1)
 (defvar *tagged-qsos* nil)
+(defvar *route* "D")
+
+(define-condition invalid-qsl-route (error)
+  ((route
+    :initarg :route
+    :initform ""
+    :reader invalid-qsl-route-route))
+  (:report (lambda (condition stream)
+	     (format stream "Invalid QSL route '~A' (must be one of 'B', 'D', 'E' or 'M')"
+		     (invalid-qsl-route-route condition)))))
 
 (defun clear-partial-area ()
   (dotimes (i (- *LINES* 1))
@@ -52,7 +62,9 @@
     (mvprintw 17 1 (format nil "County:      ~10A ~14A ~14A~%"   (n->es (q-my-county q))   (n->es (q-his-county q))   (n->es (qrz "county"))))
     (mvprintw 18 1 (format nil "Grid:        ~10A ~14A ~14A~%"   (n->es (q-my-grid q))     (n->es (q-his-grid q))     (n->es (qrz "grid"))))
 
-    (mvprintw 20 1 (format nil "QSL Rx / Tx: ~A ~A~%"   (q-qsl-rcvd q) (q-qsl-sent q)))
+    (mvprintw 20 1 (format nil "QSL Rx / Tx: ~A~A ~A~A~%"
+			   (n->es (q-qsl-rcvd q)) (n->es (q-qsl-rcvd-via q))
+			   (n->es (q-qsl-sent q)) (n->es (q-qsl-sent-via q))))
 
     (mvprintw 22 1 "Comment:")
     (mvprintw 23 1 (format nil "~A~%" (n->es (q-comment q))))
@@ -114,12 +126,14 @@
 
 (defun mark-qsl-received (qso)
   (setf (q-qsl-rcvd qso) "Y"
+	(q-qsl-rcvd-via qso) *route*
 	(q-qsl-rdate qso) (log-date))
   (update-records-from-instance qso)
   qso)
 
 (defun mark-qsl-queued (qso)
-  (setf (q-qsl-sent qso) "Q")
+  (setf (q-qsl-sent qso) "Q"
+	(q-qsl-sent-via qso) *route*)
   (update-records-from-instance qso)
   qso)
 
@@ -284,7 +298,7 @@
 
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
-      (getopt:getopt argv '(("mark-queued-as-sent" :none t)
+      (getopt:getopt argv '(("route" :optional)
 			    ("match" :optional)))
     (values options leftover)))
 
@@ -297,6 +311,22 @@
     (start-color)
     (init-pair +inv-green+ COLOR_BLACK COLOR_GREEN))
   (select-call-event-loop ""))
+
+(defun process-route-option (route)
+  (when route
+    (given route #'(lambda (s l) (member s l :test #'string-equal))
+	   ('("B" "buro" "bureau")
+	     (setf *route* "B"))
+	   ('("D" "direct")
+	     (setf *route* "D"))
+	   ('("E" "electronic" "eqsl" "lotw")
+	     (setf *route* "E"))
+	   ('("M" "manager")
+	     (setf *route* "M"))
+	   (t
+	    ;; If the route has been supplied, and it isn't handled by the
+	    ;; above cases, it must be invalid.  Whinge.
+	    (log-error (make-condition 'invalid-qsl-route :route route) "~A")))))
 
 (defun get-option (name options &key (default nil default-p))
   (if-let ((option (cdr (assoc name options))))
@@ -320,9 +350,14 @@
 
 (define-galosh-command galosh-qsl ()
   (multiple-value-bind (options leftovers) (process-options argv)
-    (given (third leftovers) #'string-equal
+    (handler-case
+	(progn
+	  (process-route-option (get-option "route" options))
+	  (given (third leftovers) #'string-equal
 	   ("mark-queued-as-sent" (mark-queued-as-sent))
 	   ("waiting" (show-waiting))
 	   (t (unwind-protect
 		   (start-interface)
-		(endwin))))))
+		(endwin)))))
+      (invalid-qsl-route (e) (princ e *error-output*)
+			 (fresh-line *error-output*)))))
