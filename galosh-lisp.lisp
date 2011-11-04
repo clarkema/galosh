@@ -398,12 +398,16 @@
 
 (defmacro log-fatal (&body body) `(cl-log:log-message :fatal ,@body))
 
-(defmacro log-error (err &body body)
-  `(progn
-     (cl-log:log-message :error ,@body)
-     (error ,err)))
+(defmacro log-error (err &optional (fmt "~A") &body body)
+  (with-gensyms (e c)
+    `(let* ((,e ,err)
+	    (,c (if (typep ,e 'symbol)
+		    (make-condition ,e)
+		    ,e)))
+       (cl-log:log-message :error ,fmt ,@body ,c)
+       (error ,c))))
 
-(defmacro log-warn  (&body body) `(cl-log:log-message :warn ,@body))
-(defmacro log-info  (&body body) `(cl-log:log-message :info ,@body))
+(defmacro log-warn  (&body body) `(cl-log:log-message :warn  ,@body))
+(defmacro log-info  (&body body) `(cl-log:log-message :info  ,@body))
 (defmacro log-debug (&body body) `(cl-log:log-message :debug ,@body))
 (defmacro log-trace (&body body) `(cl-log:log-message :trace ,@body))
