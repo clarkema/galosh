@@ -32,6 +32,7 @@ This file documents the `Galosh' a suite of amateur radio utilities, version
 * Installation::
 * Setup::
 * Logging::
+* QSL Management::
 @end menu
 
 @node Introduction
@@ -416,7 +417,63 @@ of UTC.  For example, to log a time of 3 hours earlier than
 would otherwise be the case set @code{core.time_fudge} to
 @code{-10800}.
 
+@node QSL Management
+@chapter QSL Management
 
+Making and logging QSOs is all very well, but it's only really the first
+half of the story.  Whether you are working towards DXCC, have an
+interest in islands or have just returned from your latest expedition;
+the next stage is dealing with QSL cards.
+
+In this chapter we will consider various facets of QSL management, and
+how to deal with them using Galosh's @command{qsl} command.
+
+@section Processing Incoming Requests
+
+So you've just returned from your latest exotic destination.  The
+airline has finally found your luggage, and you've unpacked and are
+facing the twin realities of going back to work and being deluged
+beneath a flood of incoming QSL cards.  In fact, the first batch have
+already arrived...
+
+We'll start by dealing with direct requests.
+
+Run @command{galosh qsl} within your repository directory.  As you start
+typing a callsign, Galosh will show possible completions at the top of
+the screen.  Once you have typed the full callsign, hit enter and you
+will be presented with a list of QSOs made with that station, most
+recent first.  Select a QSO by typing the number in the first column and
+hitting enter again.
+
+You should now be looking at the QSO detail screen.  This screen
+displays the basic QSO details at the top and QSL tracking information
+at the bottom.  The middle section contains information useful for
+award-tracking.  The first column in the middle section is information
+about your station; copied into the log from your configuration at the
+time of the QSO.  The second column contains the same information for
+the other station; generally this will just be the DXCC entity
+calculated from the other station's callsign along with any other
+information you entered at the time of the QSO.  If you have set up
+@indicateurl{qrz.com} XML API access (@pxref{Getting Started With The
+qrz.com XML API}) there will be a third column showing information
+about the other station downloaded from @indicateurl{qrz.com}.
+
+Assuming the QSL request is good, you can now process it in just a few
+keystrokes.  Hit @key{r} to record that you have received a direct QSL
+for this contact, and @key{t} to record that you have queued a card to
+be sent.  @key{v} will merge details about the other station from the
+@indicateurl{qrz.com} column into the local database.  @key{a} is the
+same as @key{r}, @key{t}, and @key{v}.
+
+Once you've processed the card, hit @key{Esc} to move back through the
+list of contacts and start again with the next card.
+
+At the end of your QSLing session you will have accumulted a list of
+QSOs in the database which are marked as ``QSL queued for sending'';
+i.e., you have prepared a QSL card for the contact but have not yet
+posted it.  Once you have posted the batch of cards, run
+@w{@command{galosh qsl mark-queued-as-sent}} to tell Galosh that you
+have actually sent the cards.
 
 @bye
 
