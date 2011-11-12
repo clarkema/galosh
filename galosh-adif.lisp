@@ -272,7 +272,7 @@
       0))
 
 (defun sqlite->adifbool (int)
-  (if (= int 1)
+  (if (eq int 1) ; eq rather than = to permit nil without barfing.
       "Y"
       "N"))
 
