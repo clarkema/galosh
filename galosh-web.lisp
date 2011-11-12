@@ -16,9 +16,9 @@
 
 
 (defpackage :galosh-web
-  (:use :cl :gl :clsql :cl-markup :galosh-qso :hunchentoot :galosh-qrzcom :alexandria
+  (:use :cl :galosh-lisp :clsql :cl-markup :galosh-qso :hunchentoot :galosh-qrzcom :alexandria
        :parenscript)
-  (:shadowing-import-from :gl #:join #:default)
+  (:shadowing-import-from :galosh-lisp #:join #:default)
   (:shadowing-import-from :clsql #:get-time)
   (:shadowing-import-from :alexandria #:switch))
 (in-package :galosh-web)

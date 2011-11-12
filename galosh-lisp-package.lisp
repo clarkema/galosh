@@ -1,5 +1,4 @@
 (defpackage :galosh-lisp
-  (:nicknames :gl)
   (:use :cl :clsql :py-configparser :alexandria :cl-log)
   (:export :*galosh-db*
 	   :*galosh-version*
@@ -45,6 +44,7 @@
 	   :deg->rad
 	   :rad->deg
 	   :great-circle-heading
+	   :locator->decdeg
 	   ;; Entity processing
 	   :entity
 	   :entity-prefix

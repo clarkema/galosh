@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (screamer:define-screamer-package :galosh-qsl
-  (:use :cl :gl :clsql
+  (:use :cl :galosh-lisp :clsql
 	:galosh-qso :cl-ncurses :alexandria :st-json))
 (in-package :galosh-qsl)
 

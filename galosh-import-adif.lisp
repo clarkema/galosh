@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-import-adif
-  (:use :cl :gl :clsql :galosh-qso :galosh-adif))
+  (:use :cl :galosh-lisp :clsql :galosh-qso :galosh-adif))
 (in-package :galosh-import-adif)
 
 (defvar *comment-prefix* nil)

@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-journal-entry
-  (:use :cl :gl :clsql)
+  (:use :cl :galosh-lisp :clsql)
   (:export :journal-entry :j-id :j-date :j-text))
 (in-package :galosh-journal-entry)
 

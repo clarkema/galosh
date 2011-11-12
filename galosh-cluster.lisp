@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-cluster
-  (:use :cl :gl :clsql
+  (:use :cl :galosh-lisp :clsql
 	:cl-ncurses :alexandria :usocket :jpl-queues))
 (in-package :galosh-cluster)
 

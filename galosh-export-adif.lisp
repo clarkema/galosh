@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-export-adif
-  (:use :cl :gl :clsql :galosh-qso :galosh-adif :alexandria))
+  (:use :cl :galosh-lisp :clsql :galosh-qso :galosh-adif :alexandria))
 (in-package :galosh-export-adif)
 
 (clsql:file-enable-sql-reader-syntax)

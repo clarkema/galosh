@@ -44,17 +44,17 @@
 	   (r (buffer)
 	     (funcall prompt buffer)
 	     (let ((c (code-char (getch))))
-	       (gl:given c #'equal
+	       (galosh-lisp:given c #'equal
 		 (#\Newline
-		  (if (gl:empty-string-p buffer)
+		  (if (galosh-lisp:empty-string-p buffer)
 		      (if value-required-p
 			  (r buffer)
 			  nil)
 		      (optional-integer (optional-capitalize buffer))))
-		 (#\Tab (r (gl:mkstr buffer #\Space)))
-		 (#\Rubout (r (gl:drop-last buffer)))
-		 (+ctrl-w+ (r (gl:kill-last-word buffer)))
-		 (t (r (gl:mkstr buffer (optional-ucase c))))))))
+		 (#\Tab (r (galosh-lisp:mkstr buffer #\Space)))
+		 (#\Rubout (r (galosh-lisp:drop-last buffer)))
+		 (+ctrl-w+ (r (galosh-lisp:kill-last-word buffer)))
+		 (t (r (galosh-lisp:mkstr buffer (optional-ucase c))))))))
     (r buffer)))
 
 (export '(+ctrl-w+ +resize+ with-attr with-color read-value))

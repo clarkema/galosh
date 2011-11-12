@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-qrzcom
-  (:use :cl :gl :clsql :drakma)
+  (:use :cl :galosh-lisp :clsql :drakma)
   (:export :qrzcom-client :details-by-call :username :password
 	   :qrz-record
 	   :qrz-id

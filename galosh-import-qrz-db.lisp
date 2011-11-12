@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-import-qrz-db
-  (:use :cl :gl :clsql-user :galosh-qrzcom)
+  (:use :cl :galosh-lisp :clsql-user :galosh-qrzcom)
   (:shadow :read-line))
 (in-package :galosh-import-qrz-db)
 

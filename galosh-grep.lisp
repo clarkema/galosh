@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-grep
-  (:use :cl :gl :clsql :galosh-qso)
+  (:use :cl :galosh-lisp :clsql :galosh-qso)
   (:export :grep :grep-his-call))
 (in-package :galosh-grep)
 

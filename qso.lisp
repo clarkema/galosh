@@ -15,7 +15,7 @@
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :galosh-qso
-  (:use :cl :gl :clsql)
+  (:use :cl :galosh-lisp :clsql)
   (:export :qso :with-qso-accessors :q-toggle-followup :as-string :*qso-slot-accessors*
 	   :qso-datetime))
 (in-package :galosh-qso)

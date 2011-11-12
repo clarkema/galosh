@@ -20,7 +20,7 @@
 ;;;; library.
 
 (defpackage :galosh-qrz
-  (:use :cl :gl :galosh-qrzcom :clsql :galosh-grep :alexandria)
+  (:use :cl :galosh-lisp :galosh-qrzcom :clsql :galosh-grep :alexandria)
   (:export :has-offlinedb-p :offline-qrz-search :qrz-search))
 (in-package :galosh-qrz)
 
@@ -230,7 +230,7 @@ Returns nil if there is no offline database."
 	      (t (handler-case
 		     (check-required-config '("qrz.user" "qrz.password"))
 		   (missing-mandatory-configuration-error (e)
-		     (format t "~&~A~&" (gl::text e))
+		     (format t "~&~A~&" (galosh-lisp::text e))
 		     (terminate)))
 		 (princ (online-qrz-search sought))
 		 (print-logged-qsos sought)))
