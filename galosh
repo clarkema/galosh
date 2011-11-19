@@ -5,6 +5,7 @@ use 5.010;
 
 use FindBin;
 use lib "$FindBin::RealBin/perllib";
+use lib "$FindBin::RealBin/local/lib/perl5";
 
 use File::Glob     ':glob';
 use File::Spec;

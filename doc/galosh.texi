@@ -67,36 +67,39 @@ open issues or feature requests.  Alternatively, e-mail the author at
 @chapter Installation
 
 At this stage in its development, Galosh is not intended to be @emph{installed}
-as such, but run directly from a @command{git} checkout.  To get up and
-running, you only need to have @command{git} and @command{make} installed.
+as such, but run directly from a @command{git} checkout.
 
-@example
-$ git clone git://github.com/clarkema/galosh.git
-$ cd galosh
-$ sudo make install-debian-packages
-$ make install-quicklisp
-@end example
+@section OS X Installation
 
-Provided that you are running Debian GNU/Linux, this will:
+@subsection Prerequisites
+
 @enumerate
-@item install any packages you are currently missing; and
-@item download Quicklisp and set it up to manage Lisp systems within
-      the checkout directory.
+@item Xcode (Apple's developer tools).  Install from the App Store.
+@item Homebrew, from @url{http://mxcl.github.com/homebrew/}
 @end enumerate
 
-If you're not running Debian, you'll have to perform the `make
-install-debian-packages' stage manually by inspecting the Makefile to
-work out what you need and installing the equivalent packages on your
-system.  Don't forget to run @code{make install-quicklisp} afterwards.
+@subsection Getting The Code
 
-Once all the dependencies are installed, ensure that the main
-@command{galosh} script is in your @env{PATH}, either by adding the
-checkout directory to your @env{PATH} directly, or by symlinking the
-@command{galosh} command into a directory that is already in your
+Once the prerequisites are in place, open a Terminal window, make a new
+directory for Galosh, and use @command{git} to get a copy of the Galosh
+code.  Once you have downloaded the code, run Galosh's setup script to
+install all of its other dependencies.
+
+@example
+$ mkdir -p $HOME/git/galosh
+$ cd $HOME/git/galosh
+$ git clone git://github.com/clarkema/galosh.git
+$ cd galosh
+$ ./setup
+@end example
+
+Now the dependencies are installed, ensure that the main
+@command{galosh} script is in your @env{PATH}.  I recommend symlinking
+the @command{galosh} command into a directory that is already in your
 @env{PATH}.
 
-Galosh makes use of various sources of data from the Internet.  Once
-@command{galosh} is in your path, the final step is to download the
+Finally, Galosh makes use of various sources of data from the Internet.
+Once @command{galosh} is in your path, the final step is to download the
 most recent versions of these data:
 
 @example

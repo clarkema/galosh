@@ -1,0 +1,298 @@
+#!/usr/bin/perl -w
+
+use strict;
+use 5.010;
+
+use FindBin;
+use lib "$FindBin::RealBin/local/lib/perl5";
+
+use Cwd;
+use English qw( -no_match_vars );
+use File::Path qw( make_path );
+use IPC::Cmd qw( can_run );
+use Term::UI;
+use Term::ReadLine;
+
+my $term = Term::ReadLine->new( 'brand' );
+
+my $quicklisp_installer_uri = 'http://beta.quicklisp.org/quicklisp.lisp';
+
+umask 0077;
+
+our $osx_deps = [
+    { 
+        name             => 'cpanminus',
+        test_executable  => 'cpanm',
+        brew_flags       => '--HEAD'
+    },
+    {
+        name             => 'asciidoc',
+        test_executable  => 'asciidoc',
+    },
+    {
+        name             => 'sbcl',
+        test_executable  => 'sbcl',
+    },
+    {
+        type             => 'perl',
+        name             => 'File::HomeDir',
+        module           => 'File::HomeDir',
+    },
+    {
+        type             => 'perl',
+        name             => 'JSON',
+        module           => 'JSON',
+    },
+];
+
+our $debian_deps = [
+    {
+        type           => 'perl',
+        name           => 'LWP',
+        package        => 'libwww-perl',
+        module         => 'LWP',
+    },
+    {
+        type           => 'perl',
+        name           => 'File::HomeDir',
+        package        => 'libfile-homedir-perl',
+        module         => 'File::HomeDir',
+    },
+    {
+        type           => 'perl',
+        name           => 'JSON',
+        package        => 'libjson-perl',
+        module         => 'JSON',
+    },
+    {
+        type           => 'perl',
+        name           => 'File::chdir',
+        package        => 'libfile-chdir-perl',
+        module         => 'File::chdir',
+    },
+    {
+        type           => 'perl',
+        name           => 'DBI',
+        package        => 'libdbi-perl',
+        module         => 'DBI',
+    },
+    {
+        type            => 'program',
+        name            => 'SBCL',
+        test_executable => 'sbcl',
+        package         => 'sbcl',
+    },
+    {
+        type            => 'program',
+        name            => 'sqlite3',
+        test_executable => 'sqlite3',
+        package         => 'sqlite3',
+    },
+    {
+        type            => 'debian',
+        name            => 'libsqlite3-dev',
+    },
+    {
+        type            => 'debian',
+        name            => 'libncurses5-dev',
+    },
+];
+
+sub can_require
+{
+    my $module = shift;
+    print( "Checking for $module.pm... " );
+    eval "require $module";
+    return ( $@ ? 0 : 1 );
+}
+
+sub can_execute
+{
+    my $command = shift;
+    print( "Checking for $command... " );
+    return can_run( $command );
+}
+
+sub has_debian_package
+{
+    my $package = shift;
+    print( "Checking for $package... " );
+    my $result = qx( dpkg --list | grep $package );
+    return $result ? 1 : 0;
+}
+
+sub require_command
+{
+    my $cmd = shift;
+    qx( command -v $cmd );
+    if ( $CHILD_ERROR ) {
+        die( "Could not find $cmd; please install it and try again." );
+    }
+}
+
+sub setup_osx
+{
+    my @perl_modules_to_install;
+
+    for my $dep ( @$osx_deps ) {
+        given ( $dep->{'type'} ) {
+            when ( 'perl' ) {
+                if ( can_require( $dep->{'module'} ) ) {
+                    say( "found." );
+                }
+                else {
+                    say( "missing.  Added to installation list." );
+                    push( @perl_modules_to_install, $dep->{'module'} );
+                }
+            }
+            default {
+                print( "Checking for $dep->{'name'}... " );
+                chomp( my $path = qx( command -v $dep->{'test_executable'} ) );
+                if ( $CHILD_ERROR ) {
+                    say( "not found. Installing." );
+                    brew_install( $dep );
+                }
+                else {
+                    say( "$path." );
+                }
+            }
+        }
+    }
+
+    if ( @perl_modules_to_install ) {
+        make_path( "local" );
+        my $command = "cpanm --local-lib=local "
+            . join( " ", @perl_modules_to_install );
+        system( $command );
+    }
+
+    install_quicklisp();
+    install_buildapp();
+}
+
+sub setup_linux
+{
+    my @packages_to_install;
+
+    for my $dep ( @$debian_deps ) {
+        given ( $dep->{'type'} ) {
+            when ( 'perl' ) {
+                if ( can_require( $dep->{'module'} ) ) {
+                    say( "found." );
+                }
+                else {
+                   say( "missing.  Added to installation list." );
+                   push( @packages_to_install, $dep->{'package'} );
+                }
+            }
+            when ( 'program' ) {
+                if ( can_execute( $dep->{'test_executable'} ) ) {
+                    say( "found." );
+                }
+                else {
+                    say( "missing.  Added to installation list." );
+                    push( @packages_to_install, $dep->{'package'} );
+                }
+            }
+            when ( 'debian' ) {
+                if ( has_debian_package( $dep->{'name'} ) ) {
+                    say( "found." );
+                }
+                else {
+                    say( "missing. Added to installation list." );
+                    push( @packages_to_install, $dep->{'name'} );
+                }
+            }
+        }
+    }
+
+    if ( @packages_to_install ) {
+        my $command = "sudo aptitude install " . join( " ", @packages_to_install );
+        say( "This will now install missing packages by executing:" );
+        say( $command );
+        if ( $term->ask_yn( prompt  => 'Proceed?', default => 'n' ) ) {
+            system( $command );
+        }
+    }
+
+    install_quicklisp();
+    install_buildapp();
+}
+
+sub brew_install
+{
+    my $wanted = shift;
+    my $name   = $wanted->{'name'};
+    my $flags  = $wanted->{'flags'} || "";
+
+    qx( command -v brew );
+
+    if ( $CHILD_ERROR ) {
+        say( "Trying to install $name via Homebrew, but can't find `brew`." );
+        say( "Please install either Homebrew or $name, and try again." );
+    }
+    system( "brew install $name $wanted->{'brew_flags'}" );
+}
+
+sub install_quicklisp
+{
+    require LWP::UserAgent;
+    LWP::UserAgent->import();
+    my $quicklisp_dir = cwd() . '/quicklisp/'; # Trailing / required for SBCL
+
+    print( "Checking for Quicklisp... " );
+    if ( -e $quicklisp_dir && -d $quicklisp_dir ) {
+        print( "found.\n" );
+        print( "Ensuring required Quicklisp systems are installed... " );
+        system( "sbcl --no-userinit --load quicklisp/setup.lisp " .
+            qq{--eval "(ql:quickload 'galosh)" --eval "(quit)"} );
+        print( "done.\n" );
+    }
+    else {
+        print( "not found.  Installing.\n" );
+        my $ua = LWP::UserAgent->new(
+            agent     => "galosh",
+            env_proxy => 1,
+        );
+        my $res = $ua->get(
+            $quicklisp_installer_uri,
+            ':content_file' => 'quicklisp.lisp'
+        );
+
+        if ( $res->is_success ) {
+            my $cwd = cwd();
+            system( "sbcl --no-userinit --load quicklisp " .
+                qq{--eval "(quicklisp-quickstart:install :path \\"$quicklisp_dir/\\")" } .
+                qq{--eval "(ql:quickload 'galosh)" } .
+                qq{--eval "(quit)"} );
+
+            unlink( 'quicklisp.lisp' );
+        }
+        else {
+            die "Failed to download Quicklisp installer: " . $res->status_line;
+        }
+    }
+}
+
+sub install_buildapp
+{
+    print( 'Checking for buildapp... ' );
+    if ( can_execute( 'buildapp' ) ) {
+            print( "found.\n" );
+    }
+    else {
+        make_path( "local/bin" );
+        system( "sbcl --no-userinit --load quicklisp/setup.lisp " .
+            qq{--eval "(ql:quickload 'buildapp)" } .
+            qq{--eval "(buildapp:build-buildapp \\"local/bin/buildapp\\")" } .
+            qq{--eval "(quit)"} );
+    }
+}
+
+given ( $OSNAME ) {
+    when ( 'darwin' ) { setup_osx();   }
+    when ( 'linux' )  { setup_linux(); }
+    default {
+        say( "Sorry, this setup script only supports GNU/Linux and Mac OS X." );
+    }
+}
