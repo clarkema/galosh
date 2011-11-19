@@ -223,20 +223,26 @@ body {
 		   (raw (qrz-info (q-his-call qso))))))
 
 (define-easy-handler (qsl-options :uri "/qsl-options") (entity band)
-  (standard-page (:title "QSL Options")
-		 (:table :class "qsl-table"
-		  (:thead
-		   (:tr
-		    (:th "DX Call")
-		    (:th "QSO Date")
-		    (:th "QSL Sent?")
-		    (:th "QSL Sent Date")))
-		  (loop for q in (select 'qso :where [and [= 'band band][= 'his_dxcc entity]] :flatp t)
-		       collecting (markup (:tr
-					   (:td (:a :href (mkstr "http://www.qrz.com/db/" (q-his-call q)) (q-his-call q)))
-					   (:td (q-qso-date q))
-					   (:td (q-qsl-sent q))
-					   (:td (q-qsl-sdate q))))))))
+  (standard-page (:title (mkstr "QSL Options: " (entity-adif->name entity)))
+		 (markup
+		  (:link :rel "stylesheet" :href "/resources/css/report.css")
+		  (:img :src (format nil "/resources/flags/~A.svg" entity) :class "bg-flag")
+		  (:h1 (mkstr "QSL Options For " (entity-adif->name entity)))
+		  (:table :class "qso-table"
+			  (:thead
+			   (:tr
+			    (:th "DX Call")
+			    (:th "QSO Date")
+			    (:th "QSL Sent?")
+			    (:th "QSL Sent Date")
+			    (:th "Comment")))
+			  (loop for q in (select 'qso :where [and [= 'band band][= 'his_dxcc entity]] :flatp t)
+			     collecting (markup (:tr
+						 (:td (:a :href (mkstr "http://www.qrz.com/db/" (q-his-call q)) (q-his-call q)))
+						 (:td (raw (human-date (q-qso-date q) :separator "&#8209;")))
+						 (:td (q-qsl-sent q))
+						 (:td (human-date (q-qsl-sdate q)))
+						 (:td (q-comment q)))))))))
 
 (define-easy-handler (report :uri "/report") ()
   (let ((bands (list "160m" "80m" "60m" "40m" "30m" "20m" "17m" "15m" "12m" "10m" "6m")))
@@ -263,16 +269,20 @@ body {
       (when (entity-information-available-p)
 	(standard-page (:title "DXCC Progress")
 		       (markup
+			(:link :rel "stylesheet" :href "/resources/css/report.css")
 			(:table :class "qsl-table"
-				(:thead (raw (header-row)))
-				(:tbody (loop for i from 1
-					   for v in (sort (all-entity-names) #'string-lessp)
-					   collecting (let ((adif (mkstr (entity-name->adif v))))
-							(markup (:tr
-								 (:td v)
-								 (:td adif)
-								 (country-row adif))))
-					   collecting (when (zerop (rem i 15)) (header-row)))))))))))
+				       (:thead (raw (header-row)))
+				       (:tbody (loop for i from 1
+						  for v in (sort (all-entity-names) #'string-lessp)
+						  collecting (let ((adif (mkstr (entity-name->adif v))))
+							       (markup (:tr
+									(:td v (:img :src (format nil "/resources/flags/~A.svg" adif) :class "small-flag"))
+									(:td adif)
+									(country-row adif))))
+						  collecting (when (zerop (rem i 15)) (header-row))))))
+		       (markup (:p (fmts "~D QSO~:P in your log have ~
+                                  no associated DXCC information."
+				  (first (select [count [*]] :from 'qso :where [null 'his_dxcc] :flatp t))))))))))
 
 (define-easy-handler (root :uri "/") (call)
   (let ((total-qsos (first (select [count[*]] :from 'qso :flatp t)))
@@ -309,6 +319,8 @@ body {
 	*dispatch-table* (list
 ;			  (create-regex-dispatcher "^/[a-z\\d]+\\d+[a-z]+$" #'(lambda () (log-details :cols *limited-columns*)))
 			  'dispatch-easy-handlers
+			  (create-folder-dispatcher-and-handler "/resources/flags/" (translate-logical-pathname "GL:resources;flags;"))
+			  (create-folder-dispatcher-and-handler "/resources/css/"   (translate-logical-pathname "GL:resources;css;"))
 			  'default-dispatcher))
   (start (make-instance 'easy-acceptor :address "127.0.0.1" :port port)))
 

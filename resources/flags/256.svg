@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200px" height="800px" viewBox="0 0 180 120" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect fill="#004b8f" width="180" height="120"/>
+<rect fill="#ffca13" x="60" width="60" height="120"/>
+<path id="1" fill="#c00" d="M66,33 h48 l-16,5 v44 l16,5 h-48 l16,-5 v-44z"/>
+<use xlink:href="#1" transform="rotate(90 90 60)"/>
+<path fill="#fff" d="M86,38 h8 v44 h-8zM68,56 h44 v8 h-44z"/>
+</svg>

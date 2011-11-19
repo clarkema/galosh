@@ -1,0 +1,59 @@
+html * {
+    font-family: "ff-din-web-pro-1","ff-din-web-pro-2",sans-serif;
+    font-size: 10pt;
+}
+body {
+    background-color: #002b36;
+    color: #839496;
+}
+.qsl-table {
+    border-collapse: collapse;
+    margin-left: auto;
+    margin-right: auto;
+}
+.qso-table {
+    border-collapse: collapse;
+}
+.qsl-table th, .qso-table th {
+    background-color: #073642;
+    padding: 5px ! important;
+}
+.qsl-table td, .qsl-table th,
+.qso-table td, .qso-table th {
+    border: 1px solid #073642;
+    padding: 4px;
+}
+.qsl-table img {
+    float: right;
+    max-width: 22px;
+    margin-top: 2px;
+}
+.qsl-stats {
+    text-align: center;
+}
+.confirmed,
+.confirmed a:link,
+.confirmed a:visited,
+.confirmed a:hover,
+.confirmed a:active {
+    color: #859900;
+    text-decoration: none;
+}
+.unconfirmed,
+.unconfirmed a:link,
+.unconfirmed a:visited,
+.unconfirmed a:hover,
+.unconfirmed a:active {
+    color: #dc322f;
+    text-decoration: none;
+}
+
+.bg-flag {
+    opacity: 0.4;
+    max-width: 350px;
+    float: right;
+}
+
+a:link, a:visited, a:hover, a:active {
+    color: #268bd2;
+}
