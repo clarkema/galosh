@@ -1,0 +1,50 @@
+galosh-difftool(1)
+==================
+
+NAME
+----
+galosh-difftool - Show changes between versions of your log.
+
+SYNOPSIS
+--------
+'galosh difftool' [<commit>]
+
+DESCRIPTION
+-----------
+Shows changes made to your log over time.
+
+This command is a thin wrapper that uses `git(1)` plumbing to rtrieve 
+the requested versions of your log.  As such, it requires that you are
+using `git` to manage your Galosh repository.
+
+By default, 'galosh difftool' will compare the working copy of your log with
+HEAD -- the most recently checked-in version.
+
+USAGE
+-----
+
+'galosh difftool'::
+
+    Compare the working copy of the log with HEAD.
+
+'galosh difftool' <commit>::
+
+    Compare the working copy of the log with <commit>.  See
+    gitrevisions(7) for different ways to specify this.
+
+SEE ALSO
+--------
+gitrevisions(7)
+
+Author
+------
+Written by Mike Clarke <mike -at- galosh.org.uk>.
+
+Documentation
+-------------
+
+Documentation by Mike Clarke.
+
+GALOSH
+------
+Part of the Galosh suite.

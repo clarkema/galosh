@@ -200,6 +200,12 @@ sub cmd_create_qsl
     Galosh::CreateQSL::main();
 }
 
+sub cmd_difftool
+{
+    require Galosh::DiffTool;
+    Galosh::DiffTool::main( @ARGV );
+}
+
 sub cmd_journal
 {
     use Galosh::Journal;
