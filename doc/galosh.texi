@@ -436,12 +436,14 @@ facing the twin realities of going back to work and being deluged
 beneath a flood of incoming QSL cards.  In fact, the first batch have
 already arrived...
 
+@subsection Direct Requests
+
 We'll start by dealing with direct requests.
 
 Run @command{galosh qsl} within your repository directory.  As you start
 typing a callsign, Galosh will show possible completions at the top of
-the screen.  Once you have typed the full callsign, hit enter and you
-will be presented with a list of QSOs made with that station, most
+the screen.  Once you have typed the full callsign, hit @key{Enter} and
+you will be presented with a list of QSOs made with that station, most
 recent first.  Select a QSO by typing the number in the first column and
 hitting enter again.
 
@@ -474,6 +476,20 @@ i.e., you have prepared a QSL card for the contact but have not yet
 posted it.  Once you have posted the batch of cards, run
 @w{@command{galosh qsl mark-queued-as-sent}} to tell Galosh that you
 have actually sent the cards.
+
+@subsection Requests Via Other Routes
+
+@command{galosh log} shows the current QSL route at the top-left of the
+screen: the default is `D' for direct.  Generally it's anticipated that
+incoming cards will be dealt with in batches from a single source; so
+you'll have a batch of direct cards, or a batch of cards from the
+bureau, etc.  With that in mind, you can specify the route to use for a
+particular QSLing session with the @option{--route} command-line
+option.  This option accepts `D' for direct, `B' for bureau, `E' for
+electronic, or `M' for manager.
+
+You can also change the current route from within @command{galosh qsl}
+by entering @command{:set route FOO}, where FOO is one of D, B, E, or M.
 
 @bye
 
