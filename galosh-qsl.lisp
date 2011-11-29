@@ -56,7 +56,7 @@
 
 (defun process-route-option (route)
   (when route
-    (setf *route* (given route #'(lambda (s l) (member s l :test #'string-equal))
+    (setf *route* (given route #'string-equal
 		    ('("B" "buro" "bureau")            "B")
 		    ('("D" "direct")                   "D")
 		    ('("E" "electronic" "eqsl" "lotw") "E")
@@ -196,8 +196,8 @@
 	     (print-qsos qso-list)
 	     (print-buffer buffer)
 	     (let ((c (code-char (getch))))
-	       (given c (lambda (c l) (member c l :test #'char=))
-		 ('(#\Newline)
+	       (given c #'char=
+		 (#\Newline
 		   (if (empty-string-p buffer)
 		       (again buffer)
 		       (let ((qso-num (parse-integer buffer)))
@@ -206,17 +206,17 @@
 			       (manage-qso-event-loop (nth (- qso-num 1) qso-list))
 			       (again ""))
 			     (again buffer)))))
-		 ('(#\p)
+		 (#\p
 		   (create-qsl (sort (copy-seq *tagged-qsos*) #'> :key #'(lambda (x) (parse-integer (q-qso-date x)))))
 		   (again buffer))
-		 ('(#\Rubout)
+		 (#\Rubout
 		   (again (drop-last buffer)))
 		 ('(#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\0)
 		   (again (mkstr buffer c)))
-		 ('(#\Esc)
+		 (#\Esc
 		   (setf *tagged-qsos* nil)
 		   :cancel)
-		 ('(#\:)
+		 (#\:
 		   (when (empty-string-p buffer)
 		     (process-command (read-value :prompt #'(lambda (b) (print-buffer b ":")))))
 		   (again buffer))

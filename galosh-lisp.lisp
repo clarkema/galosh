@@ -375,13 +375,18 @@
 		  (* (sin theta-s) (cos theta-f) (cos delta-long)))))
       (norm (rad->deg (atan SA SB))))))
 
+;; NB: this macro will currently fail if a clause is based on a function
+;; that returns a list; this will cause it to go down the funcall route
+;; rather than the member route.  Not sure if that is a problem or not.
 (defmacro given (keyform test &body clauses)
   (with-gensyms (k)
     (let ((acc '(cond)))
       (dolist (form clauses)
 	(if (eq (car form) t)
 	    (setf acc (append acc `((t ,@(cdr form)))))
-	    (setf acc (append acc `(((funcall ,test ,k ,(car form)) ,@(cdr form)))))))
+	    (if (and (consp (car form)) (eq (caar form) 'quote))
+		(setf acc (append acc `(((member ,k ,(car form) :test ,test) ,@(cdr form)))))
+		(setf acc (append acc `(((funcall ,test ,k ,(car form)) ,@(cdr form))))))))
       (append `(let ((,k ,keyform)))
 		 (list acc)))))
 
