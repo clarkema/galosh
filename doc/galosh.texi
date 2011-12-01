@@ -114,10 +114,10 @@ all available Galosh commands.
 Galosh provides a Bash completion file in
 @file{contrib/galosh-bash-completion}.  To have completion work for you,
 this file needs to be sourced, one way or another, when @command{bash}
-starts.  There are many ways of achieving this.  One possibility is make
-a directory such as @file{$HOME/local/etc/bash_completion.d} to hold
-your personal Bash completion files, and then add something like this to
-your @file{.bashrc}:
+starts.  There are many ways of achieving this.  One possibility is to
+make a directory such as @file{$HOME/local/etc/bash_completion.d} to
+hold your personal Bash completion files, and then add something like
+this to your @file{.bashrc}:
 
 @example
 #####################
@@ -178,10 +178,10 @@ ways modelled.
 
 @strong{Most uses of Galosh require you to be in a repository.}
 
-A repository is nothing more than a special directory on the file system that
-contains configuration files, your log, and other related information.  To
-create one, simply create a new directory, change into it, and run @code{galosh
-init}.
+A repository is nothing more than a special directory in the file system
+that contains configuration files, your log, and other related
+information.  To create one, simply create a new directory, change into
+it, and run @command{galosh init}.
 
 @example
 $ mkdir log
@@ -200,10 +200,11 @@ $ tree -a
     `-- tmp
 @end example
 
-@file{.galosh/log.db} is the new (currently empty) SQLite database which will contain your logs.
-@file{.galosh/tmp} is used for temporary files created in the course of running
-various commands such as @command{galosh journal}, and can be ignored.
-Finally, @file{.galosh/config} is the configuration file for this repository.
+@file{.galosh/log.db} is the new (currently empty) SQLite database which
+will contain your logs.  @file{.galosh/tmp} is used for temporary files
+created in the course of running various commands such as
+@command{galosh journal}, and can be ignored.  Finally,
+@file{.galosh/config} is the configuration file for this repository.
 
 @node Configuration
 @section The Configuration System
@@ -278,10 +279,11 @@ database.  To get started with either of these, you'll need a subscription from
 @node Getting Started With The qrz.com XML API
 @subsection Getting Started With The qrz.com XML API
 
-If you don't already have an XML subscriber account with @indicateurl{qrz.com}, go to
-@url{http://www.qrz.com/XML/index.html} and sign up.  Once you have your username and
-password, you'll need to configure Galosh (@pxref{Configuration}).  Add the
-following to your configuration file:
+If you don't already have an XML subscriber account with
+@indicateurl{qrz.com}, go to @url{http://www.qrz.com/XML/index.html} and
+sign up.  Once you have your username and password, you'll need to
+configure Galosh (@pxref{Configuration}).  Add the following to your
+configuration file:
 
 @example
 [qrz]
@@ -489,7 +491,8 @@ option.  This option accepts `D' for direct, `B' for bureau, `E' for
 electronic, or `M' for manager.
 
 You can also change the current route from within @command{galosh qsl}
-by entering @command{:set route FOO}, where FOO is one of D, B, E, or M.
+by entering @command{:set route FOO}, where @code{FOO} is one of D, B,
+E, or M.
 
 @bye
 
