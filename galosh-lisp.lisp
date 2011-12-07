@@ -259,10 +259,14 @@
     (and (has-section-p *config* section)
 	 (has-option-p *config* section option))))
 
-(defun get-config (name)
+(defun get-config (name &key (default nil default-p))
   (unless *config* (init-config))
-  (destructuring-bind (section option) (split #\. name)
-    (coerce (get-option *config* section option) 'simple-string)))
+  (handler-case
+      (destructuring-bind (section option) (split #\. name)
+	(coerce (get-option *config* section option) 'simple-string))
+    (t (e) (if default-p
+	       default
+	       (error e)))))
 
 (defun init-config ()
   (let ((global-config (merge-pathnames (make-pathname :directory '(:relative ".galosh") :name "config") (user-homedir-pathname))))
