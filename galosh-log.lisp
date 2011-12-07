@@ -162,6 +162,7 @@
 				:mode (mode)
 				:qrg (qrg)
 				:my-iota *iota*
+				:my-grid (get-config "user.grid" :default nil)
 				:tx-rst (ensure-valid-rst tx-rst (mode))
 				:rx-rst (ensure-valid-rst rx-rst (mode)))))
 	  (run-full-call-handlers call)
