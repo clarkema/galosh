@@ -21,8 +21,8 @@ our $clublog_api_key = 'a5a1046e08eebc5fdef1f45ebf2ad049e914c850';
 our $context_dir     = File::Spec->join( File::Spec->curdir(), ".galosh" );
 our $home_galosh_dir = File::Spec->join( File::HomeDir->my_home, ".galosh" );
 our $compiled_dir    = File::Spec->join( $home_galosh_dir, "compiled" );
+our $config          = {};
 our $galosh_dir;
-
 ######################################################################
 # General utility functions here
 ######################################################################
@@ -133,14 +133,6 @@ sub cmd_compile
 
 sub cmd_config
 {
-    my $context_dir = get_context();
-    my $home_config_file = File::Spec->join( $ENV{'HOME'}, ".galosh", "config" );
-    my $repo_config_file = File::Spec->join( $context_dir, "config" );
-    my $config = {};
-
-    read_config( $home_config_file, $config );
-    read_config( $repo_config_file, $config );
-
     if ( $ARGV[1] ) {
         print $config->{ $ARGV[1] }, "\n";
     }
@@ -149,6 +141,12 @@ sub cmd_config
             print "$k = $v\n"
         }
     }
+}
+
+sub cmd_clublog_upload
+{
+    require Galosh::ClublogUpload;
+    Galosh::ClublogUpload::main( @ARGV );
 }
 
 sub cmd_recompile_all
@@ -162,6 +160,16 @@ sub cmd_recompile_all
 }
 
 sub read_config
+{
+    my $context_dir = get_context();
+    my $home_config_file = File::Spec->join( $ENV{'HOME'}, ".galosh", "config" );
+    my $repo_config_file = File::Spec->join( $context_dir, "config" );
+
+    read_config_file( $home_config_file, $config );
+    read_config_file( $repo_config_file, $config );
+}
+
+sub read_config_file
 {
     my $file     = shift;
     my $hash_ref = shift;
@@ -241,6 +249,8 @@ unless ( -e $home_galosh_dir && -d $home_galosh_dir ) {
 }
 
 find_galosh_dir();
+
+read_config();
 
 if ( defined( &$sub_name ) ) {
     no strict "refs";
