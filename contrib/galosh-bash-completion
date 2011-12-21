@@ -37,6 +37,13 @@ _galosh_help()
     return 0
 }
 
+_galosh_import_adif()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+
+    COMPREPLY=( $(compgen -f -- $cur ) )
+    return 0
+}
 _galosh_import_qrz_db()
 {
     local cur="${COMP_WORDS[COMP_CWORD]}"
