@@ -162,11 +162,14 @@ sub cmd_recompile_all
 sub read_config
 {
     my $context_dir = get_context();
-    my $home_config_file = File::Spec->join( $ENV{'HOME'}, ".galosh", "config" );
-    my $repo_config_file = File::Spec->join( $context_dir, "config" );
 
+    if ( $context_dir ) {
+        my $repo_config_file = File::Spec->join( $context_dir, "config" );
+        read_config_file( $repo_config_file, $config );
+    }
+
+    my $home_config_file = File::Spec->join( $ENV{'HOME'}, ".galosh", "config" );
     read_config_file( $home_config_file, $config );
-    read_config_file( $repo_config_file, $config );
 }
 
 sub read_config_file
@@ -174,6 +177,8 @@ sub read_config_file
     my $file     = shift;
     my $hash_ref = shift;
     my $section;
+
+    return unless -e $file;
 
     open( my $fh, '<', $file ) or die "Failed to open config file $file: $!\n";
 
