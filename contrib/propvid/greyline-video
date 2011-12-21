@@ -1,0 +1,171 @@
+#! /usr/bin/python
+
+import argparse
+import datetime
+import ephem
+import os
+import sys
+from itertools import count
+
+class InvalidArgumentError(Exception):
+    def __init__(self, message):
+        self.message = message
+    def __str__(self):
+        return self.message
+
+class OutputSequence:
+    def __init__(self, prefix):
+        self.prefix  = prefix
+        self.counter = count(1)
+    def next_filename(self):
+        return "{}{:03d}".format( self.prefix, self.counter.next() )
+
+# We re-set observer.date in the except clauses below because pyephem
+# leaves the data in a mangled state when it throws an exception.
+def sunrise( observer, date ):
+    """Calculate sunrise for a given location and date.
+
+    observer -- an ephem.Observer
+    date -- a tuple of (year, month, day, hour, minute, second)
+
+    If the location is within either the Arctic or Antarctic circle
+    and the sun will not rise on the date specified, return either the
+    transit or anti-transit as appropriate; this is the closest we will
+    get to greyline on that day.
+    """
+    observer.date = date
+    try:
+        sr = observer.next_rising( ephem.Sun() )
+        if sr.datetime().day == observer.date.datetime().day:
+            return sr
+        else:
+            return None
+    except ephem.NeverUpError:
+        observer.date = date
+        return observer.next_transit( ephem.Sun() )
+    except ephem.AlwaysUpError:
+        observer.date = date
+        return observer.next_antitransit( ephem.Sun() )
+
+# We re-set observer.date in the except clauses below because pyephem
+# leaves the data in a mangled state when it throws an exception.
+def sunset( observer, date ):
+    """Calculate sunset for a given location and date.
+
+    observer -- an ephem.Observer
+    date -- a tuple of (year, month, day, hour, minute, second)
+
+    If the location is within either the Arctic or Antarctic circle
+    and the sun will not set on the date specified, return either the
+    transit or anti-transit as appropriate; this is the closest we will
+    get to greyline on that day.
+    """
+    observer.date = date
+    try:
+        ss = observer.next_setting( ephem.Sun() )
+        if ss.datetime().day == observer.date.datetime().day:
+            return ss
+        else:
+            return None
+    except ephem.NeverUpError:
+        observer.date = date
+        return observer.next_transit( ephem.Sun() )
+    except ephem.AlwaysUpError:
+        observer.date = date
+        return observer.next_antitransit( ephem.Sun() )
+
+def valid_latitude_p( latitude ):
+    try:
+        l = float(latitude)
+        return ( l >= -90 and l <= 90 )
+    except:
+        return False
+
+def valid_longitude_p( latitude ):
+    try:
+        l = float(latitude)
+        return ( l >= -180 and l <= 180 )
+    except:
+        return False
+
+def write_config_file( name ):
+    with open( name, 'w' ) as fh:
+        fh.write("[earth]\nmarker_file=markers")
+
+def datetime_to_xplanet( dt ):
+    return '{0:d}{1:02d}{2:02d}.{3:02d}{4:02d}{5:02d}'.format(
+        dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second )
+
+def create_map( date, seq, base_qth ):
+    if date == None: return
+
+    xplanet_date = datetime_to_xplanet( date.datetime() )
+    print seq.prefix, xplanet_date
+
+    with open( "markers", 'w' ) as fh:
+        fh.write('{} {} "{}" color=white outlined=true\n'.format(
+            base_qth[0],
+            base_qth[1],
+            base_qth[2] ) )
+        fh.write('-10 900 "{}" '.format( xplanet_date ) +
+            'image=none position=pixel color=black outlined=false\n' )
+
+    os.system( "xplanet -projection mercator -geometry 1000x500 " +
+        "-config config -quality 100 -num_times 1 " +
+        "-output {0}.jpg -num_times 1 -date {1}".format(
+            seq.next_filename(), xplanet_date ) )
+
+def main( lat, lon, label ):
+    if not valid_latitude_p( lat ):
+        raise InvalidArgumentError( "'{}' is not a valid latitude.".format(lat) )
+    if not valid_longitude_p( lon ):
+        raise InvalidArgumentError( "'{}' is not a valid longitude.".format(lon) )
+
+    year        = 2011
+    months      = [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
+    ss_sequence = OutputSequence( "ss" );
+    sr_sequence = OutputSequence( "sr" );
+    base_marker = ( lat, lon, label )
+
+    qth = ephem.Observer()
+    qth.lat = lat
+    qth.lon = lon
+
+    # Disable pyephem's atmospheric refraction support, which is not
+    # interesting for our purposes.
+    qth.pressure = 0
+    qth.horizon = '-0:34'
+
+    write_config_file( 'config' )
+
+    month = 1
+    for days in months:
+        for day in range( 1, days + 1 ):
+            create_map( sunrise( qth, ( year, month, day, 0, 0, 0 ) ),
+                    sr_sequence,
+                    base_marker )
+            create_map(  sunset( qth, ( year, month, day, 0, 0, 0 ) ),
+                    ss_sequence,
+                    base_marker )
+        month = month + 1
+
+    os.system( "ffmpeg -r 8 -y -i {0}%03d.jpg -vcodec libx264 {0}.mp4".format("sr") )
+    os.system( "ffmpeg -r 8 -y -i {0}%03d.jpg -vcodec libx264 {0}.mp4".format("ss") )
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description = """Create videos of sunrise and sunset greyline
+        for any location.
+    """ )
+    parser.add_argument( 'latitude',  help='(decimal degrees)' )
+    parser.add_argument( 'longitude', help='(decimal degrees)' )
+    parser.add_argument( 'label',     help="""Label to identify the base
+        location on the map.""" )
+
+    args = parser.parse_args()
+
+    try:
+        main( args.latitude, args.longitude, args.label )
+    except InvalidArgumentError as e:
+        print >> sys.stderr, e.message
+        exit( 1 )
