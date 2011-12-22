@@ -5,3 +5,4 @@ doc/*.pdf
 doc/*.t2d
 *.fasl
 quicklisp
+.DS_Store
