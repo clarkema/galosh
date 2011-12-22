@@ -80,6 +80,8 @@
   ())
 (define-condition callsign-not-found-error (error)
   ((text :initarg :text :reader text)))
+(define-condition network-or-threading-error (error)
+  ())
 
 (defclass qrzcom-client ()
   ((username :initarg :username :initform "")
@@ -100,6 +102,13 @@
 	 (key (aref (dom:get-elements-by-tag-name doc "Key") 0)))
     (setf (get-qrz-key (slot-value client 'username)) (dom:node-value (dom:first-child key)))))
 
+(defun http-request-with-retry (retries &rest http-request-args)
+  (handler-case
+      (funcall #'http-request http-request-args)
+    (t (e) (if retries
+	       (http-request-with-retry (1- retries) http-request-args)
+	       (log-error 'network-or-threading-error)))))
+
 (defun api-call (client request)
   ;; If nothing is stored in *qrz-keys-by-username*, we haven't yet logged in.
   ;; Try reading our state file to see if that gives us a stored key we can use.
@@ -109,9 +118,9 @@
   (if (zerop (hash-table-count *qrz-keys-by-username*))
       (login client))
   (labels ((api-request (try)
-	     (let* ((response (http-request (format nil "~A?s=~A&~A" 
-						    *qrz-api-url* 
-						    (get-qrz-key (slot-value client 'username))
+	     (let* ((response (http-request-with-retry 10 (format nil "~A?s=~A&~A"
+								  *qrz-api-url*
+								  (get-qrz-key (slot-value client 'username))
 						    request)))
 		    (doc (cxml:parse response (cxml-dom:make-dom-builder)))
 		    (err (dom:get-elements-by-tag-name doc "Error")))
@@ -142,7 +151,7 @@
 	doc callsign)
     (handler-case
 	(setf doc (api-call client (cats "callsign=" call)))
-      (callsign-not-found-error () (return-from details-by-call nil)))
+      (t () (return-from details-by-call nil)))
     (setf callsign (aref (dom:get-elements-by-tag-name doc "Callsign") 0))
     (dom:do-node-list (node (dom:child-nodes callsign) result)
       (when (dom:element-p node)
