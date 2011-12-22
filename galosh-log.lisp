@@ -50,14 +50,24 @@
 ;;; Utilities
 ;;; ===================================================================
 (defun ensure-valid-rst (val mode)
-  (cond ((stringp val)
-	 (let ((rst (princ-to-string (default-rst-for-mode mode))))
-	   (if (= (length val) 1)
-	       (setf (subseq rst 1 2) val)
-	       (setf (subseq rst 0 (length val)) val))
-	   (parse-integer rst)))
-	((integerp val) val)
-	(t (default-rst-for-mode mode))))
+  (let ((phone-modes '("SSB" "ESSB" "AM"))
+	(tone-modes '("CW")))
+    (cond ((stringp val)
+	   (cond ((member mode phone-modes :test #'string=)
+		  (let ((rst (copy-seq "59")))
+		    (if (= (length val) 1)
+			(setf (subseq rst 1 2) val)
+			(setf (subseq rst 0 (length val)) val))
+		    rst))
+		 ((member mode tone-modes :test #'string=)
+		  (let ((rst (copy-seq "599")))
+		    (if (= (length val) 1)
+			(setf (subseq rst 1 2) val)
+			(setf (subseq rst 0 (length val)) val))
+		    rst))
+		 (t val)))
+	  ((integerp val) (princ-to-string val))
+	  (t (princ-to-string (default-rst-for-mode mode))))))
 
 ;;; ===================================================================
 ;;; Painting functions
