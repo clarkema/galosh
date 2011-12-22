@@ -21,7 +21,7 @@
 (defvar *comment-prefix* nil)
 
 (defun ensure-defaults (qso)
-  (default (q-my-call qso) (get-config "user.call"))
+;  (default (q-my-call qso) (get-config "user.call"))
   (default (q-comment qso) *comment-prefix*)
   (default (q-band qso) (qrg->band (q-qrg qso))))
 
@@ -40,7 +40,7 @@
 	(concatenate 'list options `((filename . ,(third leftover)))))))
 
 (defun process-file (path)
-  (with-open-file (stream path)
+  (with-open-file (stream path :external-format '(:utf-8 :replacement #\?))
     (map-over-qsos #'(lambda (q)
 		       (ensure-defaults q)
 		       (update-records-from-instance q)

@@ -77,8 +77,10 @@
     his-call
     his-operator
     his-name
+    his-web
     my-call
     my-operator
+    my-name
     my-owner
     (qrg :type integer :initform 0)
     (band :noaccessors)
@@ -87,8 +89,10 @@
     qso-date-off
     time-on
     time-off
-    (tx-rst :type integer :initform 59)
-    (rx-rst :type integer :initform 59)
+    qso-complete
+    qso-random
+    (tx-rst :initform "59")
+    (rx-rst :initform "59")
     comment
     notes
     prop-mode
@@ -96,24 +100,28 @@
     (swl :type integer :initform 0)
 
     ;; Conditions
-    (his-power :type integer)
-    (my-power  :type integer)
-    (a-index   :type integer)
-    (k-index   :type integer)
+    (his-power :type float)
+    (my-power  :type float)
+    (a-index   :type float)
+    (k-index   :type float)
     sfi ; solar flux
     my-rig
+    (distance :type float)
 
-    (ant-az :type integer)
-    (ant-el :type integer)
+    (ant-az :type float)
+    (ant-el :type float)
+    ant-path
 
     ;; His QTH
     (his-cq-zone :type integer)
     (his-itu-zone :type integer)
     (his-dxcc :type integer)
+    his-continent
     his-country
     his-state
     his-county ; cnty
     his-city ; -> qth in adif
+    his-address;
     his-iota
     his-iota-island-id
     his-grid
@@ -180,7 +188,10 @@
 
     ;; Satellite operating
     satellite-mode
-    satellite-name)
+    satellite-name
+
+    ;; EME
+    force-init)
 
 
 (defun max-qso-id ()
@@ -206,7 +217,7 @@
 (defun q-band (qso)
   (let ((qrg  (slot-value qso 'qrg))
 	(band (slot-value qso 'band)))
-    (if qrg
+    (if (and qrg (not (zerop qrg)))
 	(qrg->band qrg)
 	band)))
 

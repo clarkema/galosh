@@ -2,7 +2,8 @@
     :depends-on (#:galosh-lisp
 		 #:galosh-qso
 		 #:clsql
-		 #:getopt)
+		 #:getopt
+		 #:parse-number)
     :components ((:file "galosh-adif")
 		 (:file "galosh-import-adif"
 			:depends-on ("galosh-adif"))))

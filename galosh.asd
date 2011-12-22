@@ -2,7 +2,7 @@
     :depends-on (#:hunchentoot
 		 #:parenscript
 		 #:clsql-sqlite3
-         #:cl-log
+		 #:cl-log
 		 #:cl-markup
 		 #:cl-ncurses
 		 #:split-sequence
@@ -10,6 +10,7 @@
 		 #:drakma
 		 #:cxml
 		 #:getopt
+		 #:parse-number
 		 #:py-configparser
 		 #:fiveam
 		 #:jpl-queues

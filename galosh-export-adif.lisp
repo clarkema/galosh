@@ -51,7 +51,7 @@
     options))
 
 (defun print-header ()
-  (say "Exported from Galosh -- a suite of amateur radio tools for Linux.")
+  (say "Exported from Galosh.")
   (format t "<PROGRAMID:~A>~A~%" (length "GALOSH") "GALOSH")
   (format t "<PROGRAMVERSION:~A>~A~%" (length *galosh-version*) *galosh-version*)
   (say "<EOH>"))
