@@ -7,6 +7,8 @@ use FindBin;
 use lib "$FindBin::RealBin/perllib";
 use lib "$FindBin::RealBin/local/lib/perl5";
 
+$ENV{'PATH'} .= ":$FindBin::RealBin/local/bin";
+
 use File::Glob     ':glob';
 use File::Spec;
 use File::HomeDir;

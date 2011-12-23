@@ -6,6 +6,8 @@ use 5.010;
 use FindBin;
 use lib "$FindBin::RealBin/local/lib/perl5";
 
+$ENV{'PATH'} .= ":$FindBin::RealBin/local/bin";
+
 use Cwd;
 use English qw( -no_match_vars );
 use File::Path qw( make_path );
@@ -276,7 +278,6 @@ sub install_quicklisp
 
 sub install_buildapp
 {
-    print( 'Checking for buildapp... ' );
     if ( can_execute( 'buildapp' ) ) {
             print( "found.\n" );
     }
