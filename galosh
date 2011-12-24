@@ -137,12 +137,19 @@ sub cmd_compile
 sub cmd_config
 {
     if ( $ARGV[1] ) {
-        print $config->{ $ARGV[1] }, "\n";
+        if ( $config->{ $ARGV[1] } ) {
+            print $config->{ $ARGV[1] }, "\n";
+            exit 0;
+        }
+        else {
+            exit 1;
+        }
     }
     else {
         while ( my ($k, $v) = each %$config ) {
             print "$k = $v\n"
         }
+        exit 0;
     }
 }
 
