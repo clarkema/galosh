@@ -10,10 +10,12 @@ else
     done
 fi
 
-address=$( galosh qrz --raw "$call" | awk -F "\t" '$1 == "email:" { print $2 }' )
+address=$( galosh qrz --raw "$call" | awk -F "\t" '$1 == "email:" { print $2 }' ; exit ${PIPESTATUS[0]} )
 
-if [ -n "$address" ]; then
-    ${mua:-echo} $address
-else
-    echo "No e-mail address found for $call."
+if [[ $? -eq 0 ]]; then
+    if [ -n "$address" ]; then
+        ${mua:-echo} $address
+    else
+        echo "No e-mail address found for $call."
+    fi
 fi
