@@ -229,7 +229,8 @@
 	  (t "Unknown band"))))
 
 (define-condition missing-mandatory-configuration-error (error)
-  ((text :initarg :text :reader text)))
+  ((text :initarg :text :reader text)
+   (variables :initarg :variables :reader variables)))
 
 (defvar *config* nil)
 
@@ -254,12 +255,15 @@
       (setf config (read-stream config s)))))
 
 (defun check-required-config (variables)
-  (dolist (ropt variables)
-    (destructuring-bind (section option) (split #\. ropt)
-      (unless (and (has-section-p *config* section)
-		   (has-option-p *config* section option))
-	(error 'missing-mandatory-configuration-error :text
-	       (format nil "Please update your configuration to provide a value for `~a'." ropt))))))
+  (let ((missing ()))
+    (dolist (ropt variables)
+      (destructuring-bind (section option) (split #\. ropt)
+	(unless (and (has-section-p *config* section)
+		     (has-option-p *config* section option))
+	  (setf missing (cons ropt missing)))))
+    (if missing
+	(error 'missing-mandatory-configuration-error :variables missing)
+	t)))
 
 (defun has-config-p (name)
   (unless *config* (init-config))
@@ -316,7 +320,9 @@
 		     (load ,mixin-repo-path)))
 		 ,@body))
 	   (missing-mandatory-configuration-error (e)
-	     (lecture (text e))
+	     (lecture (list "~(~A~) requires values for the following configuration options:" ',name)
+		      (list "~{    ~A~&~}" (variables e))
+		      "See the Configuration section of the Galosh manual for more information.")
 	     (terminate 1))
 	   (missing-galosh-db-error (e)
 	     (lecture (text e)

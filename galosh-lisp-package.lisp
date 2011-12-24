@@ -20,6 +20,7 @@
 	   :cats
 	   :join
 	   :say
+	   :lecture
 	   :open-in-browser
 	   :keys
 	   :default
