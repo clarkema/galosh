@@ -1,0 +1,54 @@
+galosh-config(1)
+================
+
+NAME
+----
+galosh-config - Get Galosh options
+
+SYNOPSIS
+--------
+`galosh config` [<name>]
+
+DESCRIPTION
+-----------
+This command allows you to query Galosh options.  The name is given in
+dotted format; i.e., 'user.call'.  If no name is provided, all known
+options will be printed.
+
+If all options are requsted, or a specific option is requested and that
+option exists, the exit status will be 0.
+
+If a specific option is requested and that option does not exist the
+exit status will be 1.
+
+EXAMPLES
+--------
+
+    $ galosh config user.call
+    VP8DMH
+    $ echo $?
+    0
+
+    $ galosh config unknown.option
+    $ echo $?
+    1
+
+    $ galosh config
+    user.call = VP8DMH
+    user.name = Mike Clarke
+    user.grid = HB64ok
+    cluster.host = gb7mbc.net
+    ...
+
+Author
+------
+Written by Mike Clarke <mike -at- galosh.org.uk>.
+
+Documentation
+-------------
+
+Documentation by Mike Clarke.
+
+GALOSH
+------
+Part of the Galosh suite.
