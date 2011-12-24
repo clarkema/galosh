@@ -11,19 +11,24 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-`galosh email` is a very thin wrapper around `galosh qrz`, which uses the
-qrz.com XML API to look up another operator's e-mail address, which it then
-passes to your chosen mail user agent.
+`galosh email` is a very thin wrapper around `galosh qrz`.  It uses the
+qrz.com XML API to look up another operator's e-mail address, which it
+then passes to your chosen mail user agent.
 
 For this to work, you must:
 
-. have set up `galosh qrz` so that it works for XML API queries (i.e., online mode); and
+. have set up `galosh qrz` so that it works for XML API queries (i.e.,
+  online mode); and
 . be connected to the Internet.
 
 SETUP
 -----
-`galosh qrz` uses qrz.com as its data source for callsign lookups, so you will
-need an account.  For more information on this, see the main Galosh user manual.
+`galosh email` takes your MUA from `tools.mua`.  If this is unset
+(the default) it will print the requested e-mail address to STDOUT.
+
+`galosh qrz` uses qrz.com as its data source for callsign lookups, so
+you will need an account.  For more information on this, see the main
+Galosh user manual.
 
 SEE ALSO
 --------

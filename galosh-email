@@ -1,6 +1,6 @@
 #! /bin/bash -
 
-mua=$( galosh config core.mua )
+mua=$( galosh config tools.mua )
 
 if [ -n "$1" ]; then
     call=$1
@@ -13,7 +13,7 @@ fi
 address=$( galosh qrz --raw "$call" | awk -F "\t" '$1 == "email:" { print $2 }' )
 
 if [ -n "$address" ]; then
-    $mua -- $address
+    ${mua:-echo} $address
 else
     echo "No e-mail address found for $call."
 fi
