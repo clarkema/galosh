@@ -96,6 +96,14 @@
   (princ obj stream)
   (fresh-line stream))
 
+(defun lecture (&rest lines)
+  (fresh-line *error-output*)
+  (dolist (l lines)
+    (if (consp l)
+	(apply #'format *error-output* l)
+	(princ l *error-output*))
+    (fresh-line *error-output*)))
+
 (defun open-in-browser (call)
   (sb-ext:run-program "galosh" (list "browser" (mkstr "http://www.qrz.com/db/" call))
 		      :wait nil
@@ -298,17 +306,24 @@
 						   (user-homedir-pathname))))
 	 (init-config)
 	 (handler-case
-	     (check-required-config ,req-config)
+	     (progn
+	       (check-required-config ,req-config)
+	       (with-galosh-db ((get-config "core.log"))
+		 (let ((*package* (find-package ,(symbol-name name))))
+		   (when (probe-file ,mixin-global-path)
+		     (load ,mixin-global-path))
+		   (when (probe-file ,mixin-repo-path)
+		     (load ,mixin-repo-path)))
+		 ,@body))
 	   (missing-mandatory-configuration-error (e)
-	     (format t "~&~A~&" (text e))
-	     (terminate)))
-	 (with-galosh-db ((get-config "core.log"))
-	   (let ((*package* (find-package ,(symbol-name name))))
-	     (when (probe-file ,mixin-global-path)
-	       (load ,mixin-global-path))
-	     (when (probe-file ,mixin-repo-path)
-	       (load ,mixin-repo-path)))
-	   ,@body)))))
+	     (lecture (text e))
+	     (terminate 1))
+	   (missing-galosh-db-error (e)
+	     (lecture (text e)
+		      "This probably means that you are not in a Galsh repository."
+		      "Most Galosh commands require you to be in a repository; see the manual for"
+		      "more information.")
+	     (terminate 1)))))))
 
 (defun terminate (&optional (status 0))
   #+sbcl     (sb-ext:quit      :unix-status status)    ; SBCL
