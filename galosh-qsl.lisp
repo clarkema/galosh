@@ -266,6 +266,7 @@
 				       ,@options))
 	  (again q)))
 (defun manage-qso-event-loop (qso)
+  (log-trace "> qsl::manage-qso-event-loop")
   (open-in-browser (q-his-call qso))
   (let ((qrz-details (galosh-qrz:qrz-search (q-his-call qso))))
     (labels ((again (q)

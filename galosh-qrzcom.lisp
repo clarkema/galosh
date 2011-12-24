@@ -93,35 +93,44 @@
   (setf (gethash username *qrz-keys-by-username*) new))
 
 (defun login (client)
-  (let* ((doc (cxml:parse (http-request (format nil "~A?username=~A&password=~A&agent=~A"
-						*qrz-api-url*
-						(slot-value client 'username)
-						(slot-value client 'password)
-						"galosh-testing"))
+  (log-trace "> qrzcom::login")
+  (let* ((doc (cxml:parse (http-request-with-retry 10 (format nil "~A?username=~A&password=~A&agent=~A"
+							      *qrz-api-url*
+							      (slot-value client 'username)
+							      (slot-value client 'password)
+							      "galosh-testing"))
 			  (cxml-dom:make-dom-builder)))
 	 (key (aref (dom:get-elements-by-tag-name doc "Key") 0)))
     (setf (get-qrz-key (slot-value client 'username)) (dom:node-value (dom:first-child key)))))
 
 (defun http-request-with-retry (retries &rest http-request-args)
-  (handler-case
-      (funcall #'http-request http-request-args)
-    (t (e) (if retries
-	       (http-request-with-retry (1- retries) http-request-args)
-	       (log-error 'network-or-threading-error)))))
+  (log-trace "> qrzcom::http-request-with-retry")
+  (labels ((again (retries)
+	     (log-debug "HTTP request attempt number ~D" retries)
+	   (handler-case
+	       (apply #'http-request http-request-args)
+	     (t (e)
+	       (log-debug "Error: ~A" e)
+	       (if (> retries 0)
+		   (again (1- retries))
+		   (log-error 'network-or-threading-error
+		       "network-or-threading-error"))))))
+    (again retries)))
 
 (defun api-call (client request)
+  (log-trace "> qrzcom::api-call")
   ;; If nothing is stored in *qrz-keys-by-username*, we haven't yet logged in.
   ;; Try reading our state file to see if that gives us a stored key we can use.
-  (if (zerop (hash-table-count *qrz-keys-by-username*))
-      (read-state))
+  (unless (gethash (slot-value client 'username) *qrz-keys-by-username*)
+    (read-state))
   ;; Still nothing?  Try logging in!
-  (if (zerop (hash-table-count *qrz-keys-by-username*))
-      (login client))
+  (unless (gethash (slot-value client 'username) *qrz-keys-by-username*)
+    (login client))
   (labels ((api-request (try)
 	     (let* ((response (http-request-with-retry 10 (format nil "~A?s=~A&~A"
 								  *qrz-api-url*
 								  (get-qrz-key (slot-value client 'username))
-						    request)))
+								  request)))
 		    (doc (cxml:parse response (cxml-dom:make-dom-builder)))
 		    (err (dom:get-elements-by-tag-name doc "Error")))
 	       (if (> (length err) 0)
@@ -147,11 +156,13 @@
     (api-request 1)))
 
 (defun details-by-call (client call)
+  (log-trace "> qrzcom::details-by-call")
   (let ((result (make-hash-table :test 'equal))
 	doc callsign)
     (handler-case
 	(setf doc (api-call client (cats "callsign=" call)))
-      (t () (return-from details-by-call nil)))
+      (callsign-not-found-error () (return-from details-by-call nil))
+      (network-or-threading-error () (return-from details-by-call nil)))
     (setf callsign (aref (dom:get-elements-by-tag-name doc "Callsign") 0))
     (dom:do-node-list (node (dom:child-nodes callsign) result)
       (when (dom:element-p node)
