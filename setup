@@ -98,6 +98,10 @@ our $debian_deps = [
         type            => 'debian',
         name            => 'libncurses5-dev',
     },
+    {
+        type            => 'debian',
+        name            => 'build-essential',
+    },
 ];
 
 sub can_require
