@@ -241,6 +241,12 @@ sub cmd_update
     Galosh::Update::main();
 }
 
+sub cmd_wwv
+{
+    # Yeeeeee-hawwwww!
+    exec( 'curl http://www.swpc.noaa.gov/ftpdir/latest/wwv.txt' );
+}
+
 ######################################################################
 # Main execution starts here
 ######################################################################
