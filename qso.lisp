@@ -56,13 +56,14 @@
     `(progn
        (def-view-class qso ()
 	 (,@fields)
-	  (:base-table "qso"))
+	 (:base-table "qso"))
        (eval-when (:compile-toplevel :load-toplevel :execute)
 	 (export (list ,@(loop for name in accessor-names collect `(quote ,name)))))
-       (setf *qso-slot-accessors* (list ,@(loop for name in accessor-names collect `(quote ,name))))
+       (setf *qso-slot-accessors* (list ,@(loop for name in
+					     accessor-names collect `(quote ,name))))
        (defmacro with-qso-accessors (qso &body body)
 	 `(with-accessors ,',(loop for field in accessor-names
-				  collect (list field field))
+				collect (list field field))
 	      ,qso
 	    ,@body)))))
 
