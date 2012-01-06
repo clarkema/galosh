@@ -198,12 +198,14 @@
   t)
 
 (defun cmd-set (string)
-  (destructuring-bind (set place value) (split-words string :first 3)
-    (declare (ignore set))
-    (given place #'string-equal
-	   ("qrg"  (setf (qrg) value))
-	   ("mode" (setf (mode) (string-upcase value)))
-	   ("iota" (setf *iota* (string-upcase value))))))
+  (let ((words (split-words string :first 3)))
+    (if (>= (length words) 3)
+	(destructuring-bind (place value) (cdr words)
+	  (given place #'string-equal
+		 ("qrg"  (setf (qrg) value))
+		 ("mode" (setf (mode) (string-upcase value)))
+		 ("iota" (setf *iota* (string-upcase value)))))))
+  t)
 
 (defun event-loop (buffer)
   (paint-skeleton)
