@@ -28,6 +28,9 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (setf *auto-escape* nil))
 
+(defvar *header* "")
+(defvar *footer* "")
+
 (defmacro with-html (&body body)
   `(markup
     ,@body))
@@ -35,26 +38,10 @@
 (defmacro standard-page ((&key (title "")) &body body)
   `(progn
      (setf (reply-external-format*) (flex:make-external-format :utf-8 :eol-style :lf))
-     (with-html
-	 (:html :lang "en"
-		(:head
-		 (:meta :charset "utf-8")
-;		 (:link :rel "stylesheet" :href "http://clarkema.org/main.css")
-;		 (:link :rel "stylesheet" :href "http://clarkema.org/log.css")
-		 (:link :rel "stylesheet" :href "http://glo.sh/report.css")
-		 (:title ,title))
-		(:body
-		 (:div :id "header" "Mike Clarke, VP8DMH")
-		 (:div :id "menu"
-		       (:ul
-			(:li (:a :href "http://clarkema.org/" "Home"))
-			(:li (:a :href "http://clarkema.org/blog/newest.html" "Blog Home"))
-			(:li (:a :href "http://clarkema.org/photos/index.html" "Photos"))
-			(:li (:a :href "http://clarkema.org/vp8dmh/index.html" "Radio"))
-			(:li :style "float: right" (:a :href "http://clarkema.org/contact.html" "Contact"))))
-		 (:div :id "header_img" "")
-		 (:div :id "content"
-		       ,@body))))))
+     (mkstr
+      *header*
+      ,@body
+      *footer*)))
 
 (defstruct (column
 	     (:constructor make-column (label value-function &optional (alignment "right"))))
@@ -275,40 +262,55 @@ body {
 				      (markup (:td :class "confirmed qsl-stats" (mkstr confirmed "/" worked)))))))))
       (when (entity-information-available-p)
 	(standard-page (:title "DXCC Progress")
-		       (:table :class "qsl-table"
-			(:thead (raw (header-row)))
-			(:tbody (loop for i from 1
-				   for v in (sort (all-entity-names) #'string-lessp)
-				   collecting (let ((adif (mkstr (entity-name->adif v))))
-						(markup (:tr
-							 (:td v)
-							 (:td adif)
-							 (country-row adif))))
-				   collecting (when (zerop (rem i 15)) (header-row))))))))))
+		       (markup
+			(:table :class "qsl-table"
+				(:thead (raw (header-row)))
+				(:tbody (loop for i from 1
+					   for v in (sort (all-entity-names) #'string-lessp)
+					   collecting (let ((adif (mkstr (entity-name->adif v))))
+							(markup (:tr
+								 (:td v)
+								 (:td adif)
+								 (country-row adif))))
+					   collecting (when (zerop (rem i 15)) (header-row)))))))))))
 
 (define-easy-handler (root :uri "/") (call)
   (let ((total-qsos (first (select [count[*]] :from 'qso :flatp t)))
 	(unique-calls (first (query "select count(distinct his_call) from qso" :flatp t))))
-    (standard-page (:title call)
-		   (:h1 "Online Logs")
-		   (:p (fmt "The ~a log contains ~:d QSO~:p, with ~:d unique station~:p. You can search for yours here." (get-config "user.call") total-qsos unique-calls))
-		   (:form :style "float: right"
-			  (:label "Callsign search:")
-			  (:input :name "call"
-				  :placeholder "Callsign"
-				  :autofocus "autofocus"
-				  :type "search"))
+    (standard-page ()
+		   (markup
+		    (:h1 "Online Logs")
+		    (:p (fmt "The ~a log contains ~:d QSO~:p, with ~:d unique station~:p. You can search for yours here." (get-config "user.call") total-qsos unique-calls))
+		    (:form :style "float: right"
+			   (:label "Callsign search:")
+			   (:input :name "call"
+				   :placeholder "Callsign"
+				   :autofocus "autofocus"
+				   :type "search")))
 		   (when call
-		     (raw (log-result call))))))
+		     (log-result call)))))
+
+(defun slurp-file (filespec)
+  (with-open-file (f filespec
+		     :direction :input
+		     :if-does-not-exist nil)
+    (when f
+      (let ((tmp (make-string (file-length f))))
+	(read-sequence tmp f)
+	tmp))))
 
 (defun start-server (&key (port 8080))
+  (if (has-config-p "web.header")
+      (setf *header* (slurp-file (get-config "web.header"))))
+  (if (has-config-p "web.footer")
+      (setf *footer* (slurp-file (get-config "web.footer"))))
   (setf *message-log-pathname* "errors"
 	*default-content-type* "text/html; charset=utf-8"
 	*dispatch-table* (list
 ;			  (create-regex-dispatcher "^/[a-z\\d]+\\d+[a-z]+$" #'(lambda () (log-details :cols *limited-columns*)))
 			  'dispatch-easy-handlers
 			  'default-dispatcher))
-  (start (make-instance 'acceptor :address "127.0.0.1" :port port)))
+  (start (make-instance 'easy-acceptor :address "127.0.0.1" :port port)))
 
 (defun buildapp-init ()
   (load-entity-information))
