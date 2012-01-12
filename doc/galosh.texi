@@ -86,8 +86,8 @@ code.  Once you have downloaded the code, run Galosh's setup script to
 install all of its other dependencies.
 
 @example
-$ mkdir -p $HOME/git/galosh
-$ cd $HOME/git/galosh
+$ mkdir -p $HOME/git
+$ cd $HOME/git
 $ git clone git://github.com/clarkema/galosh.git
 $ cd galosh
 $ ./setup
@@ -98,9 +98,9 @@ Now the dependencies are installed, ensure that the main
 the @command{galosh} command into a directory that is already in your
 @env{PATH}.
 
-Finally, Galosh makes use of various sources of data from the Internet.
-Once @command{galosh} is in your path, the final step is to download the
-most recent versions of these data:
+Finally, Galosh makes use of various sources of data from the Internet.  Once
+@command{galosh} is in your @env{PATH}, the final step is to download the most
+recent versions of these data:
 
 @example
 $ galosh update
@@ -484,7 +484,7 @@ have actually sent the cards.
 
 @subsection Requests Via Other Routes
 
-@command{galosh log} shows the current QSL route at the top-left of the
+@command{galosh qsl} shows the current QSL route at the top-left of the
 screen: the default is `D' for direct.  Generally it's anticipated that
 incoming cards will be dealt with in batches from a single source; so
 you'll have a batch of direct cards, or a batch of cards from the
