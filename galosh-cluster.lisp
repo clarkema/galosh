@@ -25,8 +25,8 @@
 (defvar *history* ())
 (defvar *history-head* nil)
 (defvar *client* nil)
-(defparameter *history-size* 100)
-
+(defparameter *history-size* 1000)
+(defvar *history-offset* 0)
 (defvar *announce-queue* nil)
 
 (defconstant +inv-green+ 1)
@@ -177,11 +177,17 @@
   (with-color +inv-green+
     (mvprintw 0 0 (string-right-pad *COLS* " Galosh Cluster"))))
 
+;;; Bit of a nasty bodge; should be removed when the history gets moved to SQL
+(defmacro safe-elt (foo bar)
+  (with-gensyms (num)
+    `(let ((,num ,bar))
+       (elt ,foo (if (>= ,num 0) ,num 0)))))
+
 (defun display-history ()
   (let ((display-lines (- *LINES* 3)))
     (dotimes (i display-lines)
-      (multiple-value-bind (line colour) (format-object (elt *history-head*
-							    (+ (- *history-size* display-lines) i)))
+      (multiple-value-bind (line colour) (format-object (safe-elt *history-head*
+							    (+ (- *history-size* display-lines) i *history-offset*)))
 	(with-color colour
 	  (mvprintw (+ 1 i) 0 line)))))
   (refresh))
@@ -202,16 +208,19 @@
   (display-history))
 
 (defun ncurses-main-loop ()
-  (let* ((raw-code (getch))
-	 (c (code-char raw-code)))
-    (cond ((= raw-code 410)
-	   (repaint-all)
-	   (ncurses-main-loop))
-	  ((eql c #\q)
-	   (cluster-write *client* (format nil "q~%"))
-	   (enqueue 'terminate *announce-queue*))
-	  (t
-	   (ncurses-main-loop)))))
+  (given (code-char (getch)) #'char=
+    (#\j (if (< *history-offset* 0)
+	     (incf *history-offset*)))
+    (#\k (when (< (abs *history-offset*) (1- *history-size*))
+	   (decf *history-offset*)))
+    (#\G (setf *history-offset* 0))
+    (#\q (cluster-write *client* (format nil "q~%"))
+	 (enqueue 'terminate *announce-queue*)
+	 (return-from ncurses-main-loop)))
+  (repaint-all)
+  (ncurses-main-loop))
+
+
 
 (defun write-state (path)
   (with-open-file (s path
