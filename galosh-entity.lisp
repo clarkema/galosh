@@ -257,23 +257,26 @@ added to the search results.  Returns either the matching entity, or nil."
 			 :name "Invalid2" :adif "1000")))))
 
 
-(defun get-entity (call &optional (datetime (get-datetime)) &key (error-p t))
+(defun get-entity (call &key (datetime (get-datetime)) (error-p t))
+  (log-trace (mkstr "> lisp:get-entity " call))
   (setf call (string-upcase (string-trim '(#\Space #\Tab) call)))
   (if (entity-information-available-p)
       (labels ((gett (call)
 		 (if-let ((it (get-exception call datetime)))
-		   it
+		   (progn
+		     (log-trace (mkstr "Matched by exception: " it))
+		     it)
 		   (cond ((ends-with-subseq "/MM" call)
 			  (make-instance 'entity
 					 :name "Maritime Mobile"
 					 :adif "999"))
 			 ((ends-with-subseq "/QRP" call)
-			  (get-entity (subseq call 0 (- (length call) 4)) datetime))
+			  (get-entity (subseq call 0 (- (length call) 4)) :datetime datetime))
 			 ((or (ends-with-subseq "/P" call)
 			      (ends-with-subseq "/M" call)
 			      (ends-with-subseq "/A" call)
 			      (ends-with-subseq "/B" call))
-			  (get-entity (subseq call 0 (- (length call) 2)) datetime))
+			  (get-entity (subseq call 0 (- (length call) 2)) :datetime datetime))
 			 (t
 			  (let ((best '(nil 0)))
 			    (dolist (part (split #\/ call))
@@ -289,7 +292,9 @@ added to the search results.  Returns either the matching entity, or nil."
 				(car best))))))))
 	(if (sane-callsign-p call)
 	    (if-let ((it (get-invalid call datetime)))
-	      it
+	      (progn
+		(log-trace (mkstr "Invalid call: " it))
+		it)
 	      (gett call))
 	    nil))
       nil))

@@ -42,7 +42,7 @@
 	*history-head* (cdr *history-head*)))
 
 (defun new-entity-p (call)
-  (let ((sought (entity-adif (get-entity call nil :error-p nil))))
+  (let ((sought (entity-adif (get-entity call :error-p nil))))
     (zerop (first (select [count[*]] :from 'qso :where [= 'his_dxcc sought] :flatp t)))))
 
 ;;; ===================================================================
@@ -62,8 +62,8 @@
 		  (string-downcase(spot-time object))
 		  (string-right-pad 7 (spot-spotter object))
 		  (spot-spotted object)
-		  (string-right-pad 33 (entity-name (get-entity (spot-spotter object) nil :error-p nil)))
-		  (string-right-pad 33 (entity-name (get-entity (spot-spotted object) nil :error-p nil)))
+		  (string-right-pad 33 (entity-name (get-entity (spot-spotter object) :error-p nil)))
+		  (string-right-pad 33 (entity-name (get-entity (spot-spotted object) :error-p nil)))
 		  (spot-qrg object)
 		  (spot-comment object))
 	  (if (new-entity-p (spot-spotted object)) +red+ 0)))
@@ -190,7 +190,7 @@
   (when (new-entity-p (spot-spotted spot))
     (enqueue (format nil "~A: ~A. New DXCC."
 		     (spot-spotted spot)
-		     (entity-name (get-entity (spot-spotted spot) nil :error-p nil)))
+		     (entity-name (get-entity (spot-spotted spot) :error-p nil)))
 	     *announce-queue*)))
 
 ;;;

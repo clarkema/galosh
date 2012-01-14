@@ -264,7 +264,7 @@
 (defun complete-missing-entities ()
   (with-transaction ()
     (do-query ((qso) [SELECT 'qso :WHERE [null 'his_dxcc]])
-      (let ((entity (get-entity (q-his-call qso) (qso-datetime qso) :error-p nil)))
+      (let ((entity (get-entity (q-his-call qso) :datetime (qso-datetime qso) :error-p nil)))
 	(setf (q-his-dxcc qso) (entity-adif entity))
 	(update-records-from-instance qso)
 	(format t "Updated ~A to ~A (~A)~%" (as-string qso) (entity-adif entity) (entity-name entity))))))
