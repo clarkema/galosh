@@ -64,6 +64,18 @@
     (= `(sql-operation 'or
 		       ,@(mapcar (lambda (f) `(sql-operation '= (sql-expression :attribute ',(second form)) ,f))
 				 (cddr form))))
+    (> `(sql-operation '>
+		       (sql-expression :attribute ',(second form))
+		       ,(third form)))
+    (>= `(sql-operation '>=
+			(sql-expression :attribute ',(second form))
+			,(third form)))
+    (< `(sql-operation '<
+		       (sql-expression :attribute ',(second form))
+		       ,(third form)))
+    (<= `(sql-operation '<=
+			(sql-expression :attribute ',(second form))
+			,(third form)))
     (or
      `(sql-operation 'or ,@(mapcar (lambda (f) (compile-query-form f)) (cdr form))))
     (and
