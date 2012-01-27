@@ -1,0 +1,80 @@
+galosh-clublog-upload(1)
+========================
+
+NAME
+----
+galosh-clublog-upload - Upload an ADIF or LGS file to Club Log.
+
+SYNOPSIS
+--------
+`galosh clublog-upload` [OPTIONS] <file.adi> <callsign>
+
+DESCRIPTION
+-----------
+`galosh clublog-upload` automates the process of uploading an ADIF log
+file to Club Log using the Club Log API.
+
+OPTIONS
+-------
+--clear::
+    Clear all existing entries from your Club Log record before uploading;
+    otherwise the uploaded file is merged with existing entries.
+
+--force-file-name=NAME::
+    Club Log supports uploads of ADIF and LGS files, and requires that the
+    extension of the uploaded file's name be 'ADI', 'ADIF', or 'LGS'.
++
+Normally the name of the file specified on the command-line is passed straight
+through to Club Log; this option allows you to over-ride the default name by
+providing your own.  Useful when uploading files with temporary names generated
+by other processes.
+
+EXAMPLES
+--------
+
+* Export all of your contacts to an ADIF file, then upload that file
+to Club Log:
++
+--------------------------------------------------------
+$ galosh export-adif --fieldset=clublog > all.adi
+$ galosh clublog-upload --clear all.adi vp8dmh
+--------------------------------------------------------
+
+* A zsh script to upload only contacts made today.  This script makes use of
+zsh's process substitution to put the output from `export-adif` into a
+temporary file, the path to which is then passed to `clublog-upload`.
++
+This example demonstrates the use of matching to select only the log entries of
+interest, and `--force-file-name` to over-ride the temporary file name provided
+by zsh.
++
+--------------------------------------------------------
+#!/bin/zsh
+
+CALL="VP8DMH"
+TODAY=$(date -u '+%Y%m%d')
+
+galosh clublog-upload --force-file-name=$CALL.adi \
+=(galosh export-adif --fieldset=clublog \
+--match="(and (like my-call \"$CALL%\")(= qso-date \"$TODAY\"))")\
+$CALL
+--------------------------------------------------------
+
+CONFIGURATION
+-------------
+`clublog.email`
+
+`clublog.password`
+
+Author
+------
+Written by Mike Clarke <mike -at- galosh.org.uk>.
+
+Documentation
+-------------
+
+Documentation by Mike Clarke.
+
+GALOSH
+------
+Part of the Galosh suite.

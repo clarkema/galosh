@@ -22,20 +22,23 @@ use Getopt::Long qw( GetOptionsFromArray :config permute );
 sub main
 {
     my $clear = 0;
+    my $forcename;
     my $options_successful = GetOptionsFromArray( \@_,
-        'clear' => \$clear,
+        'clear'             => \$clear,
+        'force-file-name:s' => \$forcename,
     );
     exit 1 unless $options_successful;
 
     my $upload_url      = "http://www.clublog.org/putlogs.php";
     my $file            = $_[1];
     my $target_callsign = $_[2];
+    my $upload_name     = $forcename || $file;
 
     unless ( $file and $target_callsign ) {
         print STDERR "Usage: galosh clublog-upload <logfile> <callsign>\n";
         exit 1;
     }
-    unless ( $file =~ m/\.(adif?|lgs)$/ )  {
+    unless ( $forcename or $file =~ m/\.(adif?|lgs)$/ )  {
         print STDERR "Error: Club Log only accepts .adif, .adi and .lgs ",
             "file extensions.\n";
         exit 1;
@@ -63,7 +66,7 @@ sub main
             'password' => $main::config->{'clublog.password'},
             'callsign' => $target_callsign,
             'clear'    => $clear,
-            'file'     => [ undef, $file, Content => $content ], 
+            'file'     => [ undef, $upload_name, Content => $content ],
             'api'      => $main::clublog_api_key,
         ],
     );
