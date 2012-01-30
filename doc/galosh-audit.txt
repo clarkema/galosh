@@ -3,7 +3,7 @@ galosh-audit(1)
 
 NAME
 ----
-galosh-audit - Audit your log.
+galosh-audit - Audit your amateur radio log.
 
 SYNOPSIS
 --------
@@ -33,4 +33,4 @@ Documentation by Mike Clarke.
 
 GALOSH
 ------
-Part of the Galosh suite.
+Part of the Galosh suite of amateur radio programmes.

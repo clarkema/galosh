@@ -30,4 +30,4 @@ Documentation by Mike Clarke.
 
 GALOSH
 ------
-Part of the Galosh suite.
+Part of the Galosh suite of amateur radio programmes.
