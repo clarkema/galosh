@@ -1,0 +1,36 @@
+galosh-audit(1)
+===============
+
+NAME
+----
+galosh-audit - Audit your log.
+
+SYNOPSIS
+--------
+'galosh audit' [--commit]
+
+DESCRIPTION
+-----------
+Checks the log for missing or invalid information and optionally
+corrects it.
+
+OPTIONS
+-------
+
+--commit::
+    By default `galosh audit` will only _inform_ you of potential
+    problems with the log; not do anything about it.  If this flag is
+    provided, it will also correct what it can.
+
+Author
+------
+Written by Mike Clarke <mike -at- galosh.org.uk>.
+
+Documentation
+-------------
+
+Documentation by Mike Clarke.
+
+GALOSH
+------
+Part of the Galosh suite.

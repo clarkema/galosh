@@ -18,7 +18,16 @@
 
 # This file provides bash completion support for Galosh.
 
-_GALOSH_COMMANDS="browser clublog-upload cluster difftool help lisp-repl log grep export-adif import-adif import-qrz-db qrz qsl recompile-all update"
+_GALOSH_COMMANDS="audit browser clublog-upload cluster difftool help lisp-repl log grep export-adif import-adif import-qrz-db qrz qsl recompile-all update"
+
+_galosh_audit()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local opts="--commit"
+
+    COMPREPLY=( $(compgen -f -W "$opts" -- $cur ) )
+    return 0
+}
 
 _galosh_clublog_upload()
 {
