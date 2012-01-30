@@ -6,7 +6,7 @@
 @c %** end of header
 
 @copying
-Copyright (C) 2010, 2011 Michael Clarke.
+Copyright (C) 2010, 2011, 2012 Michael Clarke.
 @end copying
 
 @titlepage
@@ -17,9 +17,9 @@ Copyright (C) 2010, 2011 Michael Clarke.
 
 @ifnottex
 @node top
-@top Galosh sample
+@top Galosh
 
-This file documents the `Galosh' a suite of amateur radio utilities, version
+This file documents the `Galosh' suite of amateur radio utilities, version
 0.0.1.
 
 @insertcopying
@@ -33,6 +33,7 @@ This file documents the `Galosh' a suite of amateur radio utilities, version
 * Setup::
 * Logging::
 * QSL Management::
+* Auditing::
 @end menu
 
 @node Introduction
@@ -475,7 +476,7 @@ same as @key{r}, @key{t}, and @key{v}.
 Once you've processed the card, hit @key{Esc} to move back through the
 list of contacts and start again with the next card.
 
-At the end of your QSLing session you will have accumulted a list of
+At the end of your QSLing session you will have accumulated a list of
 QSOs in the database which are marked as ``QSL queued for sending'';
 i.e., you have prepared a QSL card for the contact but have not yet
 posted it.  Once you have posted the batch of cards, run
@@ -496,6 +497,23 @@ electronic, or `M' for manager.
 You can also change the current route from within @command{galosh qsl}
 by entering @command{:set route FOO}, where @code{FOO} is one of D, B,
 E, or M.
+
+@node Auditing
+@chapter Auditing
+
+A complete and accurate log is invaluable when applying for awards.
+Running @command{galosh audit} regularly can help you complete missing
+information as well as identify and correct inconsistencies as you go
+along.  This in turn can help you avoid the situation of chasing that
+final state for WAS when you unknowingly worked a station there years
+ago...
+
+To get started, simply run @command{galosh audit} within your
+repository.  It will scan your log for problems and print a note for
+each; but won't actually make any changes to your log.  To have
+@command{galosh audit} automatically fix everything that it can, pass it
+the @option{--commit} option.  For full details of everything that
+@command{galosh audit} checks for, see its manpage.
 
 @bye
 
