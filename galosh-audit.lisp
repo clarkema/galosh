@@ -32,19 +32,43 @@
 	  (q-rx-rst q)
 	  (q-tx-rst q)))
 
-(defun check-bands (commit)
+(defun check-bands (fix)
+  (say "Checking for missing band data...")
   (with-transaction ()
     (do-query ((qso) [SELECT 'qso :WHERE [null 'band]])
-      (if commit
+      (if fix
 	(progn
 	  (setf (q-band qso) (qrg->band (q-qrg qso)))
 	  (update-records-from-instance qso)
 	  (format t "~A no band: ~A!~%" (format-qso qso) (qrg->band (q-qrg qso))))
 	(format t "~A no band: ~A?~%" (format-qso qso) (qrg->band (q-qrg qso)))))))
 
+(defun check-missing-dxcc (fix)
+  (say "Checking for missing DXCC data...")
+  (with-transaction ()
+    (do-query ((qso) [SELECT 'qso :WHERE [null 'band]])
+      (let ((entity (get-entity (q-his-call qso) :datetime (qso-datetime qso) :error-p nil)))
+	(if fix
+	    (progn
+	      (setf (q-his-dxcc qso) (entity-adif entity))
+	      (update-records-from-instance qso)
+	      (format t "~A no dxcc: ~A!~%" (format-qso qso) (entity-name entity)))
+	    (format t "~A no DXCC: ~A?~%" (format-qso qso) (entity-name entity)))))))
+
+(defun check-invalid-dxcc (fix)
+  (say "Checking for invalid DXCC data...")
+  (with-transaction ()
+    (do-query ((qso) [SELECT 'qso])
+      (let ((entity (get-entity (q-his-call qso) :datetime (qso-datetime qso) :error-p nil)))
+	(when (not (eq (q-his-dxcc qso) (entity-adif entity)))
+	  (format t "~A DXCC ~A, should be ~A~%"
+		  (format-qso qso)
+		  (entity-adif->name (q-his-dxcc qso))
+		  (entity-name entity)))))))
+
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
-      (getopt:getopt argv '(("commit" :none t)))
+      (getopt:getopt argv '(("fix" :none t)))
     (declare (ignore leftover))
     options))
 
@@ -53,5 +77,7 @@
 
 (define-galosh-command galosh-audit ()
   (let* ((options (process-options argv))
-	 (commit (assoc "commit" options)))
-    (check-bands commit)))
+	 (fix (assoc "fix" options)))
+    (check-bands fix)
+    (check-missing-dxcc fix)
+    (check-invalid-dxcc fix)))

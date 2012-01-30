@@ -17,11 +17,6 @@ Manage your amateur radio log.
 and easily create new log entries, with as much or as little detail as is
 appropriate.
 
-OPTIONS
--------
---complete-missing-entities::
-    Fill in DXCC entity information for any entries in your log that lack it.
-
 SEE ALSO
 --------
 `galosh-qsl(1)`

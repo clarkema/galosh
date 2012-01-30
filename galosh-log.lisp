@@ -261,14 +261,6 @@
   (bordeaux-threads:make-thread #'rig-poller)
   (event-loop ""))
 
-(defun complete-missing-entities ()
-  (with-transaction ()
-    (do-query ((qso) [SELECT 'qso :WHERE [null 'his_dxcc]])
-      (let ((entity (get-entity (q-his-call qso) :datetime (qso-datetime qso) :error-p nil)))
-	(setf (q-his-dxcc qso) (entity-adif entity))
-	(update-records-from-instance qso)
-	(format t "Updated ~A to ~A (~A)~%" (as-string qso) (entity-adif entity) (entity-name entity))))))
-
 ;;; Try and start the rig polling thread.  If it fails (most likely because
 ;;; we aren't running or can't find the rig server) let the thread silently
 ;;; die.  The (ignore-errors) wrapper simply stops an ugly error message
@@ -300,11 +292,9 @@
   (let ((options (process-options argv))
 	(state-file (make-pathname :directory (fatal-get-galosh-dir) :name "galosh-log" :type "state"))
 	(*operator* (get-config "user.call")))
-    (cond ((get-option "complete-missing-entities" options)
-	   (complete-missing-entities))
-	  (t
-	   (read-state state-file)
-	   (unwind-protect
-		(start-interface)
-	     (endwin)
-	     (write-state state-file))))))
+    (declare (ignore options))
+    (read-state state-file)
+    (unwind-protect
+	 (start-interface)
+      (endwin)
+      (write-state state-file))))
