@@ -29,6 +29,13 @@ sub main
     );
     exit 1 unless $options_successful;
 
+    unless ( $main::config->{'clublog.email'}
+             and $main::config->{'clublog.password'} ) {
+         print STDERR "Error: No username or password known for Club Log.\n" .
+            "Please provide values for clublog.email and clublog.password.\n";
+         exit 1;
+    }
+
     my $upload_url      = "http://www.clublog.org/putlogs.php";
     my $file            = $_[1];
     my $target_callsign = $_[2];
