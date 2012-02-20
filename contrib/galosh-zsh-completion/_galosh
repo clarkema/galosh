@@ -1,0 +1,129 @@
+#compdef galosh
+
+# galosh -- amateur radio utilities.
+# Copyright (C) 2010, 2011, 2012 Michael Clarke, M0PRL
+# <mike -at- galosh.org.uk>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License Version 3, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# This file provides zsh completion support for Galosh.
+
+_galosh_commands ()
+{
+    local -a base_commands
+    base_commands=(
+        'audit:check your log for problems'
+        'clublog-upload:upload ADIF files to clublog.org'
+        'cluster:DX cluster client'
+        'compile:compile commands to decrease startup time'
+        'difftool:show changes to your log'
+        'export-adif:export your log as an ADIF file'
+        'grep:show log entries matching a pattern'
+        'help:display help information about galosh subcommands'
+        'import-adif:import entries to your log from an ADIF file'
+        'import-qrz-db'
+        'lisp-repl'
+        'log:manage your log'
+        'qrz:look up callsigns using qrz.com'
+        'qsl:manage QSL requests'
+        'web'
+    )
+    local -a commands
+    commands+=($base_commands)
+    _describe -t commands 'galosh command' commands && ret=0
+}
+
+function _galosh()
+{
+    local curcontext=$curcontext state line
+    typeset -A opt_args
+    
+    _arguments -C \
+        '--debug[debug mode]' \
+        '*::arg:->cmd_or_options' && return
+
+    case $state in
+        (cmd_or_options)
+            if (( CURRENT == 1 )); then
+                _galosh_commands
+            else
+                curcontext="${curcontext%:*:*}:galosh-$words[1]:"
+                if (( $+functions[_galosh-$words[1]] )); then
+                    _call_function ret _galosh-$words[1]
+                else
+                    _files
+                fi
+                return ret
+            fi
+            ;;
+    esac
+}
+
+function __galosh_export_adif_fieldsets()
+{
+    local -a fieldsets
+    fieldsets=(${(f)"$(galosh export-adif --list-fieldsets)"})
+
+    compadd $* - $fieldsets
+}
+
+function _galosh-export-adif()
+{
+    _arguments -C -S : \
+        '(--fieldset --list-fieldsets)--fieldset=[output only fields in the specified set]:fieldset:__galosh_export_adif_fieldsets' \
+        '(--fieldset --list-fieldsets --match)--list-fieldsets[list available fieldsets]' \
+        '(--match --list-fieldsets)--match=[output only QSOs matching the given expression]:match:' && ret=0
+}
+
+function _galosh-qrz()
+{
+    _arguments -C -S : \
+        '--offline[work offline]' && ret=0
+}
+
+function _galosh-audit()
+{
+    _arguments -C -S : \
+        '--fix[fix problems rather than just reporting]' && ret=0
+}
+
+function _galosh-clublog-upload()
+{
+    _arguments -C -S : \
+        '--clear' \
+        '--force-file-name' \
+        '1:file:_files -g \*.\(adi\|adif\)' && ret=0
+}
+
+function _galosh-cluster()
+{
+    _compskip=all
+}
+
+function _galosh-compile()
+{
+    _galosh_commands && ret=0
+}
+
+function _galosh-help()
+{
+    _galosh_commands && ret=0
+}
+
+function _galosh-log()
+{
+    _compskip=all
+}
+
+_galosh "$@"
+
