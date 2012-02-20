@@ -68,6 +68,13 @@
 (defun empty-string-p (str)
   (zerop (length str)))
 
+(defun string-truncate (string length &key (mark t))
+  (if (> (length string) length)
+      (if mark
+	  (mkstr (subseq string 0 (1- length)) "$")
+	  (subseq string 0 length))
+      string))
+
 (defun string-right-pad (target-width str &key (padding-element #\Space))
   (if (< (length str) target-width)
       (concatenate 'string str (make-string (- target-width (length str)) :initial-element padding-element))

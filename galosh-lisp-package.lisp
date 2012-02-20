@@ -14,6 +14,7 @@
 	   :valid-callsign-char-p
 	   :sane-callsign-p
 	   :empty-string-p
+	   :string-truncate
 	   :string-right-pad
 	   :n->es
 	   :es->n
