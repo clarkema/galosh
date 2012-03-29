@@ -14,7 +14,13 @@ address=$( galosh qrz --raw "$call" | awk -F "\t" '$1 == "email:" { print $2 }' 
 
 if [[ $? -eq 0 ]]; then
     if [ -n "$address" ]; then
-        ${mua:-echo} $address
+        if [ -n "$mua" ]; then
+            $mua $address
+        elif [[ "$OSTYPE" == darwin* ]]; then
+            open "mailto:$address"
+        else
+            echo $address
+        fi
     else
         echo "No e-mail address found for $call."
     fi
