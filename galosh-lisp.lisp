@@ -183,8 +183,11 @@
 (defun fatal-get-galosh-dir ()
   (handler-case
       (get-galosh-dir :raise-error t)
-    (missing-galosh-dir-error ()
-      (format t "GALOSH_DIR is not defined.~%" )
+    (missing-galosh-dir-error (e)
+      (lecture (text e)
+	       "This probably means that you are not in a Galosh repository."
+	       "Most Galosh commands require you to be in a repository; see the manual for"
+	       "more information.")
       (terminate 1))))
 
 (defun human-date (date)
@@ -333,7 +336,7 @@
 	     (terminate 1))
 	   (missing-galosh-db-error (e)
 	     (lecture (text e)
-		      "This probably means that you are not in a Galsh repository."
+		      "This probably means that you are not in a Galosh repository."
 		      "Most Galosh commands require you to be in a repository; see the manual for"
 		      "more information.")
 	     (terminate 1)))))))
