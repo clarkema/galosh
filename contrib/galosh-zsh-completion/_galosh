@@ -1,7 +1,7 @@
 #compdef galosh
 
 # galosh -- amateur radio utilities.
-# Copyright (C) 2010, 2011, 2012 Michael Clarke, M0PRL
+# Copyright (C) 2012 Michael Clarke, M0PRL
 # <mike -at- galosh.org.uk>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -123,6 +123,18 @@ function _galosh-help()
 function _galosh-log()
 {
     _compskip=all
+}
+
+function _galosh-qsl()
+{
+    local -a qsl_commands
+    qsl_commands=(
+        'show-waiting:sent requests awaiting responses.'
+        'show-queue:show cards awaiting sending.'
+        'mark-sent:mark queued cards as sent.'
+        '--route:foo'
+    )
+    _describe -t commands 'galosh qsl command' qsl_commands && ret=0
 }
 
 _galosh "$@"
