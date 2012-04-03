@@ -480,7 +480,7 @@ At the end of your QSLing session you will have accumulated a list of
 QSOs in the database which are marked as ``QSL queued for sending'';
 i.e., you have prepared a QSL card for the contact but have not yet
 posted it.  Once you have posted the batch of cards, run
-@w{@command{galosh qsl mark-queued-as-sent}} to tell Galosh that you
+@w{@command{galosh qsl mark-sent}} to tell Galosh that you
 have actually sent the cards.
 
 @subsection Requests Via Other Routes

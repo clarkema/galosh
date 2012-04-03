@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2011 Michael Clarke, M0PRL
+;;;; Copyright (C) 2011, 2012 Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -32,8 +32,9 @@
 	(progn
 	  (process-route-option (get-option "route" options))
 	  (given (third leftovers) #'string-equal
-	    ("mark-queued-as-sent" (mark-queued-as-sent))
-	    ("waiting" (show-waiting))
+	    ("mark-sent" (mark-sent *route*))
+	    ("show-waiting" (show-waiting))
+	    ("show-queue" (show-queue *route*))
 	    (t (unwind-protect
 		    (start-interface)
 		 (endwin)))))
@@ -70,11 +71,19 @@
 ;;; Minor subcommands
 ;;;
 
-(defun mark-queued-as-sent ()
+(defun mark-sent (route)
   (update-records [qso]
 		  :av-pairs `((qsl_sent "Y")
 			      (qsl_sdate ,(log-date)))
-		  :where [= [qsl_sent] "Q"]))
+		  :where [and [= [qsl_sent] "Q"]
+		              [= [qsl_sent_via] route]]))
+
+(defun show-queue (route)
+  (do-query ((q) [select 'qso
+	     :caching nil
+	     :where [and [= 'qsl_sent "Q"] [= 'qsl_sent_via route]]
+	     :order-by [qsl-sdate]])
+    (format t "~&~A~%" (q-his-call q))))
 
 (defun show-waiting ()
   (let ((date-col 15))
