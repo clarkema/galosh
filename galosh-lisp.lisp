@@ -35,13 +35,15 @@
 (defun mklist (obj)
   (if (listp obj) obj (list obj)))
 
-(defun mkstr (&rest args)
-  (with-output-to-string (s)
-			 (dolist (a args)
-			   (princ (if a a "") s))))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+ (defun symb (&rest args)
+   (values (intern (apply #'mkstr args)))))
 
-(defun symb (&rest args)
-  (values (intern (apply #'mkstr args))))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun mkstr (&rest args)
+    (with-output-to-string (s)
+      (dolist (a args)
+	(princ (if a a "") s)))))
 
 (defun mkkeyword (&rest args)
   (values (intern (apply #'mkstr args) "KEYWORD")))
@@ -64,6 +66,105 @@
 (defun last1 (lst)
   (car (last lst)))
 (proclaim '(inline last1))
+
+;;;
+;;; A series of closure-related utility macros from
+;;; Let Over Lambda
+;;;
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun g!-symbol-p (s)
+    (and (symbolp s)
+	 (> (length (symbol-name s)) 2)
+	 (string= (symbol-name s)
+		  "G!"
+		  :start1 0
+		  :end1 2))))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defmacro defmacro/g! (name args &rest body)
+    (let ((docstring (if (or (null (car body)) (stringp (car body)))
+			 (car body)
+			 nil))
+	  (syms (remove-duplicates
+		 (remove-if-not #'g!-symbol-p
+				(flatten body)))))
+      `(defmacro ,name ,args
+	 ,docstring
+	 (let ,(mapcar
+		(lambda (s)
+		  `(,s (gensym ,(subseq
+				 (symbol-name s)
+				 2))))
+		syms)
+	   ,@(if docstring
+		 (cdr body)
+		 body))))))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun o!-symbol-p (s)
+    (and (symbolp s)
+	 (> (length (symbol-name s)) 2)
+	 (string= (symbol-name s)
+		  "O!"
+		  :start1 0
+		  :end1 2))))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun o!-symbol-to-g!-symbol (s)
+    (symb "G!"
+	  (subseq (symbol-name s) 2))))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defmacro defmacro! (name args &rest body)
+    (let* ((docstring (if (stringp (car body))
+			  (car body)
+			  nil))
+	   (os (remove-if-not #'o!-symbol-p (flatten args)))
+	   (gs (mapcar #'o!-symbol-to-g!-symbol os)))
+      `(defmacro/g! ,name ,args
+	 ,docstring
+	 `(let ,(mapcar #'list (list ,@gs) (list ,@os))
+	    ,(progn ,@(if docstring
+			  (cdr body)
+			  body)))))))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defmacro alambda (params &body body)
+    `(labels ((self ,params ,@body))
+       #'self)))
+
+;;
+;; destructuring (or dispatching) lambda
+;;
+;; See [LoL,p147]
+;;
+(defmacro! dlambda (&rest ds)
+  `(lambda (&rest ,g!args)
+     (case (car ,g!args)
+       ,@(mapcar
+	  (lambda (d)
+	    `(,(if (eq t (car d))
+		   t
+		   (list (car d)))
+	       (apply (lambda ,@(cdr d))
+		      ,(if (eq t (car d))
+			   g!args
+			   `(cdr ,g!args)))))
+	  ds))))
+
+(defmacro! dalambda (&rest ds)
+  `(alambda (&rest ,g!args)
+     (case (car ,g!args)
+       ,@(mapcar
+	  (lambda (d)
+	    `(,(if (eq t (car d))
+		   t
+		   (list (car d)))
+	       (apply (lambda ,@(cdr d))
+		      ,(if (eq t (car d))
+			   g!args
+			   `(cdr ,g!args)))))
+	  ds))))
 
 (defun empty-string-p (str)
   (zerop (length str)))

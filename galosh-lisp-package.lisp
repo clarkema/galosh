@@ -74,4 +74,13 @@
 	   :log-warn
 	   :log-info
 	   :log-debug
-	   :log-trace))
+	   :log-trace
+	   :g!-symbol-p
+	   :defmacro/g!
+	   :o!-symbol-p
+	   :o!-symbol-to-g!-symbol
+	   :defmacro!
+	   :alambda
+	   :dlambda
+	   :dalambda
+	   :self))
