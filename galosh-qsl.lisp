@@ -23,8 +23,9 @@
 
 (defconstant +inv-green+ 1)
 (defconstant +inv-red+   2)
-(defvar *tagged-qsos* nil)
 (defvar *route* "D")
+(declaim (ftype (function)
+		local-tagged-list))
 
 (define-galosh-command galosh-qsl ()
   (multiple-value-bind (options leftovers) (process-options argv)
@@ -36,7 +37,8 @@
 	    ("show-waiting" (show-waiting))
 	    ("show-queue" (show-queue *route*))
 	    (t (unwind-protect
-		    (start-interface)
+		    (progn (setf (symbol-function 'local-tagged-list) (make-tag-list))
+			   (start-interface))
 		 (endwin)))))
       (invalid-qsl-route (e) (say e *error-output*)))))
 
@@ -92,7 +94,24 @@
 	       :caching nil
 	       :where [and [or [= 'qsl_sent "Y"] [= 'qsl_sent "Q"]] [null 'qsl_rcvd]]
 	       :order-by [qsl_sdate]])
-      (format t "~&~A~vT~A~%" (q-his-call q) date-col (or (q-qsl-sdate q) "queued")))))
+      (format t "~&~A~vT~A~%" (q-his-call q)
+	      date-col (or (q-qsl-sdate q) "queued")))))
+
+;;;
+;;; Data structures
+;;;
+
+(defun make-tag-list ()
+  (let (tagged-qsos)
+    (dlambda
+     (:toggle (qso)
+	      (if (member qso tagged-qsos)
+		  (setf tagged-qsos (remove qso tagged-qsos))
+		  (setf tagged-qsos (cons qso tagged-qsos)))
+	      qso)
+     (:clear () (setf tagged-qsos ()))
+     (t () (sort (copy-seq tagged-qsos) #'>
+		 :key (lambda (x) (parse-integer (q-qso-date x))))))))
 
 ;;;
 ;;; Painting routines
@@ -135,11 +154,6 @@
 (defun prompt (p)
   (mvprintw (1- *LINES*) 0 (format nil "~a~%" p))
   (refresh))
-
-(defun paint-help-screen ()
-  (with-color +inv-green+
-    (mvprintw 0 0 (string-right-pad *COLS* "i:Exit")))
-  (getch))
 
 ;;;
 ;;; Call selection event loop
@@ -198,40 +212,64 @@
 ;;; QSO selection event loop
 ;;;
 
+(defvar *select-qso-event-loop-keys*
+  (alist-hash-table
+   '((#\p . :print-locally-tagged)
+     (#\M . :clear-locally-tagged))))
+
+(defun make-qso-selector ()
+  (dlambda
+   (:print-locally-tagged ()
+     (create-qsl (local-tagged-list)))
+   (:clear-locally-tagged ()
+     (local-tagged-list :clear))))
+
+(defun make-buffer ()
+  (let ((buffer ""))
+    (lambda (&optional x)
+      (cond
+	((null x)
+	 buffer)
+	((symbolp x)
+	 (case x
+	   (:clear (setf buffer ""))))
+	(t (given x #'char=
+	     (#\Rubout
+	      (setf buffer (drop-last buffer))
+	      t)
+	     ('(#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\0)
+	       (setf buffer (mkstr buffer x))
+	       t)))))))
+
 (defun select-qso-event-loop (qso-list)
-  (labels ((again (buffer)
-	     (paint-skeleton)
-	     (clear-partial-area)
-	     (print-qsos qso-list)
-	     (print-buffer buffer)
-	     (let ((c (code-char (getch))))
-	       (given c #'char=
-		 (#\Newline
-		   (if (empty-string-p buffer)
-		       (again buffer)
-		       (let ((qso-num (parse-integer buffer)))
-			 (if (and (> qso-num 0) (<= qso-num (length qso-list)))
-			     (progn
-			       (manage-qso-event-loop (nth (- qso-num 1) qso-list))
-			       (again ""))
-			     (again buffer)))))
-		 (#\p
-		   (create-qsl (sort (copy-seq *tagged-qsos*) #'> :key #'(lambda (x) (parse-integer (q-qso-date x)))))
-		   (again buffer))
-		 (#\Rubout
-		   (again (drop-last buffer)))
-		 ('(#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\0)
-		   (again (mkstr buffer c)))
-		 (#\Esc
-		   (setf *tagged-qsos* nil)
-		   :cancel)
-		 (#\:
-		   (when (empty-string-p buffer)
-		     (process-command (read-value :prompt #'(lambda (b) (print-buffer b ":")))))
-		   (again buffer))
-		 ;; Let the default case handle +resize+
-		 (t (again buffer))))))
-    (again "")))
+  (let ((cancel (gensym)))
+    (cbind ((buffer (make-buffer))
+	    (selector (make-qso-selector)))
+      (until= cancel
+	(progn
+	  (paint-skeleton)
+	  (clear-partial-area)
+	  (print-qsos qso-list)
+	  (print-buffer (buffer))
+	  (let ((cc (code-char (getch))))
+	    (given cc #'char=
+	      (#\Esc cancel)
+	      (#\Newline
+	       (unless (empty-string-p (buffer))
+		 (let ((qso-num (parse-integer (buffer))))
+		   (when (and (> qso-num 0) (<= qso-num (length qso-list)))
+		     (manage-qso-event-loop (nth (- qso-num 1) qso-list))
+		     (buffer :clear)))))
+	      (#\:
+	       (when (empty-string-p (buffer))
+		 (process-command
+		  (read-value :prompt (lambda (b) (print-buffer b ":"))))))
+	      ;; Let the default case handle +resize+
+	      (t
+	       (unless (buffer cc)
+		 (when-let ((message (gethash cc *select-qso-event-loop-keys*)))
+		   (selector message)))))))))))
+
 
 (defun qso-for-selection (q)
   (format nil "~A ~A ~A ~A ~A ~A~%"
@@ -261,70 +299,95 @@
   (one-value (either (print-all-qsos qsos)
 		     (print-some-qsos qsos))))
 
-
 ;;;
 ;;; QSO management event loop
 ;;;
 
+(defvar *qso-event-loop-keys*
+  (alist-hash-table
+   '((#\c . :edit-his-cq-zone)
+     (#\i . :edit-his-itu-zone)
+     (#\I . :edit-his-iota)
+     (#\D . :edit-his-dxcc)
+     (#\G . :edit-his-grid)
+     (#\o . :edit-his-country)
+     (#\r . :mark-qsl-received)
+     (#\m . :toggle-local-tag)
+     (#\t . :mark-qsl-queued)
+     (#\z . :open-his-call-in-browser)
+     (#\p . :print-qsl)
+     (#\A . :edit-his-call)
+     (#\v . :merge-qrz-details)
+     (#\a . :all))))
+
+(defun manage-qso-event-loop (qso)
+  (log-trace "> qsl::manage-qso-event-loop")
+  ;; (open-in-browser (q-his-call qso))
+  (let ((cancel (gensym)))
+    (cbind ((manager (make-qso-manager qso)))
+      (until= cancel
+	(progn
+	  (paint-skeleton)
+	  ;; This update is in many cases superfluous and wasteful,
+	  ;; but it's here to ensure that what we print with
+	  ;; (print-qso-details...)  is _always_ the same as what is
+	  ;; in the database.
+	  (update-records-from-instance qso)
+	  (manager :print-qso-details)
+	  (prompt "> ")
+	  (let ((cc (code-char (getch))))
+	    (given cc #'char=
+	      (#\Esc cancel)
+	      (#\: (process-command
+		    (read-value :promtp (lambda (b) (print-buffer b ":")))))
+	      (t (when-let ((message (gethash cc *qso-event-loop-keys*)))
+		   (manager message))))))))))
+
 ;; Note that edit really belongs as a macrolet within manage-qso-event-loop.
 ;; It can't be defined there because screamer can't cope with macrolet forms,
 ;; but if you try and use it anywhere else there will be all kinds of errors.
-(defmacro edit (field prompt &rest options)
-  `(progn (setf (,field q) (read-value :prompt #'(lambda (b) (print-buffer b ,prompt))
-				       :buffer (mkstr (,field q))
-				       ,@options))
-	  (again q)))
-(defun manage-qso-event-loop (qso)
-  (log-trace "> qsl::manage-qso-event-loop")
-  (open-in-browser (q-his-call qso))
+(defmacro edit-field (field prompt &rest options)
+  `(setf (,field qso) (read-value :prompt (lambda (b) (print-buffer b ,prompt))
+				  :buffer (mkstr (,field qso)))))
+(defun make-qso-manager (qso)
   (let ((qrz-details (galosh-qrz:qrz-search (q-his-call qso))))
-    (labels ((again (q)
-	       (paint-skeleton)
-	       ;; This update is in many cases superfluous and wasteful, but it's
-	       ;; here to ensure that what we print with (print-qso-details...)
-	       ;; is _always_ the same as what is in the database.
-	       (update-records-from-instance q)
-	       (print-qso-details q qrz-details)
-	       (prompt "> ")
-	       (given (code-char (getch)) #'char=
-		 ((gethash "edit-cq-zone" *qso-event-loop-keys*) (edit q-his-cq-zone "CQ Zone: " :integer-p t))
-		 (#\i (edit q-his-itu-zone "ITU Zone: " :integer-p t))
-		 (#\I (edit q-his-iota "IOTA: "))
-		 (#\D (edit q-his-dxcc "DXCC: " :integer-p t))
-		 (#\G (edit q-his-grid "Grid: "))
-		 (#\o (edit q-his-country "Country: "))
-		 (#\r (again (mark-qsl-received q)))
-		 (#\m (again (toggle-qso-tag q)))
-		 (#\t (again (mark-qsl-queued q)))
-		 (#\v (again (merge-qso-qrz-details q qrz-details)))
-		 (#\z (open-in-browser (q-his-call q))
-		      (again q))
-		 (#\p (create-qsl q)
-		      (again q))
-		 (#\a (again (progn (merge-qso-qrz-details q qrz-details)
-				    (mark-qsl-received q)
-				    (mark-qsl-queued q))))
-		 (#\A (edit q-his-call "Call: "))
-		 (#\? (paint-help-screen)
-		      (again q))
-		 (#\Esc :cancel)
-		 (#\: (process-command (read-value :prompt #'(lambda (b) (print-buffer b ":"))))
-		      (again q))
-		 (t (again q)))))
-      (again qso))))
-
-(defun mark-qsl-received (qso)
-  (setf (q-qsl-rcvd qso) "Y"
-	(q-qsl-rcvd-via qso) *route*
-	(q-qsl-rdate qso) (log-date))
-  (update-records-from-instance qso)
-  qso)
-
-(defun mark-qsl-queued (qso)
-  (setf (q-qsl-sent qso) "Q"
-	(q-qsl-sent-via qso) *route*)
-  (update-records-from-instance qso)
-  qso)
+    (dalambda
+     (:print-qso-details () (print-qso-details qso qrz-details))
+     (:all ()
+	   (self :merge-qrz-details)
+	   (self :mark-qsl-received)
+	   (self :mark-qsl-queued))
+     (:edit-his-call ()
+       (edit-field q-his-call "Call: "))
+     (:edit-his-iota ()
+       (edit-field q-his-iota "IOTA: "))
+     (:edit-his-dxcc ()
+       (edit-field q-his-dxcc "DXCC: " :integer-p t))
+     (:edit-his-itu-zone ()
+       (edit-field q-his-itu-zone "ITU Zone: " :integer-p t))
+     (:edit-his-cq-zone ()
+       (edit-field q-his-cq-zone "CQ Zone: " :integer-p t))
+     (:edit-his-grid ()
+       (edit-field q-his-grid "Grid: "))
+     (:edit-his-country ()
+       (edit-field q-his-country "Country: "))
+     (:merge-qrz-details ()
+       (merge-qso-qrz-details qso qrz-details))
+     (:print-qsl ()
+       (create-qsl qso))
+     (:toggle-local-tag ()
+       (local-tagged-list :toggle qso))
+     (:open-his-call-in-browser ()
+       (open-in-browser (q-his-call qso)))
+     (:mark-qsl-queued ()
+       (setf (q-qsl-sent qso) "Q"
+	     (q-qsl-sent-via qso) *route*)
+       (update-records-from-instance qso))
+     (:mark-qsl-received ()
+       (setf (q-qsl-rcvd qso) "Y"
+	     (q-qsl-rcvd-via qso) *route*
+	     (q-qsl-rdate qso) (log-date))
+       (update-records-from-instance qso)))))
 
 (defun merge-qso-qrz-details (qso qrz-details)
   (labels ((qrz (field)
@@ -352,7 +415,10 @@
 		 "")))
     (declare (inline qrz))
     (clear-partial-area)
-    (mvprintw 1  1 (format nil "His call:    ~A ~A~%"   (string-right-pad 21 (q-his-call q)) (if (member q *tagged-qsos*) "t" "")))
+    (mvprintw 1  1 (format nil "His call:    ~A ~A~%"
+			   (string-right-pad 21 (q-his-call q))
+			   (cond ((member q (local-tagged-list)) "t")
+				 (t ""))))
     (mvprintw 2  1 (format nil "My call:     ~A~%"      (q-my-call q)))
     (mvprintw 4  1 (format nil "QSO date:    ~A ~A~%"   (human-date (q-qso-date q)) (q-time-on q)))
     (mvprintw 6  1 (format nil "Frequency:   ~A (~A)~%" (q-qrg q) (q-band q)))
@@ -405,15 +471,6 @@
 					       :input :stream)))
 	(write-json full-card (sb-ext:process-input worker-handle))
 	(close (sb-ext:process-input worker-handle))))))
-
-(defun toggle-qso-tag (qso)
-  (if (member qso *tagged-qsos*)
-      (setf *tagged-qsos* (remove qso *tagged-qsos*))
-      (setf *tagged-qsos* (append *tagged-qsos* (mklist qso))))
-  qso)
-
-(defvar *qso-event-loop-keys* (make-hash-table :test #'equal))
-(setf (gethash "edit-cq-zone" *qso-event-loop-keys*) #\c)
 
 ;;;
 ;;; Command handling
