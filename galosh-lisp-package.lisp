@@ -83,4 +83,6 @@
 	   :alambda
 	   :dlambda
 	   :dalambda
-	   :self))
+	   :self
+	   :until=
+	   :cbind))

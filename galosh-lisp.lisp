@@ -537,6 +537,36 @@
 	(values (subseq str 0 (+ index 1)) (subseq str (+ index 1)))
 	(values "" nil))))
 
+(defmacro! until= (o!test &body body)
+  "Execute BODY until it returns TEST"
+  `(let (,g!result)
+     (tagbody ,g!start-tag
+	(setf ,g!result ,@body)
+	(if (equal ,g!result ,g!test)
+	    ,g!result
+	    (go ,g!start-tag)))))
+
+(defmacro cbind (bindings &body body)
+  "CBIND ({(binding value)}*) form*
+
+Analagous to LET; binds the closure results of evaluating VALUES to
+BINDINGS for the evaluation of FORMS.
+
+  (cbind ((foo (lambda (x) (+ x 2))))
+    (foo 4))"
+  (loop for b in bindings
+       as g = (gensym)
+       collecting `(,g ,@(cdr b)) into binding-forms
+       collecting `(,(car b) (&rest args) (apply ,g args)) into flets
+       collecting (car b) into inline
+       collecting g into functions
+       finally (return
+		 `(let (,@binding-forms)
+		    (declare (function ,@functions))
+		    (flet (,@flets)
+		      (declare (inline ,@inline))
+		      ,@body)))))
+
 (defmacro log-fatal (&body body) `(cl-log:log-message :fatal ,@body))
 
 (defmacro log-error (err &optional (fmt "~A") &body body)
