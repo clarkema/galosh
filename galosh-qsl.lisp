@@ -14,10 +14,10 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(screamer:define-screamer-package :galosh-qsl
-  (:use :cl :galosh-lisp :clsql
-	:galosh-qso :cl-ncurses :alexandria :st-json))
-(in-package :galosh-qsl)
+(screamer:define-screamer-package #:galosh-qsl
+  (:use #:cl #:galosh-lisp #:clsql
+	#:galosh-qso #:cl-ncurses #:alexandria #:st-json))
+(in-package #:galosh-qsl)
 
 (clsql:enable-sql-reader-syntax) 
 
@@ -54,8 +54,8 @@
 
 (defun get-option (name options &key (default nil default-p))
   (if-let ((option (cdr (assoc name options))))
-	  option
-	  (if default-p default nil)))
+    option
+    (if default-p default nil)))
 
 (defun process-route-option (route)
   (when route
@@ -65,9 +65,12 @@
 		    ('("E" "electronic" "eqsl" "lotw") "E")
 		    ('("M" "manager")                  "M")
 		    (t
-		     ;; If the route has been supplied, and it isn't handled by the
-		     ;; above cases, it must be invalid.  Whinge.
-		     (log-error (make-condition 'invalid-qsl-route :route route) "~A"))))))
+		     ;; If the route has been supplied, and it isn't
+		     ;; handled by the above cases, it must be
+		     ;; invalid.
+		     (log-error
+			 (make-condition 'invalid-qsl-route
+					 :route route) "~A"))))))
 
 ;;;
 ;;; Minor subcommands
@@ -92,7 +95,8 @@
     (format t "~&Call~vTRequest sent~%" date-col)
     (do-query ((q) [select 'qso
 	       :caching nil
-	       :where [and [or [= 'qsl_sent "Y"] [= 'qsl_sent "Q"]] [null 'qsl_rcvd]]
+	       :where [and [or [= 'qsl_sent "Y"] [= 'qsl_sent "Q"]]
+	                   [null 'qsl_rcvd]]
 	       :order-by [qsl_sdate]])
       (format t "~&~A~vT~A~%" (q-his-call q)
 	      date-col (or (q-qsl-sdate q) "queued")))))
@@ -174,8 +178,9 @@
 		 (select-call-event-loop ""))
       (#\Rubout (print-calls (find-partial-calls (drop-last buffer)))
 		(select-call-event-loop (drop-last buffer)))
-      (#\: (if (empty-string-p buffer)
-	       (process-command (read-value :prompt #'(lambda (b) (print-buffer b ":")))))
+      (#\: (when (empty-string-p buffer)
+	     (process-command
+	      (read-value :prompt #'(lambda (b) (print-buffer b ":")))))
 	   (select-call-event-loop buffer))
       (#\Esc (select-call-event-loop (kill-last-word buffer)))
       (+ctrl-w+ (select-call-event-loop (kill-last-word buffer)))
@@ -285,8 +290,10 @@
       (fail)
       (let ((i 1))
 	(dolist (qso qsos)
-	  (mvprintw i 0 (format nil "~A  ~A ~A" (if (member qso *tagged-qsos*) "t" " ")
-				i (qso-for-selection qso)))
+	  (mvprintw i 0 (format nil "~A ~A ~A"
+				(if (member qso (local-tagged-list)) "*" "-")
+				i
+				(qso-for-selection qso)))
 	  (setf i (+ i 1))))))
 
 (defun print-some-qsos (qsos)
@@ -396,9 +403,11 @@
 		 "")))
     (declare (inline qrz))
     (if (and (qrz "cqzone") (not (equal (qrz "cqzone") "0")))
-	(setf (q-his-cq-zone qso) (parse-integer (qrz "cqzone") :junk-allowed t)))
+	(setf (q-his-cq-zone qso)
+	      (parse-integer (qrz "cqzone") :junk-allowed t)))
     (if (and (qrz "ituzone") (not (equal (qrz "ituzone") "0")))
-	(setf (q-his-itu-zone qso) (parse-integer (qrz "ituzone") :junk-allowed t)))
+	(setf (q-his-itu-zone qso)
+	      (parse-integer (qrz "ituzone") :junk-allowed t)))
     (setf (q-his-dxcc qso)     (parse-integer (qrz "dxcc") :junk-allowed t)
 	  (q-his-iota qso)     (qrz "iota")
 	  (q-his-country qso)  (qrz "country")
@@ -487,8 +496,8 @@
     (declare (ignore set))
     (given place #'string-equal
       ("route" (handler-case
-		 (process-route-option value)
-	       (invalid-qsl-route (e) (paint-warning e)))))))
+		   (process-route-option value)
+		 (invalid-qsl-route (e) (paint-warning e)))))))
 
 ;;;
 ;;; Conditions
