@@ -277,11 +277,12 @@
 
 
 (defun qso-for-selection (q)
-  (format nil "~A ~A ~A ~A ~A ~A~%"
+  (format nil "~A ~A ~A ~A ~A ~A ~A~%"
 	  (human-date (q-qso-date q))
 	  (q-my-call q)
 	  (q-his-call q)
 	  (q-qrg q)
+	  (subseq (q-time-on q) 0 4)
 	  (q-mode q)
 	  (q-qsl-sent q)))
 
