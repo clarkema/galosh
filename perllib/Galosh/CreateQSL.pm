@@ -1,5 +1,5 @@
 # galosh -- amateur radio utilities.
-# Copyright (C) 2011 Michael Clarke, M0PRL
+# Copyright (C) 2011, 2012 Michael Clarke, M0PRL
 # <mike -at- galosh.org.uk>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,6 +16,9 @@
 
 package Galosh::CreateQSL;
 
+use 5.010;
+
+use English qw( -no_match_vars );
 use Fcntl qw( :DEFAULT :flock );
 use File::chdir;
 use File::Spec;
@@ -23,8 +26,18 @@ use File::Temp;
 use POSIX qw( strftime );
 use JSON;
 
+use Getopt::Long qw( GetOptionsFromArray :config permute );
+
+my $template = "$FindBin::RealBin/resources/qsl/default-qsl.tex";
+
 sub main
 {
+    my $preview = 0;
+    my $options_successful = GetOptionsFromArray( \@_,
+        'preview' => \$preview,
+    );
+    exit 1 unless $options_successful;
+
     local $/ = undef; # Slurp mode on
     my $temp_dir;
 
@@ -38,7 +51,7 @@ sub main
 
     local $CWD = $temp_dir;
 
-    open( my $template, '<', '/home/clarkema/git/galosh/qsl/qsl-single.tex' )
+    open( my $template, '<', $template )
         or die $!;
 
     my $tmp = File::Temp->new(
@@ -55,9 +68,49 @@ sub main
     $tmp->sync;
 
     system( "pdflatex $texname" );
-    system( "evince $pdfname" );
+
+    if ( $preview ) {
+        preview_card( $pdfname );
+    }
+    else {
+        print_card( $pdfname );
+		#system( "lp -o media=Custom.90x140mm -o landscape $pdfname" );
+    }
 
     close( $template );
+}
+
+sub preview_card
+{
+    my $file    = shift;
+    my $command = $main::config->{'qsl.previewcmd'};
+
+    if ( $command ) {
+        system( "$command $file" );
+    }
+    else {
+        given ( $OSNAME ) {
+            when ( 'darwin' ) {
+                system( "open -W $file" );
+            }
+            default {
+                system( "evince $file" );
+            }
+        }
+    }
+}
+
+sub print_card
+{
+    my $file    = shift;
+    my $command = $main::config->{'qsl.printcmd'};
+
+	if ( $command ) {
+		system( "$command $file" );
+	}
+	else {
+		system( "lp -o media=Custom.90x140mm -o landscape $file" );
+	}
 }
 
 sub latex_variables
@@ -67,7 +120,7 @@ sub latex_variables
     my $swl = $meta->{'swl'};
 
     my $header = <<END;
-\\documentclass[a4paper]{article}
+\\documentclass{article}
 \\pagestyle{empty}
 \\usepackage{amsmath}
 \\usepackage{latexsym}

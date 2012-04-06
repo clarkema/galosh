@@ -5,13 +5,16 @@ NAME
 ----
 galosh-create-qsl - Create printable QSL card backs.
 
+SYNOPSIS
+--------
+    galosh create-qsl [--preview]
+
 DESCRIPTION
 -----------
-`galosh create-qsl` reads a JSON data-structure from STDIN and uses
-LaTeX to create a PDF file suitable for printing on the back of a QSL
-card.  This command is primarily plumbing, intended to be called by
-`galosh qsl`.  However, it can also be used to create nicely laid-out
-QSL card backs from your own scripts.
+`galosh create-qsl` uses LaTeX to create a PDF file suitable for
+printing on the back of a QSL card.  This command is primarily plumbing,
+intended to be called by `galosh qsl`.  However, it can also be used to
+create nicely laid-out QSL card backs from your own scripts.
 
 USAGE
 -----
@@ -42,6 +45,32 @@ report rather than confirmation of a 2-way QSO.
 
 All objects after the first represent QSOs.  Currently only 3 fit
 comfortably on a standard QSL card -- it's up to you to check this.
+
+CONFIGURATION
+-------------
+qsl.printcmd::
+    Specify the command to be used to print the completed card.  If this
+    option exists, `galosh create-qsl` will call the specified command,
+    passing it the path to a PDF file as the final word on the
+    command-line.  For example:
+
+      printcmd = lp -o media=Custom.90x140mm -o landscape
+
+qsl.previewcmd::
+    Specify the command to be used to preview the completed card.  If
+    this option exists, `galosh create-qsl` will call the specified
+    command, passing it the path to a PDF file as the final word on the
+    command-line.  For example:
+
+      # Linux
+      previewcmd = evince
+
+      # OS X
+      previewcmd = open -W
+
+Note that neither printcmd nor previewcmd should return until they are
+done with PDF file.  As soon as the specified commands complete,
+`galosh create-qsl` will clean up the generated PDF and exit.
 
 SEE ALSO
 --------
