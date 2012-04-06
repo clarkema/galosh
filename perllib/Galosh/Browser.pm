@@ -1,5 +1,5 @@
 # galosh -- amateur radio utilities.
-# Copyright (C) 2011 Michael Clarke, M0PRL
+# Copyright (C) 2011, 2012 Michael Clarke, M0PRL
 # <mike -at- galosh.org.uk>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -92,21 +92,25 @@ sub spawn_browser
 
 sub main
 {
-    exit if $OSNAME eq "darwin";
-
     my ($command, $url) = @_;
-    my $tmp_dir = File::Spec->join( $main::galosh_dir, 'tmp' );
-    my $fifo    = find_first_tab_fifo( $tmp_dir );
 
     if ( $url =~ m!^[a-z0-9/]+$! ) {
         $url = "http://www.qrz.com/db/$url";
     }
 
-    if ( $fifo ) {
-        send_command( $fifo, "uri $url" );
+    if ( $OSNAME eq "darwin" ) {
+        exec( qq[osascript -e 'tell application "Safari"' -e 'set URL of last item of tabs of first item of windows to "$url"' -e 'end tell'] );
     }
     else {
-        spawn_browser( $tmp_dir, $url );
+        my $tmp_dir = File::Spec->join( $main::galosh_dir, 'tmp' );
+        my $fifo    = find_first_tab_fifo( $tmp_dir );
+
+        if ( $fifo ) {
+            send_command( $fifo, "uri $url" );
+        }
+        else {
+            spawn_browser( $tmp_dir, $url );
+        }
     }
 }
 
