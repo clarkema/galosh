@@ -219,8 +219,8 @@ sub cmd_browser
 
 sub cmd_create_qsl
 {
-    use Galosh::CreateQSL;
-    Galosh::CreateQSL::main();
+    require Galosh::CreateQSL;
+    Galosh::CreateQSL::main( @ARGV );
 }
 
 sub cmd_difftool

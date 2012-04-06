@@ -133,7 +133,8 @@ sub latex_variables
 \\setlength{\\TPHorizModule}{1cm}
 \\setlength{\\TPVertModule}{1cm}
 \\begin{document}
-\\newcommand{\\contactline}[5]{\\vphantom{\$\\dfrac b b\$} #1 & #2 & #3 & #4 & #5 & PSE/TNX \\\\}
+\\newcommand{\\swlcontactline}[5]{\\vphantom{\$\\dfrac b b\$} #1 & #2 & #3 & #4 & #5 \\\\}
+\\newcommand{\\qsocontactline}[5]{\\vphantom{\$\\dfrac b b\$} #1 & #2 & #3 & #4 & #5 & PSE/TNX \\\\}
 \\newcommand{\\emptycontact}{\\vphantom{\$\\dfrac b b\$} & & & & & \\\\}
 \\newcommand{\\contactlines}{
     \\hline
@@ -141,10 +142,10 @@ END
 
     foreach my $qso (@$info) {
         if ( $swl ) {
-            $header .= "\\contactline{$qso->{'his-call'}}{$qso->{'qso-date'}}{$qso->{'time-on'}}{$qso->{'qrg'}}{$qso->{'mode'}}";
+            $header .= "\\swlcontactline{$qso->{'his-call'}}{$qso->{'qso-date'}}{$qso->{'time-on'}}{$qso->{'qrg'}}{$qso->{'mode'}}";
         }
         else {
-            $header .= "\\contactline{$qso->{'qso-date'}}{$qso->{'time-on'}}{$qso->{'qrg'}}{$qso->{'mode'}}{$qso->{'tx-rst'}}";
+            $header .= "\\qsocontactline{$qso->{'qso-date'}}{$qso->{'time-on'}}{$qso->{'qrg'}}{$qso->{'mode'}}{$qso->{'tx-rst'}}";
         }
 
         $header .= "\\hline";
@@ -167,7 +168,7 @@ END
 END
 
     if ( $swl ) {
-        $header .= "\\newcommand{\\contacthead}{\\vphantom{\\rule{0pt}{12pt}}\\bf\\quad Worked \\quad & \\bf\\quad Date \\quad & \\bf\\ Time (UTC)\\ &\\bf\\quad MHz\\quad&\\bf\\ Mode\\ &\\bf QSL \\\\}\n";
+        $header .= "\\newcommand{\\contacthead}{\\vphantom{\\rule{0pt}{12pt}}\\bf\\quad Worked \\quad & \\bf\\quad Date \\quad & \\bf\\ Time (UTC)\\ &\\bf\\quad MHz\\quad&\\bf\\ Mode\\\\}\n";
     }
     else {
         $header .= "\\newcommand{\\contacthead}{\\vphantom{\\rule{0pt}{12pt}}\\bf\\quad Date \\quad & \\bf\\ Time (UTC)\\ &\\bf\\quad MHz\\quad&\\bf\\ Mode\\ &\\bf\\ RST \\ & \\bf QSL \\\\}\n";
