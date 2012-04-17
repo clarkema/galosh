@@ -84,7 +84,9 @@
     my-name
     my-owner
     (qrg :type integer :initform 0)
+    (qrg-rx :type integer :initform 0)
     (band :noaccessors)
+    (band-rx :noaccessors)
     (mode :initform "SSB")
     qso-date
     qso-date-off
@@ -224,6 +226,16 @@
 
 (defun (setf q-band) (band qso)
   (setf (slot-value qso 'band) band))
+
+(defun q-band-rx (qso)
+  (let ((qrg (slot-value qso 'qrg-rx))
+	(band (slot-value qso 'band-rx)))
+    (if (and qrg (not (zerop qrg)))
+	(qrg->band qrg)
+	band)))
+
+(defun (setf q-band-rx) (band qso)
+  (setf (slot-value qso 'band-rx) band))
 
 (defun qso-datetime (qso)
   (let ((date (q-qso-date qso))

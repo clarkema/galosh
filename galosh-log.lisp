@@ -26,16 +26,34 @@
 
 (defconstant +inv-green+ 1)
 
-(let ((qrg 14260000)
+(let ((qrg-tx 14260000)
+      (qrg-rx 14260000)
       (qrg-lock (bordeaux-threads:make-lock)))
   (defun qrg ()
     (bordeaux-threads:with-lock-held (qrg-lock)
-      qrg))
+      qrg-tx))
+  (defun qrg-tx ()
+    (bordeaux-threads:with-lock-held (qrg-lock)
+      qrg-tx))
+  (defun qrg-rx ()
+    (bordeaux-threads:with-lock-held (qrg-lock)
+      qrg-rx))
   (defun (setf qrg) (value)
     (bordeaux-threads:with-lock-held (qrg-lock)
-      (if (integerp value)
-	  (setf qrg value)
-	  (setf qrg (parse-integer value :junk-allowed t))))))
+      (setf qrg-rx (if (integerp value)
+		       value
+		       (parse-integer value :junk-allowed t))
+	    qrg-tx qrg-rx)))
+  (defun (setf qrg-rx) (value)
+    (bordeaux-threads:with-lock-held (qrg-lock)
+      (setf qrg-rx (if (integerp value)
+		       value
+		       (parse-integer value :junk-allowed t)))))
+  (defun (setf qrg-tx) (value)
+    (bordeaux-threads:with-lock-held (qrg-lock)
+      (setf qrg-tx (if (integerp value)
+		       value
+		       (parse-integer value :junk-allowed t))))))
 
 (let ((mode "SSB")
       (mode-lock (bordeaux-threads:make-lock)))
@@ -77,7 +95,8 @@
 	       `(mvprintw ,y ,x (string-right-pad *COLS* ,@body))))
     (with-color +inv-green+
       ;; Title bar
-      (bar 0 0 (format nil " QRG: ~10a Mode: ~a IOTA: ~a" (qrg) (mode) *iota*))
+      (bar 0 0 (format nil " TX: ~10A RX: ~10A Mode: ~a IOTA: ~a"
+		       (qrg-tx) (qrg-rx) (mode) *iota*))
       ;; Status bar
       (bar (- *LINES* 2) 0 (format nil "---Galosh Logger: ~A" *default-database*))
       ;; Help bar
@@ -117,10 +136,10 @@
 
 (defun paint-qrz-info (call)
   (when (galosh-qrz:has-offlinedb-p)
-    (let ((i 1))
-      (dolist (line (galosh-qrz:offline-qrz-search call))
-	(mvprintw i 40 (format nil "~A~%" line))
-	(setf i (+ i 1))))
+    (let ((result (galosh-qrz:offline-qrz-search call))
+	  (i 1))
+      (dotimes (i 5)
+	(mvprintw (1+ i) 40 (string-truncate (format nil "~A~%" (n->es (nth i result))) (- *COLS* 40)))))
     (refresh)))
 
 (defun option-mode-loop (qso)
@@ -170,7 +189,8 @@
 				:qso-date (log-date)
 				:time-on  (log-time)
 				:mode (mode)
-				:qrg (qrg)
+				:qrg (qrg-tx)
+				:qrg-rx (qrg-rx)
 				:my-iota *iota*
 				:my-grid (get-config "user.grid" :default nil)
 				:tx-rst (ensure-valid-rst tx-rst (mode))
@@ -255,7 +275,8 @@
 		     :if-does-not-exist :create
 		     :if-exists :supersede)
     (with-standard-io-syntax
-      (print `(setf (qrg)  ,(qrg))  s)
+      (print `(setf (qrg-tx)  ,(qrg-tx)) s)
+      (print `(setf (qrg-rx)  ,(qrg-rx)) s)
       (print `(setf (mode) ,(mode)) s)
       (print `(setf *iota* ,*iota*) s))))
 

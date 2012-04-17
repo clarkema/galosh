@@ -105,7 +105,10 @@
    (make-translation :slot-name 'q-my-owner :field-name "owner_callsign")
    (make-translation :slot-name 'q-qrg :field-name "freq"
                      :qso->adif #'(lambda (x) (format nil "~,6,f" (float (/ x 1000000)))))
+   (make-translation :slot-name 'q-qrg-rx :field-name "freq_rx"
+		     :qso->adif (lambda (x) (format nil "~,6,f" (float (/ x 1000000)))))
    (make-translation :slot-name 'q-band :field-name "band")
+   (make-translation :slot-name 'q-band-rx :field-name "band_rx")
    (make-translation :slot-name 'q-mode :field-name "mode")
    (make-translation :slot-name 'q-qso-date :field-name "qso_date")
    (make-translation :slot-name 'q-qso-date-off :field-name "qso_date_off")
@@ -307,7 +310,9 @@
 	      (:operator (setf (q-my-operator qso) value))
 	      (:owner_callsign (setf (q-my-owner qso) value))
 	      (:freq (setf (q-qrg qso) (decmhz->hz value)))
+	      (:freq_rx (setf (q-qrg-rx qso) (decmhz->hz value)))
 	      (:band (setf (q-band qso) value))
+	      (:band_rx (setf (q-band-rx qso) value))
 	      (:mode (setf (q-mode qso) value))
 	      (:qso_date (setf (q-qso-date qso) value))
 	      (:qso_date_off (setf (q-qso-date-off qso) value))

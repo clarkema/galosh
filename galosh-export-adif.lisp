@@ -82,6 +82,12 @@
      `(sql-operation 'and ,@(mapcar (lambda (f) (compile-query-form f)) (cdr form))))
     (not
      `(sql-operation 'not ,@(mapcar (lambda (f) (compile-query-form f)) (cdr form))))
+    (between
+     `(sql-operation 'and
+		     (sql-operation '>= (sql-expression :attribute ',(second form))
+				    ,(third form))
+		     (sql-operation '<= (sql-expression :attribute ',(second form))
+				    ,(fourth form))))
     (:no-match-options
      nil)
     (otherwise
