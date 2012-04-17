@@ -280,19 +280,15 @@ if ( defined( &$sub_name ) ) {
 elsif ( -e $compiled_path ) {
     exec( $compiled_path, @ARGV );
 }
-elsif ( -e "$FindBin::RealBin/${package_name}.asd" ) {
+elsif ( -e "$FindBin::RealBin/src/${package_name}.asd" ) {
     exec( "sbcl", ( '--noinform',
                     '--noprint',
                     '--no-userinit',
-                    '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
+                    '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint (lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
                     '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
-                    '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
-                    '--eval',
-                    @{[ $debug
-                            ? qq{(asdf:oos 'asdf:load-op "$package_name")}
-                            : qq{(ql-impl-util:call-with-quiet-compilation #'(lambda () (asdf:oos 'asdf:load-op "$package_name" :verbose nil)))}
-                    ]},
-                    '--eval', "(${package_name}::main sb-ext:*posix-argv*)",
+                    '--eval', qq{(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))},
+                    '--load', qq{$FindBin::RealBin/src/boot.lisp},
+                    '--eval', qq{(let ((galosh-bootstrap:*main-package-name* "${package_name}"))(galosh-bootstrap:boot))},
                     '--eval' , "(quit)",
                     '--end-toplevel-options',
                     @ARGV, ));
