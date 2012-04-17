@@ -28,6 +28,8 @@
 	 (connect (list dbfile) :database-type :sqlite3)
 	 (truncate-database)
 	 (create-view-from-class 'qso)
+	 (create-index "qso_his_dxcc" :on "qso"
+		       :attributes '("his_dxcc"))
 	 (create-view-from-class 'journal-entry))
     (disconnect)))
 
