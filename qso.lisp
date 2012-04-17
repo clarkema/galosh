@@ -103,8 +103,8 @@
     (swl :type integer :initform 0)
 
     ;; Conditions
-    (his-power :type float)
-    (my-power  :type float)
+    (his-power :type number)
+    (my-power  :type number)
     (a-index   :type float)
     (k-index   :type float)
     sfi ; solar flux
