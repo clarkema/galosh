@@ -434,6 +434,7 @@ the next stage is dealing with QSL cards.
 In this chapter we will consider various facets of QSL management, and
 how to deal with them using Galosh's @command{qsl} command.
 
+@node Processing Incoming Requests
 @section Processing Incoming Requests
 
 So you've just returned from your latest exotic destination.  The
@@ -469,9 +470,9 @@ about the other station downloaded from @indicateurl{qrz.com}.
 Assuming the QSL request is good, you can now process it in just a few
 keystrokes.  Hit @key{r} to record that you have received a direct QSL
 for this contact, and @key{t} to record that you have queued a card to
-be sent.  @key{v} will merge details about the other station from the
-@indicateurl{qrz.com} column into the local database.  @key{a} is the
-same as @key{r}, @key{t}, and @key{v}.
+be sent.  @key{v} will merge details about the other station from
+the @indicateurl{qrz.com} column into the local database.  @key{a}
+combines the effects of @key{r}, @key{t}, and @key{v}.
 
 Once you've processed the card, hit @key{Esc} to move back through the
 list of contacts and start again with the next card.
@@ -497,6 +498,16 @@ electronic, or `M' for manager.
 You can also change the current route from within @command{galosh qsl}
 by entering @command{:set route FOO}, where @code{FOO} is one of D, B,
 E, or M.
+
+@node Printing Cards
+@section Printing Cards
+
+The functionality in this section depends on you having a working
+TeX Live installation.  The Galosh setup script does not install TeX
+Live automatically, as it is large, complex, and not everyone will need
+it.  To install it yourself, visit @url{http://www.tug.org/texlive} and
+follow the instructions there.  Once you have got to the stage of being
+able to run @command{pdflatex}, you're ready to proceed.
 
 @node Auditing
 @chapter Auditing

@@ -25,7 +25,8 @@
 (defconstant +inv-red+   2)
 (defvar *route* "D")
 (declaim (ftype (function)
-		local-tagged-list))
+		local-tagged-list
+		global-tagged-list))
 
 (define-galosh-command galosh-qsl ()
   (multiple-value-bind (options leftovers) (process-options argv)
@@ -37,7 +38,8 @@
 	    ("show-waiting" (show-waiting))
 	    ("show-queue" (show-queue *route*))
 	    (t (unwind-protect
-		    (progn (setf (symbol-function 'local-tagged-list) (make-tag-list))
+		    (progn (setf (symbol-function 'local-tagged-list) (make-tag-list)
+				 (symbol-function 'global-tagged-list) (make-tag-list))
 			   (start-interface))
 		 (endwin)))))
       (invalid-qsl-route (e) (say e *error-output*)))))
@@ -219,13 +221,28 @@
 
 (defvar *select-qso-event-loop-keys*
   (alist-hash-table
-   '((#\p . :print-locally-tagged)
+   '((#\p . :print-qsl-card)
+     (#\P . :preview-qsl-card)
+     (#\s . :print-swl-card)
+     (#\S . :preview-swl-card)
      (#\M . :clear-locally-tagged))))
 
 (defun make-qso-selector ()
   (dlambda
-   (:print-locally-tagged ()
+   (:print-qsl-card ()
      (create-qsl (local-tagged-list)))
+   (:preview-qsl-card ()
+     (create-qsl (local-tagged-list) :preview t))
+   (:print-swl-card ()
+     (let ((swl-call (read-value :prompt (lambda (b) (print-buffer b "SWL: "))
+				 :value-required-p t
+				 :ucase-p t)))
+       (create-qsl (global-tagged-list) :swl swl-call)))
+   (:preview-swl-card ()
+     (let ((swl-call (read-value :prompt (lambda (b) (print-buffer b "SWL: "))
+				 :value-required-p t
+				 :ucase-p t)))
+       (create-qsl (global-tagged-list) :preview t :swl swl-call)))
    (:clear-locally-tagged ()
      (local-tagged-list :clear))))
 
@@ -273,7 +290,8 @@
 	      (t
 	       (unless (buffer cc)
 		 (when-let ((message (gethash cc *select-qso-event-loop-keys*)))
-		   (selector message)))))))))))
+		   (selector message))))))))
+      (local-tagged-list :clear))))
 
 
 (defun qso-for-selection (q)
@@ -321,9 +339,14 @@
      (#\o . :edit-his-country)
      (#\r . :mark-qsl-received)
      (#\m . :toggle-local-tag)
+     (#\M . :toggle-global-tag)
+     (#\* . :clear-tag-lists)
      (#\t . :mark-qsl-queued)
      (#\z . :open-his-call-in-browser)
-     (#\p . :print-qsl)
+     (#\p . :print-qsl-card)
+     (#\P . :preview-qsl-card)
+     (#\s . :print-swl-card)
+     (#\S . :preview-swl-card)
      (#\A . :edit-his-call)
      (#\v . :merge-qrz-details)
      (#\a . :all))))
@@ -347,7 +370,7 @@
 	    (given cc #'char=
 	      (#\Esc cancel)
 	      (#\: (process-command
-		    (read-value :promtp (lambda (b) (print-buffer b ":")))))
+		    (read-value :prompt (lambda (b) (print-buffer b ":")))))
 	      (t (when-let ((message (gethash cc *qso-event-loop-keys*)))
 		   (manager message))))))))))
 
@@ -381,10 +404,27 @@
        (edit-field q-his-country "Country: "))
      (:merge-qrz-details ()
        (merge-qso-qrz-details qso qrz-details))
-     (:print-qsl ()
-       (create-qsl qso))
+     (:print-qsl-card ()
+       (create-qsl (cons qso (local-tagged-list))))
+     (:preview-qsl-card ()
+       (create-qsl (cons qso (local-tagged-list)) :preview t))
+     (:print-swl-card ()
+       (let ((swl-call (read-value :prompt (lambda (b) (print-buffer b "SWL: "))
+				   :value-required-p t
+				   :ucase-p t)))
+	 (create-qsl (cons qso (global-tagged-list)) :swl swl-call)))
+     (:preview-swl-card ()
+       (let ((swl-call (read-value :prompt (lambda (b) (print-buffer b "SWL: "))
+				   :value-required-p t
+				   :ucase-p t)))
+	 (create-qsl (cons qso (global-tagged-list)) :preview t :swl swl-call)))
      (:toggle-local-tag ()
        (local-tagged-list :toggle qso))
+     (:toggle-global-tag ()
+       (global-tagged-list :toggle qso))
+     (:clear-tag-lists ()
+       (local-tagged-list :clear)
+       (global-tagged-list :clear))
      (:open-his-call-in-browser ()
        (open-in-browser (q-his-call qso)))
      (:mark-qsl-queued ()
@@ -427,7 +467,8 @@
     (clear-partial-area)
     (mvprintw 1  1 (format nil "His call:    ~A ~A~%"
 			   (string-right-pad 21 (q-his-call q))
-			   (cond ((member q (local-tagged-list)) "t")
+			   (cond ((member q (global-tagged-list)) "T")
+				 ((member q (local-tagged-list)) "t")
 				 (t ""))))
     (mvprintw 2  1 (format nil "My call:     ~A~%"      (q-my-call q)))
     (mvprintw 4  1 (format nil "QSO date:    ~A ~A~%"   (human-date (q-qso-date q)) (q-time-on q)))
@@ -452,8 +493,8 @@
     (mvprintw 22 1 (format nil "Comment: ~A~%" (n->es (q-comment q))))
     (refresh)))
 
-(defun create-qsl (qso-list)
-  (when-let ((qsos (mklist qso-list)))
+(defun create-qsl (qso-list &key preview swl)
+  (when-let ((qsos (remove-duplicates (mklist qso-list))))
     (let ((ref (car qsos))
 	  (full-card ())
 	  (meta (make-hash-table :test 'equal)))
@@ -465,6 +506,9 @@
 	    (gethash "my-itu-zone" meta) (n->es (q-my-itu-zone ref))
 	    (gethash "my-cq-zone" meta)  (n->es (q-my-cq-zone ref))
 	    (gethash "my-grid" meta)     (n->es (q-my-grid ref)))
+      (if swl
+	  (setf (gethash "swl" meta) "true"
+		(gethash "to-call" meta) swl))
       (dolist (qso qsos)
 	(let ((info (make-hash-table :test 'equal)))
 	  (setf (gethash "his-call" info) (q-his-call qso)
@@ -475,10 +519,13 @@
 		(gethash "tx-rst" info)   (q-tx-rst qso))
 	  (push info full-card)))
       (push meta full-card)
-      (let ((worker-handle (sb-ext:run-program "galosh" (list "create-qsl")
-					       :wait nil
-					       :search (sb-ext:posix-getenv "PATH")
-					       :input :stream)))
+      (let ((worker-handle
+	     (sb-ext:run-program "galosh" (if preview
+					      (list "create-qsl" "--preview")
+					      (list "create-qsl"))
+				 :wait nil
+				 :search (sb-ext:posix-getenv "PATH")
+				 :input :stream)))
 	(write-json full-card (sb-ext:process-input worker-handle))
 	(close (sb-ext:process-input worker-handle))))))
 
