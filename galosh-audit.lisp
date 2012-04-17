@@ -46,7 +46,7 @@
 (defun check-missing-dxcc (fix)
   (say "Checking for missing DXCC data...")
   (with-transaction ()
-    (do-query ((qso) [SELECT 'qso :WHERE [null 'band]])
+    (do-query ((qso) [SELECT 'qso :WHERE [null 'his_dxcc]])
       (let ((entity (get-entity (q-his-call qso) :datetime (qso-datetime qso) :error-p nil)))
 	(if fix
 	    (progn
@@ -61,10 +61,17 @@
     (do-query ((qso) [SELECT 'qso])
       (let ((entity (get-entity (q-his-call qso) :datetime (qso-datetime qso) :error-p nil)))
 	(when (not (eq (q-his-dxcc qso) (entity-adif entity)))
-	  (format t "~A DXCC ~A, should be ~A~%"
+	  (format t "~A DXCC ~A, should be ~A"
 		  (format-qso qso)
 		  (entity-adif->name (q-his-dxcc qso))
-		  (entity-name entity)))))))
+		  (entity-name entity))
+	  (if fix
+	      (progn
+		(setf (q-his-dxcc qso) (entity-adif entity))
+		(update-records-from-instance qso)
+		(write-string "!"))
+	      (write-string "?"))
+	  (fresh-line))))))
 
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
