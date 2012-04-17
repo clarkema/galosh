@@ -19,6 +19,8 @@
 
 (in-package :cl-ncurses)
 
+(defconstant +ctrl-a+ (code-char 1))
+(defconstant +ctrl-e+ (code-char 5))
 (defconstant +ctrl-w+ (code-char 23))
 (defconstant +resize+ (code-char 410))
 
@@ -57,4 +59,4 @@
 		 (t (r (galosh-lisp:mkstr buffer (optional-ucase c))))))))
     (r buffer)))
 
-(export '(+ctrl-w+ +resize+ with-attr with-color read-value))
+(export '(+ctrl-a+ +ctrl-e+ +ctrl-w+ +resize+ with-attr with-color read-value))
