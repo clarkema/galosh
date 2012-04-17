@@ -36,6 +36,7 @@ _galosh_commands ()
         'log:manage your log'
         'qrz:look up callsigns using qrz.com'
         'qsl:manage QSL requests'
+        'recompile-all:recompile all compiled commands'
         'web'
     )
     local -a commands
