@@ -6,3 +6,4 @@ doc/*.t2d
 *.fasl
 quicklisp
 .DS_Store
+src/system-index.txt
