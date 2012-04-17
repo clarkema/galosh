@@ -291,12 +291,14 @@
 	       "more information.")
       (terminate 1))))
 
-(defun human-date (date)
+(defun human-date (date &key (separator "-"))
   (if (= (length date) 8)
       (progn
-	(format nil "~A-~A-~A"
+	(format nil "~A~A~A~A~A"
 		(subseq date 6 8)
+		separator
 		(nth (- (parse-integer date :start 4 :end 6) 1) *short-month-names*)
+		separator
 		(subseq date 0 4)))))
 
 (defun log-date-time ()
