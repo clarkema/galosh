@@ -100,10 +100,10 @@ sub cmd_lisp_repl
                     '--no-userinit',
                     '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
                     '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
-                    '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
+                    '--eval', qq{(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))},
                     '--eval', qq{(ql-impl-util:call-with-quiet-compilation
-                                    #'(lambda () (mapcar #'(lambda (p) (asdf:oos 'asdf:load-op p :verbose nil))
-                                                         '("galosh-lisp" "swank"))))},
+                                    (lambda () (mapcar (lambda (p) (ql:quickload p))
+                                                       '("galosh-lisp" "swank"))))},
                     '--eval', "(swank:create-server)",
                     '--end-toplevel-options',
                     @ARGV, ));
@@ -119,14 +119,14 @@ sub cmd_compile
     my $target_command = "galosh-$ARGV[1]";
     my $output_path = File::Spec->join( $compiled_dir, $target_command );
 
-    if ( -e "$FindBin::RealBin/$target_command.asd" ) {
+    if ( -e "$FindBin::RealBin/src/$target_command.asd" ) {
         mkdir $home_galosh_dir unless -d $home_galosh_dir;
         mkdir $compiled_dir unless -d $compiled_dir;
 
         exec( "buildapp", ( '--eval', qq{(sb-ext:disable-debugger)},
                             '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
                             '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
-                            '--eval', qq{(push "$FindBin::RealBin/" asdf:*central-registry*)},
+                            '--eval', qq{(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))},
                             '--require', $target_command,
                             '--eval', qq#(if (fboundp '${target_command}::buildapp-init) (${target_command}::buildapp-init))#,
                             '--entry',   "${target_command}::main",
