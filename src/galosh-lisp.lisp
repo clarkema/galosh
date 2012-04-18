@@ -32,6 +32,15 @@
      (let ((*read-eval* nil))
        ,@body)))
 
+(defun parse-float (string &key (start 0) (end nil))
+  (if (floatp string)
+      string
+      (with-safe-io-syntax
+       (with-input-from-string (stream string :start start :end end)
+	 (let ((value (read stream)))
+	   (check-type value real "a real number")
+	   value)))))
+
 (defun mklist (obj)
   (if (listp obj) obj (list obj)))
 

@@ -423,10 +423,16 @@ when you want to log on a new frequency, you must tell the logger manually.
 To do this, type:
 
 @example
-:set qrg 7125000
+:set qrg 7125.5
 @end example
 
-Note that the frequency is in Hertz, not kHz.
+Note that the frequency is in kHz.  You can also set the TX and RX
+frequencies individually if you are working split:
+
+@example
+:set qrg-tx 14260
+:set qrg-rx 14265
+@end example
 
 @subsection Setting Mode And IOTA Information
 

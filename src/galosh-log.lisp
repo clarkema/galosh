@@ -26,6 +26,11 @@
 
 (defconstant +inv-green+ 1)
 
+(defun parse-qrg (qrg)
+  (let ((input (if (integerp qrg) qrg (parse-float qrg))))
+    (check-type input (real 0 *) "a positive real number")
+    (floor (* input 1000))))
+
 (let ((qrg-tx 14260000)
       (qrg-rx 14260000)
       (qrg-lock (bordeaux-threads:make-lock)))
@@ -40,20 +45,17 @@
       qrg-rx))
   (defun (setf qrg) (value)
     (bordeaux-threads:with-lock-held (qrg-lock)
-      (setf qrg-rx (if (integerp value)
-		       value
-		       (parse-integer value :junk-allowed t))
-	    qrg-tx qrg-rx)))
+      (ignore-errors
+	(setf qrg-rx (parse-qrg value)
+	      qrg-tx qrg-rx))))
   (defun (setf qrg-rx) (value)
     (bordeaux-threads:with-lock-held (qrg-lock)
-      (setf qrg-rx (if (integerp value)
-		       value
-		       (parse-integer value :junk-allowed t)))))
+      (ignore-errors
+	(setf qrg-rx (parse-qrg value)))))
   (defun (setf qrg-tx) (value)
     (bordeaux-threads:with-lock-held (qrg-lock)
-      (setf qrg-tx (if (integerp value)
-		       value
-		       (parse-integer value :junk-allowed t))))))
+      (ignore-errors
+	(setf qrg-tx (parse-qrg value))))))
 
 (let ((mode "SSB")
       (mode-lock (bordeaux-threads:make-lock)))
@@ -275,10 +277,10 @@
 		     :if-does-not-exist :create
 		     :if-exists :supersede)
     (with-standard-io-syntax
-      (print `(setf (qrg-tx)  ,(qrg-tx)) s)
-      (print `(setf (qrg-rx)  ,(qrg-rx)) s)
-      (print `(setf (mode) ,(mode)) s)
-      (print `(setf *iota* ,*iota*) s))))
+      (print `(setf (qrg-tx) ,(float (/ (qrg-tx) 1000))) s)
+      (print `(setf (qrg-rx) ,(float (/ (qrg-rx) 1000))) s)
+      (print `(setf (mode)   ,(mode)) s)
+      (print `(setf *iota*   ,*iota*) s))))
 
 (defun read-state (path)
   (when (probe-file path)

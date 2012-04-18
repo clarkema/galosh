@@ -22,6 +22,7 @@
 	   :join
 	   :say
 	   :lecture
+	   :parse-float
 	   :open-in-browser
 	   :keys
 	   :default
