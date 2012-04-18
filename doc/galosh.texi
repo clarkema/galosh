@@ -87,7 +87,7 @@ code.  Once you have downloaded the code, run Galosh's setup script to
 install all of its other dependencies.
 
 @example
-$ mkdir -p $HOME/git
+$ mkdir $HOME/git
 $ cd $HOME/git
 $ git clone git://github.com/clarkema/galosh.git
 $ cd galosh
@@ -95,17 +95,28 @@ $ ./setup
 @end example
 
 Now the dependencies are installed, ensure that the main
-@command{galosh} script is in your @env{PATH}.  I recommend symlinking
-the @command{galosh} command into a directory that is already in your
-@env{PATH}.
+@command{galosh} script is in your @env{PATH}.  You can do this either
+by adding @file{$HOME/git/galosh} to your @env{PATH}, or by symlinking
+the @command{galosh} command into a directory that is @emph{already} in
+your @env{PATH}.
 
-Finally, Galosh makes use of various sources of data from the Internet.  Once
-@command{galosh} is in your @env{PATH}, the final step is to download the most
-recent versions of these data:
+Finally, Galosh makes use of various sources of data from the Internet.
+Once @command{galosh} is in your @env{PATH}, the final step is to
+download the most recent versions of these data:@footnote{This includes
+things like entity resolution data from Club Log, and is saved under
+$HOME/.galosh}
 
 @example
 $ galosh update
 @end example
+
+@section GNU/Linux Installation
+
+TODO
+
+@section FreeBSD Installation
+
+TODO
 
 @section Bash Completion (Optional)
 
@@ -365,24 +376,41 @@ difference in response time.
 @chapter Logging
 
 QSO logging under Galosh is provided by the @command{log} command.  Once
-you have initialized a log with @command{galosh init}, 
-QSO logging under Galosh is intended to be as fast as possible; allowing
-efficient logging under busy run conditions, while also offering sufficient
-flexibility to allow the operator to enter additional information for a QSO
-as required.
+you have initialized a repository with @command{galosh init}, QSO
+logging under Galosh is intended to be as fast as possible; allowing
+efficient logging under busy run conditions while also offering
+sufficient flexibility to allow the operator to enter additional
+information for a QSO as required.
 
 @section Your First QSO
 
-To get started, run @command{galosh log} within your repository directory.
-Once the logger has started, simply type in a callsign and hit enter twice.  A
-QSO will be added to the log using all of the default information: 59 both ways
-on 14260kHz.
+To get started, run @command{galosh log} within your repository
+directory.  Once the logger has started simply type in a callsign and
+hit @key{ENTER} twice.  A QSO will be added to the log using all of the
+default information: 59 both ways on 14260kHz.
+
+Normally, anything you type in the logger is taken as the start of a log
+entry.  The first word is taken as the callsign you are logging, and is
+automatically converted to upper-case as you type.  The second and third
+words are optional and represent the received and sent signal reports
+respectively.  A mode-specific default is used if they are omitted.
+If only a single digit is entered for either signal report it is taken
+as @samp{5x} in phone modes or @samp{5x9} in tone modes.
+
+@subheading Examples
+
+@multitable @columnfractions .20 .80
+@item @code{M0PRL}
+@tab 59 both ways in phone modes; 599 in tone modes.
+@item @code{M0PRL 4 1}
+@tab 54 by 59, or 549 by 599.
+@item @code{M0PRL 23}
+@tab 23 by 59
+@item @code{M0PRL 46 32}
+@tab 46 by 32
+@end multitable
 
 @section Commands
-
-Normally, anything you type in the logger is taken as the start of a log entry.
-The first word is taken as the callsign you are logging, and characters are
-automatically converted to upper-case as you type.
 
 If you start a new entry with a colon, your entry will be interpreted as a
 command rather than a log entry.  Command mode allows you to set information
@@ -433,6 +461,11 @@ the next stage is dealing with QSL cards.
 
 In this chapter we will consider various facets of QSL management, and
 how to deal with them using Galosh's @command{qsl} command.
+
+@menu
+* Processing Incoming Requests::
+* Printing Cards::
+@end menu
 
 @node Processing Incoming Requests
 @section Processing Incoming Requests
