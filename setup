@@ -213,7 +213,8 @@ sub setup_linux
     }
 
     if ( @packages_to_install ) {
-        my $command = "sudo aptitude install " . join( " ", @packages_to_install );
+        my $command = "sudo apt-get install "
+            . join( " ", @packages_to_install );
         say( "This will now install missing packages by executing:" );
         say( $command );
         if ( $term->ask_yn( prompt  => 'Proceed?', default => 'n' ) ) {
@@ -251,7 +252,9 @@ sub install_quicklisp
         print( "found.\n" );
         print( "Ensuring required Quicklisp systems are installed... " );
         system( "sbcl --no-userinit --load quicklisp/setup.lisp " .
-            qq{--eval "(ql:quickload 'galosh)" --eval "(quit)"} );
+            qq{--eval '(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))' } .
+            qq{--eval "(ql:quickload 'galosh)" } .
+            qq{--eval "(quit)"} );
         print( "done.\n" );
     }
     else {
@@ -269,6 +272,7 @@ sub install_quicklisp
             my $cwd = cwd();
             system( "sbcl --no-userinit --load quicklisp " .
                 qq{--eval "(quicklisp-quickstart:install :path \\"$quicklisp_dir/\\")" } .
+                qq{--eval '(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))' } .
                 qq{--eval "(ql:quickload 'galosh)" } .
                 qq{--eval "(quit)"} );
 
