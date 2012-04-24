@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2010, 2011 Michael Clarke, M0PRL
+;;;; Copyright (C) 2010, 2011, 2012 Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -77,8 +77,12 @@
     ;; Basics
     his-call
     his-operator
+    his-owner
     his-name
+    (his-age :type number)
     his-web
+    his-email
+    his-public-key
     my-call
     my-operator
     my-name
@@ -94,11 +98,14 @@
     time-off
     qso-complete
     qso-random
+    net
     (tx-rst :initform "59")
     (rx-rst :initform "59")
     comment
     notes
     prop-mode
+    his-sig
+    his-sig-info
     (followup :type integer :initform 0)
     (swl :type integer :initform 0)
 
@@ -109,6 +116,7 @@
     (k-index   :type float)
     sfi ; solar flux
     my-rig
+    his-rig
     (distance :type float)
 
     (ant-az :type float)
@@ -182,6 +190,8 @@
     qsl-via
     his-qsl-message
     my-qsl-message
+    credit-submitted
+    credit-granted
 
     ;; Meteor scatter
     (meteor-max-bursts :type integer)

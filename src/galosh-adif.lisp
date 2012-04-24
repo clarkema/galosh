@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2010, 2011 Michael Clarke, M0PRL
+;;;; Copyright (C) 2010, 2011, 2012s Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -96,9 +96,13 @@
   (list
    (make-translation :slot-name 'q-id :field-name "app_galosh_id")
    (make-translation :slot-name 'q-his-call :field-name "call")
-   (make-translation :slot-name 'q-his-operator :field-name "app_galosh_his_operator")
+   (make-translation :slot-name 'q-his-operator :field-name "contacted_op")
+   (make-translation :slot-name 'q-his-owner :field-name "eq_call")
    (make-translation :slot-name 'q-his-name :field-name "name")
+   (make-translation :slot-name 'q-his-age :field-name "age")
    (make-translation :slot-name 'q-his-web :field-name "web")
+   (make-translation :slot-name 'q-his-email :field-name "email")
+   (make-translation :slot-name 'q-his-public-key :field-name "public_key")
    (make-translation :slot-name 'q-my-call :field-name "station_callsign")
    (make-translation :slot-name 'q-my-name :field-name "my_name")
    (make-translation :slot-name 'q-my-operator :field-name "operator")
@@ -116,11 +120,14 @@
    (make-translation :slot-name 'q-time-off :field-name "time_off")
    (make-translation :slot-name 'q-qso-complete :field-name "qso_complete")
    (make-translation :slot-name 'q-qso-random :field-name "qso_random")
+   (make-translation :slot-name 'q-net :field-name "app_galosh_net")
    (make-translation :slot-name 'q-tx-rst :field-name "rst_sent")
    (make-translation :slot-name 'q-rx-rst :field-name "rst_rcvd")
    (make-translation :slot-name 'q-comment :field-name "comment")
    (make-translation :slot-name 'q-notes :field-name "notes")
    (make-translation :slot-name 'q-prop-mode :field-name "prop_mode")
+   (make-translation :slot-name 'q-his-sig :field-name "sig")
+   (make-translation :slot-name 'q-his-sig-info :field-name "sig_info")
    (make-translation :slot-name 'q-followup :field-name "app_galosh_followup"
 		     :qso->adif #'(lambda (x) (sqlite->adifbool x)))
    (make-translation :slot-name 'q-swl :field-name "swl"
@@ -131,6 +138,7 @@
    (make-translation :slot-name 'q-k-index :field-name "k_index")
    (make-translation :slot-name 'q-sfi :field-name "sfi")
    (make-translation :slot-name 'q-my-rig :field-name "my_rig")
+   (make-translation :slot-name 'q-his-rig :field-name "rig")
    (make-translation :slot-name 'q-distance :field-name "distance")
    (make-translation :slot-name 'q-ant-az :field-name "ant_az")
    (make-translation :slot-name 'q-ant-el :field-name "ant_el")
@@ -198,6 +206,8 @@
    (make-translation :slot-name 'q-qsl-via :field-name "qsl_via")
    (make-translation :slot-name 'q-his-qsl-message :field-name "app_galosh_his_qsl_message")
    (make-translation :slot-name 'q-my-qsl-message :field-name "qslmsg")
+   (make-translation :slot-name 'q-credit-submitted :field-name "credit_submitted")
+   (make-translation :slot-name 'q-credit-granted :field-name "credit_granted")
    ;; Meteor scatter
    (make-translation :slot-name 'q-meteor-max-bursts :field-name "max_bursts")
    (make-translation :slot-name 'q-meteor-shower-name :field-name "ms_shower")
@@ -302,9 +312,13 @@
 	    (case (tag-name tag)
 	      (:app_galosh_id (setf (q-id qso) (parse-integer value)))
 	      (:call (setf (q-his-call qso) value))
-	      (:app_galosh_his_operator (setf (q-his-operator) value))
+	      (:contacted_op (setf (q-his-operator) value))
+	      (:eq_call (setf (q-his-owner qso) value))
 	      (:name (setf (q-his-name qso) value))
+	      (:age (setf (q-his-age qso) value))
 	      (:web (setf (q-his-web qso) value))
+	      (:email (setf (q-his-email qso) value))
+	      (:public_key (setf (q-his-public-key qso) value))
 	      (:station_callsign (setf (q-my-call qso) value))
 	      (:my_name (setf (q-my-name qso) value))
 	      (:operator (setf (q-my-operator qso) value))
@@ -320,11 +334,14 @@
 	      (:time_off (setf (q-time-off qso) value))
 	      (:qso_complete (setf (q-qso-complete qso) value))
 	      (:qso_random (setf (q-qso-random qso) value))
+	      (:app_galosh_net (setf (q-net qso) value))
 	      (:rst_sent (setf (q-tx-rst qso) value))
 	      (:rst_rcvd (setf (q-rx-rst qso) value))
 	      (:comment (setf (q-comment qso) value))
 	      (:notes ())
 	      (:prop_mode (setf (q-prop-mode qso) value))
+	      (:sig (setf (q-his-sig qso) value))
+	      (:sig_info (setf (q-his-sig-info qso) value))
 	      (:app_galosh_followup (setf (q-followup qso) (adifbool->sqlite value)))
 	      (:swl (setf (q-swl qso) (adifbool->sqlite value)))
 	      (:rx_pwr (setf (q-his-power qso) (parse-number value)))
@@ -333,6 +350,7 @@
 	      (:k_index (setf (q-k-index qso) (parse-number value)))
 	      (:sfi (setf (q-sfi qso) (parse-number value)))
 	      (:my_rig (setf (q-my-rig qso) value))
+	      (:his_rig (setf (q-his-rig qso) value))
 	      (:distance (setf (q-distance qso) (parse-number value)))
 	      (:ant_az (setf (q-ant-az qso) (parse-number value)))
 	      (:ant_el (setf (q-ant-el qso) (parse-number value)))
@@ -401,6 +419,8 @@
 	      (:qsl_via (setf (q-qsl-via qso) value))
 	      (:app_galosh_his_qsl_message (setf (q-his-qsl-message qso) value))
 	      (:qslmsg (setf (q-my-qsl-message qso) value))
+	      (:credit_submitted (setf (q-credit-submitted qso) value))
+	      (:credit_granted (setf (q-credit-granted qso) value))
 	      ;; Meteor scatter
 	      (:max_bursts (setf (q-meteor-max-bursts qso) value))
 	      (:ms_shower (setf (q-meteor-shower-name qso) value))
