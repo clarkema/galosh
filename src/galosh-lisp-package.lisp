@@ -23,6 +23,7 @@
 	   :say
 	   :lecture
 	   :parse-float
+       :ensure-integer
 	   :open-in-browser
 	   :keys
 	   :default

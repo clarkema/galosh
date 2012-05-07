@@ -32,6 +32,11 @@
      (let ((*read-eval* nil))
        ,@body)))
 
+(defun ensure-integer (value)
+  (if (stringp value)
+      (parse-integer value :junk-allowed t)
+      value))
+
 (defun parse-float (string &key (start 0) (end nil))
   (if (floatp string)
       string
