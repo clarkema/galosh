@@ -16,7 +16,7 @@
 
 (defpackage #:galosh-bootstrap
   (:use #:cl)
-  (:export #:boot
+  (:export #:boot #:prove
 	   #:*main-package-name*))
 (in-package #:galosh-bootstrap)
 
@@ -34,3 +34,14 @@
 	   (*error-output* (make-broadcast-stream)))
        (ql:quickload *main-package-name*))
      (funcall (find-main *main-package-name*) sb-ext:*posix-argv*))))
+
+(defun prove ()
+  (ql-impl-util:call-with-quiet-compilation
+    (lambda ()
+      (let ((*standard-output* (make-broadcast-stream))
+            (*error-output* (make-broadcast-stream)))
+        (ql:quickload *main-package-name*))))
+  (when (find-package "GALOSH-PROVE")
+    (funcall (symbol-function
+               (find-symbol "PROVE" (find-package "GALOSH-PROVE")))
+             *main-package-name*)))
