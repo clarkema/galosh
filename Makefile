@@ -4,5 +4,5 @@ all:
 clean:
 	rm -rf quicklisp
 
-#test:
-#	prove
+test:
+	prove
