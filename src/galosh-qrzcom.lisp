@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2010 Michael Clarke, M0PRL
+;;;; Copyright (C) 2010, 2011, 2012 Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -43,33 +43,30 @@
 
 (in-package :galosh-qrzcom)
 
+(defvar *state-file* (logical-pathname "GL:USR;galosh-qrzcom.state"))
 (defparameter *qrz-api-url* "http://www.qrz.com/xml")
 (defvar *qrz-keys-by-username* (make-hash-table :test 'equal))
 
 ;;;
 ;;; State management
 ;;;
-(defun write-state (path)
-  (with-open-file (s path
-		     :direction :output
-		     :if-does-not-exist :create
-		     :if-exists :supersede)
+(defun write-state ()
+  (with-open-file (s *state-file*
+                     :direction :output
+                     :if-does-not-exist :create
+                     :if-exists :supersede)
     (with-standard-io-syntax
       (print `(setf *qrz-keys-by-username* ,*qrz-keys-by-username*) s))))
 
 (defun read-state ()
-  (let ((state-files (list (make-pathname :directory (fatal-get-galosh-dir) :name "galosh-qrzcom" :type "state"))))
-    (dolist (file state-files)
-      (if (probe-file file)
-	  (load file)))))
+  (when (probe-file *state-file*)
+    (load *state-file*)))
 
 #+sbcl
-(let ((state-hook #'(lambda ()
-		      (when (get-galosh-dir)
-			(write-state (make-pathname :directory (get-galosh-dir) :name "galosh-qrzcom" :type "state"))))))
+(let ((state-hook #'write-state))
   (if (member state-hook sb-ext:*exit-hooks*)
-      (warn "galosh-qrzcom: State hook already added to sb-ext:*exit-hooks*")
-      (push state-hook sb-ext:*exit-hooks*)))
+    (warn "galosh-qrzcom: State hook already added to sb-ext:*exit-hooks*")
+    (push state-hook sb-ext:*exit-hooks*)))
 
 ;;;
 ;;; QRZ.com client conditions

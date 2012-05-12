@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2010, 2011 Michael Clarke, M0PRL
+;;;; Copyright (C) 2010, 2011, 2012 Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -325,9 +325,11 @@
 	  option
 	  (if default-p default nil)))
 
-(define-galosh-command galosh-log (:required-configuration '("user.call"))
+(define-galosh-command galosh-log (:require-config '("user.call"))
   (let ((options (process-options argv))
-	(state-file (make-pathname :directory (fatal-get-galosh-dir) :name "galosh-log" :type "state"))
+	(state-file (make-pathname :directory (fatal-get-galosh-dir)
+                               :name "galosh-log"
+                               :type "state"))
 	(*operator* (get-config "user.call")))
     (declare (ignore options))
     (read-state state-file)

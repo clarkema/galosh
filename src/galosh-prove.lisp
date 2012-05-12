@@ -20,7 +20,7 @@
 (in-package :galosh-prove)
 
 (defun ok (number &optional (description ""))
-  (format t "ok ~A # ~A~%" number description))
+  (format t "ok ~A - ~A~%" number description))
 
 (defun notok (number &optional (description "") (fail-comment ""))
   (princ "not ")

@@ -1,7 +1,7 @@
 (asdf:defsystem #:galosh-init-db
-    :depends-on (#:galosh-lisp
-		 #:clsql)
-    :components ((:file "qso")
-		 (:file "journal-entry")
-		 (:file "galosh-init-db"
-			:depends-on ("qso" "journal-entry"))))
+  :depends-on (#:galosh-lisp
+               #:galosh-qso
+               #:clsql)
+  :components ((:file "journal-entry")
+               (:file "galosh-init-db"
+                :depends-on ("journal-entry"))))

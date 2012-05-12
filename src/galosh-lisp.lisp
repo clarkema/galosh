@@ -27,6 +27,43 @@
 (defparameter *short-month-names*
   '("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sept" "Oct" "Nov" "Dec"))
 
+(defun parent-dir (pathname)
+  (make-pathname :directory (butlast (pathname-directory pathname))
+                 :defaults pathname))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun mkstr (&rest args)
+    (with-output-to-string (s)
+      (dolist (a args)
+        (princ (if a a "") s)))))
+
+(setf (logical-pathname-translations "GL")
+      `(("RES;**;*.*.*"
+         ,(mkstr (merge-pathnames
+                   (make-pathname :directory '(:relative "resources"))
+                   (parent-dir (ql:where-is-system "galosh-lisp")))
+                 "**/*.*"))
+        ("USR;**;*.*.*"
+         ,(mkstr (merge-pathnames
+                   (make-pathname :directory '(:relative ".galosh"))
+                   (user-homedir-pathname)) "**/*.*"))))
+
+(defmacro log-fatal (&body body) `(cl-log:log-message :fatal ,@body))
+
+(defmacro log-error (err &optional (fmt "~A") &body body)
+  (with-gensyms (e c)
+    `(let* ((,e ,err)
+	    (,c (if (typep ,e 'symbol)
+		    (make-condition ,e)
+		    ,e)))
+       (cl-log:log-message :error ,fmt ,@body ,c)
+       (error ,c))))
+
+(defmacro log-warn  (&body body) `(cl-log:log-message :warn  ,@body))
+(defmacro log-info  (&body body) `(cl-log:log-message :info  ,@body))
+(defmacro log-debug (&body body) `(cl-log:log-message :debug ,@body))
+(defmacro log-trace (&body body) `(cl-log:log-message :trace ,@body))
+
 (defmacro with-safe-io-syntax (&body body)
   `(with-standard-io-syntax
      (let ((*read-eval* nil))
@@ -52,12 +89,6 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
  (defun symb (&rest args)
    (values (intern (apply #'mkstr args)))))
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defun mkstr (&rest args)
-    (with-output-to-string (s)
-      (dolist (a args)
-	(princ (if a a "") s)))))
 
 (defun mkkeyword (&rest args)
   (values (intern (apply #'mkstr args) "KEYWORD")))
@@ -264,25 +295,47 @@
     time-fudge))
 
 (defmacro with-galosh-db ((db &key (make-default t)) &body body)
-  (with-gensyms (dbfile default-p)
-    `(let ((,dbfile ,db)
-	   (,default-p ,make-default))
-       (if *galosh-db*
-	   (progn
-	     (if ,default-p
-		 (setf *default-database* *galosh-db*))
-	     ,@body)
-	   (if (probe-file ,dbfile)
-	       (unwind-protect
-		    (progn
-		      (setf *galosh-db* (connect (list ,dbfile) :database-type :sqlite3 :make-default ,default-p
-						 :if-exists :old))
-		      ,@body)
-		 (disconnect :database *galosh-db*)
-		 (setf *galosh-db* nil))
-	       (error 'missing-galosh-db-error :text
-		      (format nil "Could not find database `~a'." ,dbfile)))))))
+  "Execute BODY with GALOSH-LISP:*GALOSH-DB* set to a CLSQL DATABASE
+object representing the SQLite3 database DB.  If :MAKE-DEFAULT is
+true (the default) set CLSQL-SYS:*DEFAULT-DATABASE* to the same object.
 
+If DB is not specified or does not exist signal MISSING-GALOSH-DB-ERROR
+with two restarts: IGNORE and ABORT.  Invoking IGNORE will execute BODY
+without the database binding; ABORT will print an error message and
+terminate."
+  (once-only (db make-default)
+    `(cond (*galosh-db*
+             ;; We already have a connection option to the database;
+             ;; just make it the default if required.
+             (if ,make-default
+               (let ((*default-database* *galosh-db*))
+                 ,@body)))
+           ((and ,db (probe-file ,db))
+            ;; We don't already have the database open, but it does exist.
+            (unwind-protect
+              (progn
+                (setf *galosh-db* (connect (list ,db)
+                                           :database-type :sqlite3
+                                           :make-default ,make-default
+                                           :if-exists :old))
+                ,@body)
+              (disconnect :database *galosh-db*)
+              (setf *galosh-db* nil)))
+           (t
+            ;; No database specified, or it doesn't exist.
+            (restart-case
+              (error 'missing-galosh-db-error :text
+                     (format nil "Could not find database `~A'." ,db))
+              (ignore ()
+                :report "Continue without log database connection."
+                ,@body)
+              (abort (e)
+                :report "Terminate with error message."
+                (lecture (text e)
+                         "This probably means that you are not in a Galosh repository."
+                         "Most Galosh commands require you to be in a repository; see the manual for"
+                         "more information.")
+                (terminate 1)))))))
 
 (define-condition missing-galosh-dir-error (error)
   ((text :initarg :text :reader text)))
@@ -411,52 +464,69 @@
   (let ((global-config (merge-pathnames (make-pathname :directory '(:relative ".galosh") :name "config") (user-homedir-pathname))))
     (setf *config* (set-defaults (make-config)))
     (read-files *config* (list global-config))
-    (handler-case
-	(read-files *config* (list (make-pathname :directory (get-galosh-dir :raise-error t) :name "config")))
-      (t ()))))
+    (ignore-errors
+      (read-files *config* (list (make-pathname :directory (get-galosh-dir :raise-error t)
+                                                :name "config"))))))
 
-(defmacro define-galosh-command (name (&key (required-configuration nil)) &body body)
-  (with-gensyms (mixin-name
-		 mixin-repo-path
-		 mixin-global-path
-		 req-config)
+(defmacro define-galosh-command (name (&key (require-config nil)
+                                            (require-db t)) &body body)
+  (let ((package (symbol-package name)))
     `(defun ,(intern "MAIN" (symbol-name name)) (,(intern "ARGV" (symbol-name name)))
-       (setf (cl-log:log-manager)
-	     (make-instance 'cl-log:log-manager :message-class 'cl-log:formatted-message))
-       (cl-log:start-messenger 'cl-log:text-file-messenger
-			       :filename (get-config "core.debug-log")
-			       :category '(or :warn :error :fatal)
-			       )
-       (setf (logical-pathname-translations "GL") '(("**;*.*.*" ,(mkstr (ql:where-is-system "galosh-lisp") "**/*.*"))))
-       (let* ((,req-config ,required-configuration)
-	      (,mixin-name ,(string-downcase (string name)))
-	      (,mixin-repo-path (make-pathname :directory (fatal-get-galosh-dir)
-					       :name ,mixin-name :type "mixin"))
-	      (,mixin-global-path (merge-pathnames (make-pathname :directory '(:relative ".galosh")
-								  :name ,mixin-name :type "mixin")
-						   (user-homedir-pathname))))
-	 (init-config)
-	 (handler-case
-	     (progn
-	       (check-required-config ,req-config)
-	       (with-galosh-db ((get-config "core.log"))
-		 (let ((*package* (find-package ,(symbol-name name))))
-		   (when (probe-file ,mixin-global-path)
-		     (load ,mixin-global-path))
-		   (when (probe-file ,mixin-repo-path)
-		     (load ,mixin-repo-path)))
-		 ,@body))
-	   (missing-mandatory-configuration-error (e)
-	     (lecture (list "~(~A~) requires values for the following configuration options:" ',name)
-		      (list "~{    ~A~&~}" (variables e))
-		      "See the Configuration section of the Galosh manual for more information.")
-	     (terminate 1))
-	   (missing-galosh-db-error (e)
-	     (lecture (text e)
-		      "This probably means that you are not in a Galosh repository."
-		      "Most Galosh commands require you to be in a repository; see the manual for"
-		      "more information.")
-	     (terminate 1)))))))
+       (generic-galosh-command (lambda () ,@body)
+                               :name ,(package-name package)
+                               :require-db ,require-db
+                               :require-config ,require-config))))
+
+(defun generic-galosh-command (callback
+                                &key name require-db require-config)
+  (flet ((load-mixins ()
+           (when name
+             (let* ((mixin-repo-path (make-pathname :directory (get-galosh-dir)
+                                                    :name name
+                                                    :type "mixin"))
+                    (mixin-repo-true (ignore-errors (truename mixin-repo-path)))
+                    (mixin-global-path (logical-pathname
+                                         (mkstr "GL:USR;" name ".mixin")))
+                    (mixin-global-true (ignore-errors
+                                         (truename (mixin-global-path))))
+                    (*package* (find-package (string-upcase name))))
+               (if mixin-global-true
+                 (load mixin-global-true)
+                 (log-debug (format nil "Global mixin ~A not found."
+                                    mixin-global-path)))
+               (if (and mixin-repo-true
+                        (not (equal mixin-global-true
+                                    mixin-repo-true)))
+                 (progn
+                   (log-debug (format nil "Repo mixin ~A found. Loading."
+                                      mixin-repo-true))
+                   (load mixin-repo-true))
+                 (log-debug (format nil "Repo mixin ~A not found."
+                                    (truename mixin-repo-path))))))))
+    (setf (cl-log:log-manager)
+          (make-instance 'cl-log:log-manager
+            :message-class 'cl-log:formatted-message))
+    (cl-log:start-messenger 'cl-log:text-file-messenger
+                            :filename (get-config "core.debug-log")
+                            :category '(or :warn :error :fatal))
+    (init-config)
+    (handler-bind
+      ((missing-mandatory-configuration-error
+         (lambda (e)
+           (lecture (list "~(~A~) requires values for the following configuration options:"
+                          (or name "LAMBDA"))
+                    (list "~{    ~A~&~}" (variables e))
+                    "See the Configuration section of the Galosh manual for more information.")
+           (terminate 1)))
+       (missing-galosh-db-error
+         (lambda (e)
+           (if require-db
+             (invoke-restart 'abort e)
+             (invoke-restart 'ignore)))))
+      (load-mixins)
+      (check-required-config require-config)
+      (with-galosh-db ((get-config "core.log" :default nil))
+        (funcall callback)))))
 
 (defun terminate (&optional (status 0))
   #+sbcl     (sb-ext:quit      :unix-status status)    ; SBCL
@@ -582,19 +652,3 @@ BINDINGS for the evaluation of FORMS.
 		    (flet (,@flets)
 		      (declare (inline ,@inline))
 		      ,@body)))))
-
-(defmacro log-fatal (&body body) `(cl-log:log-message :fatal ,@body))
-
-(defmacro log-error (err &optional (fmt "~A") &body body)
-  (with-gensyms (e c)
-    `(let* ((,e ,err)
-	    (,c (if (typep ,e 'symbol)
-		    (make-condition ,e)
-		    ,e)))
-       (cl-log:log-message :error ,fmt ,@body ,c)
-       (error ,c))))
-
-(defmacro log-warn  (&body body) `(cl-log:log-message :warn  ,@body))
-(defmacro log-info  (&body body) `(cl-log:log-message :info  ,@body))
-(defmacro log-debug (&body body) `(cl-log:log-message :debug ,@body))
-(defmacro log-trace (&body body) `(cl-log:log-message :trace ,@body))

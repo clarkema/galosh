@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2010, 2011 Michael Clarke, M0PRL
+;;;; Copyright (C) 2010, 2011, 2012 Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -14,10 +14,14 @@
 ;;;; You should have received a copy of the GNU General Public License
 ;;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(defpackage :galosh-cluster
-  (:use :cl :galosh-lisp :clsql
-	:cl-ncurses :alexandria :usocket :jpl-queues))
-(in-package :galosh-cluster)
+(defpackage #:galosh-cluster
+  (:use #:cl #:galosh-lisp #:clsql #:cl-ncurses #:alexandria
+        #:usocket #:jpl-queues)
+  (:import-from #:bordeaux-threads
+                #:make-thread
+                #:make-lock
+                #:with-lock-held))
+(in-package #:galosh-cluster)
 
 (clsql:file-enable-sql-reader-syntax)
 
@@ -42,8 +46,10 @@
 	*history-head* (cdr *history-head*)))
 
 (defun new-entity-p (call)
-  (let ((sought (entity-adif (get-entity call :error-p nil))))
-    (zerop (first (select [count[*]] :from 'qso :where [= 'his_dxcc sought] :flatp t)))))
+  (when *galosh-db*
+    (let ((sought (entity-adif (get-entity call :error-p nil))))
+      (zerop (first (select [count[*]] :from 'qso
+                            :where [= 'his_dxcc sought] :flatp t))))))
 
 ;;; ===================================================================
 ;;; Spot
@@ -110,7 +116,7 @@
    (username :initarg :username)
    (socket :initform nil)
    (stream :initform nil)
-   (write-lock :initform (bordeaux-threads:make-lock))))
+   (write-lock :initform (make-lock))))
 
 (defun cluster-connect (client)
   (let* ((sb-impl::*default-external-format* :ascii))
@@ -168,7 +174,7 @@
 	(r "")))))
 
 (defun cluster-write (client string)
-  (bordeaux-threads:with-lock-held ((slot-value client 'write-lock))
+  (with-lock-held ((slot-value client 'write-lock))
     (princ string (slot-value client 'stream))
     (force-output (slot-value client 'stream))))
 
@@ -220,23 +226,6 @@
   (repaint-all)
   (ncurses-main-loop))
 
-
-
-(defun write-state (path)
-  (with-open-file (s path
-		     :direction :output
-		     :if-does-not-exist :create
-		     :if-exists :supersede)
-    (with-standard-io-syntax
-      ())))
-;      (print `(setf *qrg*  ,*qrg*)  s)
-;      (print `(setf *mode* ,*mode*) s)
-;      (print `(setf *iota* ,*iota*) s))))
-
-(defun read-state (path)
-  (when (probe-file path)
-    (load path)))
-
 (defun start-interface ()
   (initscr)
   ;(raw) ; Get everything, including ^C, ^Z, etc
@@ -257,19 +246,21 @@
 (defun buildapp-init ()
   (load-entity-information))
 
-(define-galosh-command galosh-cluster (:required-configuration '("cluster.host" "cluster.port" "cluster.user"))
-  (let ((state-file (make-pathname :directory (fatal-get-galosh-dir) :name "galosh-cluster" :type "state")))
-    (read-state state-file)
-    (unwind-protect
-	 (progn
-	   (init-history-buffer *history-size*)
-	   (start-interface)
-	   (setf *announce-queue* (make-instance 'synchronized-queue :queue
-						 (make-instance 'unbounded-fifo-queue)))
-	   (bordeaux-threads:make-thread #'festival-worker)
-	   (bordeaux-threads:make-thread #'(lambda ()
-					     (start-cluster-client (get-config "cluster.host") (get-config "cluster.port"))))
-	   (ncurses-main-loop))
-      (join-all))
-    (endwin)
-    (write-state state-file)))
+(define-galosh-command galosh-cluster (:require-db nil
+                                       :require-config '("cluster.host"
+                                                         "cluster.port"
+                                                         "cluster.user"))
+  (unwind-protect
+    (progn
+      (init-history-buffer *history-size*)
+      (start-interface)
+      (setf *announce-queue*
+            (make-instance 'synchronized-queue :queue
+                           (make-instance 'unbounded-fifo-queue)))
+      (make-thread #'festival-worker)
+      (make-thread (lambda ()
+                     (start-cluster-client (get-config "cluster.host")
+                                           (get-config "cluster.port"))))
+      (ncurses-main-loop))
+    (join-all))
+  (endwin))

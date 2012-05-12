@@ -29,6 +29,7 @@
 	   :default
 	   :with-galosh-db
 	   :define-galosh-command
+       :generic-galosh-command
 	   :get-galosh-dir
 	   :get-time-fudge
 	   :fatal-get-galosh-dir

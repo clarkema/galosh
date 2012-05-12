@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2010, 2011 Michael Clarke, M0PRL
+;;;; Copyright (C) 2010, 2011, 2012 Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@
 		       (format t "~a" (as-string q)))
 		   stream)))
 
-(define-galosh-command galosh-import-adif (:required-configuration '("user.call"))
+(define-galosh-command galosh-import-adif (:require-config '("user.call"))
   (let (options filename)
     (handler-case
 	(progn

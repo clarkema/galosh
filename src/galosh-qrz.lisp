@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2010, 2011 Michael Clarke, M0PRL
+;;;; Copyright (C) 2010, 2011, 2012 Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -19,10 +19,10 @@
 ;;;; of the qrz module itself, implemented as a thin layer on top of the
 ;;;; library.
 
-(defpackage :galosh-qrz
-  (:use :cl :galosh-lisp :galosh-qrzcom :clsql :galosh-grep :alexandria)
-  (:export :has-offlinedb-p :offline-qrz-search :qrz-search))
-(in-package :galosh-qrz)
+(defpackage #:galosh-qrz
+  (:use #:cl #:galosh-lisp #:galosh-qrzcom #:clsql #:galosh-grep #:alexandria)
+  (:export #:has-offlinedb-p #:offline-qrz-search #:qrz-search))
+(in-package #:galosh-qrz)
 
 (clsql:file-enable-sql-reader-syntax)
 
@@ -79,9 +79,10 @@
     (format nil "~%~A" string)))
 
 (defun print-logged-qsos (term)
-  (let ((q (grep-his-call term)))
-    (when q
-      (format t "~%QSOs:~%~A" q))))
+  (when *galosh-db*
+    (let ((q (grep-his-call term)))
+      (when q
+        (format t "~%QSOs:~%~A" q)))))
 
 (defun get-country-translations ()
   (with-transaction (:database *qrz-db*)
@@ -213,24 +214,23 @@ Returns nil if there is no offline database."
 (defun buildapp-init ()
   (load-entity-information))
 
-(define-galosh-command galosh-qrz ()
+(define-galosh-command galosh-qrz (:require-db nil)
   (let* ((options (process-options argv))
-	 (sought (cdr (assoc "sought" options))))
+         (sought (cdr (assoc "sought" options))))
     (if sought
-	(if (assoc "offline" options)
-	    (if (has-offlinedb-p)
-		(progn (princ (join (offline-qrz-search sought) #\Newline))
-		       (fresh-line)
-		       (princ (prepend-newline (section-entity sought)))
-		       (print-logged-qsos sought))
-		(progn (say "Offline use of galosh qrz requires that you download and install the qrz.com")
-		       (say "database.  See 'man galosh-qrz' or 'info galosh' for more information.")))
-	    (progn
-	      (check-required-config '("qrz.user" "qrz.password"))
-	      (if (assoc "raw" options)
-		  (raw-online-qrz-search sought)
-		  (progn
-		    (princ (online-qrz-search sought))
-		    (print-logged-qsos sought)))))
-	(format *error-output* "Fatal: No call given.~%"))))
-
+        (if (assoc "offline" options)
+            (if (has-offlinedb-p)
+                (progn (princ (join (offline-qrz-search sought) #\Newline))
+                       (fresh-line)
+                       (princ (prepend-newline (section-entity sought)))
+                       (print-logged-qsos sought))
+                (progn (say "Offline use of galosh qrz requires that you download and install the qrz.com")
+                       (say "database.  See 'galosh help qrz' or 'info galosh' for more information.")))
+            (progn
+              (check-required-config '("qrz.user" "qrz.password"))
+              (if (assoc "raw" options)
+                  (raw-online-qrz-search sought)
+                  (progn
+                    (princ (online-qrz-search sought))
+                    (print-logged-qsos sought)))))
+        (format *error-output* "Fatal: No call given.~%"))))

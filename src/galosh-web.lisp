@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2010, 2011 Michael Clarke, M0PRL
+;;;; Copyright (C) 2010, 2011, 2012 Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -315,19 +315,21 @@ body {
   (if (has-config-p "web.footer")
       (setf *footer* (slurp-file (get-config "web.footer"))))
   (setf *message-log-pathname* "errors"
-	*default-content-type* "text/html; charset=utf-8"
-	*dispatch-table* (list
-;			  (create-regex-dispatcher "^/[a-z\\d]+\\d+[a-z]+$" #'(lambda () (log-details :cols *limited-columns*)))
-			  'dispatch-easy-handlers
-			  (create-folder-dispatcher-and-handler "/resources/flags/" (translate-logical-pathname "GL:resources;flags;"))
-			  (create-folder-dispatcher-and-handler "/resources/css/"   (translate-logical-pathname "GL:resources;css;"))
-			  'default-dispatcher))
+        *default-content-type* "text/html; charset=utf-8"
+        *dispatch-table* (list
+                           'dispatch-easy-handlers
+                           (create-folder-dispatcher-and-handler
+                             "/resources/flags/"
+                             (translate-logical-pathname "GL:RES;flags;"))
+                           (create-folder-dispatcher-and-handler
+                             "/resources/css/"
+                             (translate-logical-pathname "GL:RES;css;"))))
   (start (make-instance 'easy-acceptor :address "127.0.0.1" :port port)))
 
 (defun buildapp-init ()
   (load-entity-information))
 
-(define-galosh-command galosh-web (:required-configuration '("user.call"))
+(define-galosh-command galosh-web (:require-config '("user.call"))
   (let* ((port (parse-integer (or (third argv) "8080")))
 	 (server (start-server :port port)))
     (dolist (thread (sb-thread:list-all-threads))
