@@ -488,7 +488,7 @@ terminate."
                     (mixin-global-path (logical-pathname
                                          (mkstr "GL:USR;" name ".mixin")))
                     (mixin-global-true (ignore-errors
-                                         (truename (mixin-global-path))))
+                                         (truename mixin-global-path)))
                     (*package* (find-package (string-upcase name))))
                (if mixin-global-true
                  (load mixin-global-true)
@@ -502,7 +502,7 @@ terminate."
                                       mixin-repo-true))
                    (load mixin-repo-true))
                  (log-debug (format nil "Repo mixin ~A not found."
-                                    (truename mixin-repo-path))))))))
+                                    mixin-repo-path)))))))
     (setf (cl-log:log-manager)
           (make-instance 'cl-log:log-manager
             :message-class 'cl-log:formatted-message))
