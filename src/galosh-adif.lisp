@@ -17,7 +17,6 @@
 (defpackage :galosh-adif
   (:use :cl
 	:alexandria
-	:parse-number
 	:galosh-lisp
 	:galosh-qso)
   (:export :map-over-qsos
@@ -344,21 +343,21 @@
 	      (:sig_info (setf (q-his-sig-info qso) value))
 	      (:app_galosh_followup (setf (q-followup qso) (adifbool->sqlite value)))
 	      (:swl (setf (q-swl qso) (adifbool->sqlite value)))
-	      (:rx_pwr (setf (q-his-power qso) (parse-number value)))
-	      (:tx_pwr (setf (q-my-power qso) (parse-number value)))
-	      (:a_index (setf (q-a-index qso) (parse-number value)))
-	      (:k_index (setf (q-k-index qso) (parse-number value)))
-	      (:sfi (setf (q-sfi qso) (parse-number value)))
+          (:rx_pwr (setf (q-his-power qso) value))
+          (:tx_pwr (setf (q-my-power qso) value))
+          (:a_index (setf (q-a-index qso) value))
+          (:k_index (setf (q-k-index qso) value))
+          (:sfi (setf (q-sfi qso) value))
 	      (:my_rig (setf (q-my-rig qso) value))
 	      (:his_rig (setf (q-his-rig qso) value))
-	      (:distance (setf (q-distance qso) (parse-number value)))
-	      (:ant_az (setf (q-ant-az qso) (parse-number value)))
-	      (:ant_el (setf (q-ant-el qso) (parse-number value)))
+          (:distance (setf (q-distance qso) value))
+          (:ant_az (setf (q-ant-az qso) value))
+          (:ant_el (setf (q-ant-el qso) value))
 	      (:ant_path (setf (q-ant-path qso) value))
 	      ;; His QTH
-	      (:cqz (setf (q-his-cq-zone qso) (parse-integer value)))
-	      (:ituz (setf (q-his-itu-zone qso) (parse-integer value)))
-	      (:dxcc (setf (q-his-dxcc qso) (parse-integer value)))
+          (:cqz (setf (q-his-cq-zone qso) value))
+          (:ituz (setf (q-his-itu-zone qso) value))
+          (:dxcc (setf (q-his-dxcc qso) value))
 	      (:country (setf (q-his-country qso) value))
 	      (:state (setf (q-his-state qso) value))
 	      (:ve_prov (setf (q-his-state qso) value))

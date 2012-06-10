@@ -147,7 +147,7 @@ into something suitable for passing to cl-sql:def-view-class."
   (my-power  :type number)
   (a-index   :type number)
   (k-index   :type number)
-  sfi ; solar flux
+  (sfi       :type number) ; solar flux
   my-rig
   his-rig
   (distance :type number)

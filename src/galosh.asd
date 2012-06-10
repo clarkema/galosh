@@ -10,7 +10,6 @@
 		 #:drakma
 		 #:cxml
 		 #:getopt
-		 #:parse-number
 		 #:py-configparser
 		 #:fiveam
 		 #:jpl-queues
