@@ -121,6 +121,13 @@ function _galosh-help()
     _galosh_commands && ret=0
 }
 
+function _galosh-import-adif()
+{
+    _arguments -C -S : \
+        '--ignore-unknown-app-fields[ignore unrecognized fields from other logging programs]' \
+        '1:file:_files -g \*.\(adi\|adif\)' && ret=0
+}
+
 function _galosh-log()
 {
     _compskip=all

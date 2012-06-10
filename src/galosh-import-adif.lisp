@@ -34,10 +34,11 @@
 
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
-      (getopt:getopt argv '(("comment-prefix" :required)))
+    (getopt:getopt argv '(("comment-prefix" :required)
+                          ("ignore-unknown-app-fields" :none t)))
     (if (< (length leftover) 2)
-	(error "Error: please specify input file.")
-	(concatenate 'list options `((filename . ,(third leftover)))))))
+        (error "Error: please specify input file.")
+        (concatenate 'list options `((filename . ,(third leftover)))))))
 
 (defun process-file (path)
   (with-open-file (stream path :external-format '(:utf-8 :replacement #\?))
@@ -50,14 +51,20 @@
 (define-galosh-command galosh-import-adif (:require-config '("user.call"))
   (let (options filename)
     (handler-case
-	(progn
-	  (setf options (process-options argv)
-		filename (cdr (assoc 'filename options))
-		*comment-prefix* (cdr (assoc "comment-prefix" options :test #'string=)))
-	  (process-file filename))
+      (progn
+        (setf options (process-options argv)
+              filename (cdr (assoc 'filename options))
+              *comment-prefix* (cdr (assoc "comment-prefix" options :test #'string=)))
+        (let ((galosh-adif:*ignore-unknown-app-fields-p*
+                (assoc "ignore-unknown-app-fields" options)))
+          (process-file filename)))
       (file-error () (format t "Error: file `~a' does not exist!~%" filename))
       (simple-error (e) (format t "~a~%" e))
-      (adif-error (e) (format t "Parse error: ~a ~a on line ~s.~%"
-			      (adif-error-message e)
-			      (adif-error-value e)
-			      (adif-error-line-number e))))))
+      (adif-error (e)
+                  (format t "Parse error: ~a ~a on line ~s.~%
+If you want to ignore unknown APP_ fields, specify the
+`--ignore-unknown-app-fields' option.  See `galosh help import-adif' for
+more.~%"
+                          (adif-error-message e)
+                          (adif-error-value e)
+                          (adif-error-line-number e))))))
