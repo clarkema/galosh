@@ -37,8 +37,11 @@ OPTIONS
     Specifically, rather than providing the pretty printed and formatted
     output, the raw XML returned by qrz.com is converted into a simple list of
     key-value pairs separated by tabs, and dumped directly to standard output.
-    
-    
+
+--entity-adif::
+    Resolve <callsign> to a DXCC entity and print the ADIF code for that
+    entity.
+
 EXAMPLES
 --------
 

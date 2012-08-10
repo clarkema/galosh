@@ -142,6 +142,11 @@ Returns nil if there is no offline database."
     (when-let ((e (get-entity call)))
       (format t "Entity      : ~A~%" (entity-name e)))))
 
+(defun section-raw-entity (call)
+  (with-output-to-string (*standard-output*)
+    (when-let ((e (get-entity call)))
+      (princ (entity-adif e)))))
+
 (defun section-qth (call result)
   (declare (ignore call))
   (flet ((r (key) (gethash key result)))
@@ -206,7 +211,7 @@ Returns nil if there is no offline database."
 ;;;; ===================================================================
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
-      (getopt:getopt argv '(("offline" :none) ("raw" :none)))
+      (getopt:getopt argv '(("offline" :none) ("raw" :none) ("entity-adif" :none)))
     (if (third leftover)
 	(concatenate 'list options `(("sought" . ,(third leftover))))
 	options)))
@@ -218,19 +223,23 @@ Returns nil if there is no offline database."
   (let* ((options (process-options argv))
          (sought (cdr (assoc "sought" options))))
     (if sought
-        (if (assoc "offline" options)
-            (if (has-offlinedb-p)
-                (progn (princ (join (offline-qrz-search sought) #\Newline))
-                       (fresh-line)
-                       (princ (prepend-newline (section-entity sought)))
-                       (print-logged-qsos sought))
-                (progn (say "Offline use of galosh qrz requires that you download and install the qrz.com")
-                       (say "database.  See 'galosh help qrz' or 'info galosh' for more information.")))
-            (progn
-              (check-required-config '("qrz.user" "qrz.password"))
-              (if (assoc "raw" options)
-                  (raw-online-qrz-search sought)
-                  (progn
-                    (princ (online-qrz-search sought))
-                    (print-logged-qsos sought)))))
+        (cond
+          ((assoc "offline" options)
+           (if (has-offlinedb-p)
+               (progn (princ (join (offline-qrz-search sought) #\Newline))
+                      (fresh-line)
+                      (princ (prepend-newline (section-entity sought)))
+                      (print-logged-qsos sought))
+               (progn (say "Offline use of galosh qrz requires that you download and install the qrz.com")
+                      (say "database.  See 'galosh help qrz' or 'info galosh' for more information."))))
+          ((assoc "entity-adif" options)
+           (say (section-raw-entity sought)))
+          (t
+           (progn
+             (check-required-config '("qrz.user" "qrz.password"))
+             (if (assoc "raw" options)
+                 (raw-online-qrz-search sought)
+                 (progn
+                   (princ (online-qrz-search sought))
+                   (print-logged-qsos sought))))))
         (format *error-output* "Fatal: No call given.~%"))))
