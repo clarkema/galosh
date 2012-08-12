@@ -84,6 +84,11 @@
              (check-type value real "a real number")
              value))))))
 
+(defgeneric clone (x))
+(defmethod clone ((s string)) (copy-seq s))
+(defmethod clone ((x null)) nil)
+(defmethod clone ((x number)) x)
+
 (defun mklist (obj)
   (if (listp obj) obj (list obj)))
 
