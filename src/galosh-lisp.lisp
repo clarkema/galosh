@@ -75,13 +75,14 @@
       value))
 
 (defun parse-float (string &key (start 0) (end nil))
-  (if (floatp string)
-      string
-      (with-safe-io-syntax
-       (with-input-from-string (stream string :start start :end end)
-	 (let ((value (read stream)))
-	   (check-type value real "a real number")
-	   value)))))
+  (cond
+    ((floatp string) string)
+    ((null string) nil)
+    (t (with-safe-io-syntax
+         (with-input-from-string (stream string :start start :end end)
+           (let ((value (read stream)))
+             (check-type value real "a real number")
+             value))))))
 
 (defun mklist (obj)
   (if (listp obj) obj (list obj)))
