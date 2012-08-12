@@ -113,7 +113,7 @@
   (let* ((history-size (- *LINES* 9)) ; 9 = 5 for qso, 3 status bars, 1 entry line
 	 (history-start 7)
 	 (q (reverse (select 'qso
-			     :order-by '(([qso_date] :desc)([time_on] :desc))
+			     :order-by '(([qso_date] :desc)([time_on] :desc)([id] :desc))
 			     :limit history-size
 			     :caching nil
 			     :flatp t)))

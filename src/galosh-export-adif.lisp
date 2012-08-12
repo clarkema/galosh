@@ -101,7 +101,7 @@
 (defmacro generate-query (form)
   `(select 'qso
 	   :where ,(compile-query-form form)
-	   :order-by '(([qso_date] :desc)([time_on] :desc))
+	   :order-by '(([qso_date] :desc)([time_on] :desc)([id] :desc))
 	   :flatp t))
 
 (defun get-qsos-matching (terms)
