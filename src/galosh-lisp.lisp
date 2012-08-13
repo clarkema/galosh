@@ -535,7 +535,7 @@ terminate."
         (funcall callback)))))
 
 (defun terminate (&optional (status 0))
-  #+sbcl     (sb-ext:quit      :unix-status status)    ; SBCL
+  #+sbcl     (sb-ext:exit      :code status)           ; SBCL
   #+ccl      (   ccl:quit      status)                 ; Clozure CL
   #+clisp    (   ext:quit      status)                 ; GNU CLISP
   #+cmu      (  unix:unix-exit status)                 ; CMUCL
