@@ -98,7 +98,13 @@ into something suitable for passing to cl-sql:def-view-class."
            `(with-accessors ,',(loop for field in accessor-names
                                  collect (list field field))
               ,qso
-              ,@body))))))
+              ,@body))
+         (defmethod clone ((q qso))
+           (let ((new (make-instance 'qso)))
+             (setf ,@(loop for name in (remove 'q-id accessor-names)
+                     collect `(,name new)
+                     collect `(clone (,name q))))
+             new))))))
 
 (def-qso-class
   (id
