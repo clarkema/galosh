@@ -23,10 +23,10 @@ body {
     border: 1px solid #073642;
     padding: 4px;
 }
-.qsl-table img {
+.qsl-table img.small-flag {
     float: right;
     max-width: 22px;
-    margin-top: 2px;
+    max-height: 15px;
 }
 .qsl-stats {
     text-align: center;
