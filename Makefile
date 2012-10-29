@@ -1,5 +1,5 @@
 all:
-	setup
+	./setup
 
 clean:
 	rm -rf quicklisp
