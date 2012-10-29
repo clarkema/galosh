@@ -33,7 +33,9 @@
      (let ((*standard-output* (make-broadcast-stream))
 	   (*error-output* (make-broadcast-stream)))
        (ql:quickload *main-package-name*))
-     (funcall (find-main *main-package-name*) sb-ext:*posix-argv*))))
+     (funcall (find-main *main-package-name*)
+              #+sbcl sb-ext:*posix-argv*
+              #+ccl (ccl::command-line-arguments)))))
 
 (defun prove ()
   (ql-impl-util:call-with-quiet-compilation

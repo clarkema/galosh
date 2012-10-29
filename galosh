@@ -98,7 +98,7 @@ sub cmd_lisp_repl
 {
     exec( "sbcl", ( '--noinform',
                     '--no-userinit',
-                    '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
+                    '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint (lambda (x y z) (declare (ignore x y z)) (sb-ext:exit)))},
                     '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
                     '--eval', qq{(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))},
                     '--eval', qq{(ql-impl-util:call-with-quiet-compilation
@@ -124,7 +124,7 @@ sub cmd_compile
         mkdir $compiled_dir unless -d $compiled_dir;
 
         exec( "buildapp", ( '--eval', qq{(sb-ext:disable-debugger)},
-                            '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint #'(lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
+                            '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint (lambda (x y z) (declare (ignore x y z)) (sb-ext:exit)))},
                             '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
                             '--eval', qq{(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))},
                             '--require', $target_command,
@@ -284,7 +284,7 @@ elsif ( -e "$FindBin::RealBin/src/${package_name}.asd" ) {
     exec( "sbcl", ( '--noinform',
                     '--noprint',
                     '--no-userinit',
-                    '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint (lambda (x y z) (declare (ignore x y z)) (sb-ext:quit)))},
+                    '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint (lambda (x y z) (declare (ignore x y z)) (sb-ext:exit)))},
                     '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
                     '--eval', qq{(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))},
                     '--load', qq{$FindBin::RealBin/src/boot.lisp},

@@ -264,9 +264,10 @@
     (fresh-line *error-output*)))
 
 (defun open-in-browser (call)
+  #+sbcl
   (sb-ext:run-program "galosh" (list "browser" (mkstr "http://www.qrz.com/db/" call))
 		      :wait nil
-		      :search (sb-ext:posix-getenv "PATH")))
+		      :search (getenv "PATH")))
 
 (defmacro default (place value)
   `(if (null ,place)
@@ -343,11 +344,15 @@ terminate."
                          "more information.")
                 (terminate 1)))))))
 
+(defun getenv (key)
+  #+sbcl (sb-ext:posix-getenv key)
+  #+ccl  (ccl:getenv key))
+
 (define-condition missing-galosh-dir-error (error)
   ((text :initarg :text :reader text)))
 
 (defun get-galosh-dir (&key (raise-error nil))
-  (let ((gdir (sb-ext:posix-getenv "GALOSH_DIR")))
+  (let ((gdir (getenv "GALOSH_DIR")))
     (if gdir
 	gdir
 	(if raise-error
