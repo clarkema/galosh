@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2010, 2011 Michael Clarke, M0PRL
+;;;; Copyright (C) 2010, 2011, 2013 Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -58,23 +58,25 @@
 	(funcall func record)))))
 
 (defun import-call-file (path)
-  (with-open-file (stream path)
-    (with-transaction () 
-      (map-over-call-records #'(lambda (r)
+  (let ((sb-impl::*default-external-format* :latin-1))
+    (with-open-file (stream path)
+      (with-transaction ()
+	(map-over-call-records (lambda (r)
 				 (update-records-from-instance r))
-			     stream))))
+			       stream)))))
 
 (defun import-country-file (path)
-  (with-open-file (stream path)
-    (with-transaction ()
-      (do ((line (cl:read-line stream nil) (cl:read-line stream nil)))
-	  ((null line) :done)
-	(let* ((record (split #\Tab line))
-	       (country (make-instance 'qrz-country 
-				       :id (parse-integer (first record) :junk-allowed t) 
-				       :name (second record))))
-	  (format t "~s~%" record)
-	  (update-records-from-instance country))))))
+  (let ((sb-impl::*default-external-format* :latin-1))
+    (with-open-file (stream path)
+      (with-transaction ()
+	(do ((line (cl:read-line stream nil) (cl:read-line stream nil)))
+	    ((null line) :done)
+	  (let* ((record (split #\Tab line))
+		 (country (make-instance 'qrz-country
+					 :id (parse-integer (first record) :junk-allowed t)
+					 :name (second record))))
+	    (format t "~s~%" record)
+	    (update-records-from-instance country)))))))
 
 (defun create-indicies ()
   (create-index [amateur-calls] :on [amateur]
