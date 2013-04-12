@@ -153,6 +153,12 @@ sub cmd_config
     }
 }
 
+sub cmd_clublog_activity
+{
+    require Galosh::ClublogActivity;
+    Galosh::ClublogActivity::main( @ARGV );
+}
+
 sub cmd_clublog_upload
 {
     require Galosh::ClublogUpload;
