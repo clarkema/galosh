@@ -212,19 +212,19 @@ Returns nil if there is no offline database."
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
       (getopt:getopt argv '(("offline" :none) ("raw" :none) ("entity-adif" :none)))
-    (if (third leftover)
-	(concatenate 'list options `(("sought" . ,(third leftover))))
-	options)))
+    (if (second leftover)
+        (concatenate 'list options `(("sought" . ,(second leftover))))
+        options)))
 
 (defun buildapp-init ()
   (load-entity-information))
 
 (define-galosh-command galosh-qrz (:require-db nil)
   (let* ((options (process-options argv))
-         (sought (cdr (assoc "sought" options))))
+         (sought (cdr (assoc "sought" options :test #'string=))))
     (if sought
         (cond
-          ((assoc "offline" options)
+          ((assoc "offline" options :test #'string=)
            (if (has-offlinedb-p)
                (progn (princ (join (offline-qrz-search sought) #\Newline))
                       (fresh-line)
@@ -232,12 +232,12 @@ Returns nil if there is no offline database."
                       (print-logged-qsos sought))
                (progn (say "Offline use of galosh qrz requires that you download and install the qrz.com")
                       (say "database.  See 'galosh help qrz' or 'info galosh' for more information."))))
-          ((assoc "entity-adif" options)
+          ((assoc "entity-adif" options :test #'string=)
            (say (section-raw-entity sought)))
           (t
            (progn
              (check-required-config '("qrz.user" "qrz.password"))
-             (if (assoc "raw" options)
+             (if (assoc "raw" options :test #'string=)
                  (raw-online-qrz-search sought)
                  (progn
                    (princ (online-qrz-search sought))

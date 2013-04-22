@@ -39,5 +39,5 @@
 	(princ (as-string qso) s)))))
 
 (define-galosh-command galosh-grep ()
-  (dolist (sought (cddr argv))
+  (dolist (sought (cdr argv))
     (princ (grep sought))))

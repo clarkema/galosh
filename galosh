@@ -12,6 +12,7 @@ $ENV{'PATH'} .= ":$FindBin::RealBin/local/bin";
 use File::Glob     ':glob';
 use File::Spec;
 use File::HomeDir;
+use Galosh::Environment;
 
 # Note that 'require order' below makes processing stop at the first
 # non-option argument.  In this way, options are shared out correctly
@@ -62,6 +63,39 @@ sub find_galosh_dir
     }
 }
 
+sub run_lisp
+{
+    my ($commands, $args) = @_;
+
+    my %prelude = (
+        sbcl => [
+            '--noinform',
+            '--noprint',
+            '--no-userinit',
+            '--eval', qq{
+                (sb-sys:enable-interrupt sb-unix:sigint
+                  (lambda (x y z) (declare (ignore x y z)) (sb-ext:exit)))},
+        ],
+        ccl => [
+            '--no-init',
+            '--eval', qq{(require 'serial-streams)}
+        ],
+    );
+    my %postscript = (
+        sbcl => [ '--end-toplevel-options' ],
+        ccl  => [ '--' ],
+    );
+
+    exec( Galosh::Environment->lisp_command(),
+           (
+               @{ $prelude{ Galosh::Environment->lisp_type() } },
+               @{ $commands },
+               @{ $postscript{ Galosh::Environment->lisp_type() } },
+               @{ $args }
+           )
+    );
+}
+
 ######################################################################
 # Command implemented as cmd_* functions should be defined below in
 # alphabetical order.
@@ -96,23 +130,26 @@ HELP
 
 sub cmd_lisp_repl
 {
-    exec( "sbcl", ( '--noinform',
-                    '--no-userinit',
-                    '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint (lambda (x y z) (declare (ignore x y z)) (sb-ext:exit)))},
-                    '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
-                    '--eval', qq{(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))},
-                    '--eval', qq{(ql-impl-util:call-with-quiet-compilation
-                                    (lambda () (mapcar (lambda (p) (ql:quickload p))
-                                                       '("galosh-lisp" "swank"))))},
-                    '--eval', "(swank:create-server)",
-                    '--end-toplevel-options',
-                    @ARGV, ));
+    run_lisp([
+            '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
+            '--eval', qq{(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))},
+            '--eval', qq{(ql-impl-util:call-with-quiet-compilation
+                            (lambda () (mapcar (lambda (p) (ql:quickload p))
+                                               '("galosh-lisp" "swank"))))},
+            '--eval', "(swank:create-server)",
+        ],
+        \@ARGV
+    )
 }
 
 sub cmd_compile
 {
     unless ( $ARGV[1] ) {
         print STDERR "Usage: galosh compile COMMAND\n";
+        exit;
+    }
+    unless ( Galosh::Environment->lisp_type() eq 'sbcl' ) {
+        print STDERR "The `compile' command is only available when using SBCL.\n";
         exit;
     }
 
@@ -287,17 +324,15 @@ elsif ( -e $compiled_path ) {
     exec( $compiled_path, @ARGV );
 }
 elsif ( -e "$FindBin::RealBin/src/${package_name}.asd" ) {
-    exec( "sbcl", ( '--noinform',
-                    '--noprint',
-                    '--no-userinit',
-                    '--eval', qq{(sb-sys:enable-interrupt sb-unix:sigint (lambda (x y z) (declare (ignore x y z)) (sb-ext:exit)))},
-                    '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
-                    '--eval', qq{(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))},
-                    '--load', qq{$FindBin::RealBin/src/boot.lisp},
-                    '--eval', qq{(let ((galosh-bootstrap:*main-package-name* "${package_name}"))(galosh-bootstrap:boot))},
-                    '--eval' , "(quit)",
-                    '--end-toplevel-options',
-                    @ARGV, ));
+    run_lisp([
+            '--load', qq{$FindBin::RealBin/quicklisp/setup.lisp},
+            '--eval', qq{(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))},
+            '--load', qq{$FindBin::RealBin/src/boot.lisp},
+            '--eval', qq{(let ((galosh-bootstrap:*main-package-name* "$package_name"))(galosh-bootstrap:boot))},
+            '--eval' , "(quit)",
+        ],
+        \@ARGV
+    )
 }
 elsif ( -e "$FindBin::RealBin/${package_name}" ) {
     no warnings qw(uninitialized);

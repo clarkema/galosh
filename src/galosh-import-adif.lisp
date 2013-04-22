@@ -38,7 +38,7 @@
                           ("ignore-unknown-app-fields" :none t)))
     (if (< (length leftover) 2)
         (error "Error: please specify input file.")
-        (concatenate 'list options `((filename . ,(third leftover)))))))
+        (concatenate 'list options `((filename . ,(second leftover)))))))
 
 (defun process-file (path)
   (with-open-file (stream path :external-format '(:utf-8 :replacement #\?))

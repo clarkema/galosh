@@ -33,7 +33,7 @@
     (handler-case
 	(progn
 	  (process-route-option (get-option "route" options))
-	  (given (third leftovers) #'string-equal
+	  (given (second leftovers) #'string-equal
 	    ("mark-sent" (mark-sent *route*))
 	    ("show-waiting" (show-waiting))
 	    ("show-queue" (show-queue *route*))

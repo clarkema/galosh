@@ -91,10 +91,10 @@
 (defun process-options (argv)
   (multiple-value-bind (leftover options)
       (getopt:getopt argv '())
-    (if (< (length leftover) 2)
+    (if (< (length leftover) 3)
 	(error "Error: please specify input file.")
-	(concatenate 'list options `((call-file . ,(third leftover))
-				     (country-file . ,(fourth leftover)))))))
+	(concatenate 'list options `((call-file . ,(second leftover))
+				     (country-file . ,(third leftover)))))))
 
 (defun main (argv)
   (let ((options (process-options argv)))

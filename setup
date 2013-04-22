@@ -4,6 +4,7 @@ use strict;
 use 5.010;
 
 use FindBin;
+use lib "$FindBin::RealBin/perllib";
 use lib "$FindBin::RealBin/local/lib/perl5";
 
 $ENV{'PATH'} .= ":$FindBin::RealBin/local/bin";
@@ -11,6 +12,7 @@ $ENV{'PATH'} .= ":$FindBin::RealBin/local/bin";
 use Cwd;
 use English qw( -no_match_vars );
 use File::Path qw( make_path );
+use Galosh::Environment;
 use IPC::Cmd qw( can_run );
 use Term::UI;
 use Term::ReadLine;
@@ -77,12 +79,6 @@ our $debian_deps = [
         name           => 'DBI',
         package        => 'libdbi-perl',
         module         => 'DBI',
-    },
-    {
-        type            => 'program',
-        name            => 'SBCL',
-        test_executable => 'sbcl',
-        package         => 'sbcl',
     },
     {
         type            => 'program',
@@ -179,6 +175,16 @@ sub setup_osx
 sub setup_linux
 {
     my @packages_to_install;
+    my @deps = @$debian_deps;
+
+    if ( Galosh::Environment->lisp_type() eq 'sbcl' ) {
+        push @deps, {
+            type            => 'program',
+            name            => 'SBCL',
+            test_executable => 'sbcl',
+            package         => 'sbcl',
+        };
+    }
 
     for my $dep ( @$debian_deps ) {
         given ( $dep->{'type'} ) {
@@ -245,13 +251,25 @@ sub install_quicklisp
 {
     require LWP::UserAgent;
     LWP::UserAgent->import();
+    my $lisp_type    = Galosh::Environment->lisp_type();
+    my $lisp_command = Galosh::Environment->lisp_command();
+
+    given ( $lisp_type ) {
+        when ('ccl') {
+            $lisp_command .= " --no-init ";
+        }
+        default {
+            $lisp_command .= " --no-userinit ";
+        }
+    }
+
     my $quicklisp_dir = cwd() . '/quicklisp/'; # Trailing / required for SBCL
 
     print( "Checking for Quicklisp... " );
     if ( -e $quicklisp_dir && -d $quicklisp_dir ) {
         print( "found.\n" );
         print( "Ensuring required Quicklisp systems are installed... " );
-        system( "sbcl --no-userinit --load quicklisp/setup.lisp " .
+        system( "$lisp_command --load quicklisp/setup.lisp " .
             qq{--eval '(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))' } .
             qq{--eval "(ql:quickload 'galosh)" } .
             qq{--eval "(quit)"} );
@@ -270,7 +288,7 @@ sub install_quicklisp
 
         if ( $res->is_success ) {
             my $cwd = cwd();
-            system( "sbcl --no-userinit --load quicklisp " .
+            system( "$lisp_command --load quicklisp " .
                 qq{--eval "(quicklisp-quickstart:install :path \\"$quicklisp_dir/\\")" } .
                 qq{--eval '(setf quicklisp-client:*local-project-directories* (list "$FindBin::RealBin/src/"))' } .
                 qq{--eval "(ql:quickload 'galosh)" } .
@@ -286,15 +304,20 @@ sub install_quicklisp
 
 sub install_buildapp
 {
-    if ( can_execute( 'buildapp' ) ) {
-            print( "found.\n" );
+    if ( Galosh::Environment->lisp_type() eq 'sbcl' ) {
+        if ( can_execute( 'buildapp' ) ) {
+                print( "found.\n" );
+        }
+        else {
+            make_path( "local/bin" );
+            system( "sbcl --no-userinit --load quicklisp/setup.lisp " .
+                qq{--eval "(ql:quickload 'buildapp)" } .
+                qq{--eval "(buildapp:build-buildapp \\"local/bin/buildapp\\")" } .
+                qq{--eval "(quit)"} );
+        }
     }
     else {
-        make_path( "local/bin" );
-        system( "sbcl --no-userinit --load quicklisp/setup.lisp " .
-            qq{--eval "(ql:quickload 'buildapp)" } .
-            qq{--eval "(buildapp:build-buildapp \\"local/bin/buildapp\\")" } .
-            qq{--eval "(quit)"} );
+        print( "Skipping buildapp on non-SBCL Lisp.\n");
     }
 }
 
