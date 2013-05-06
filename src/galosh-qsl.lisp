@@ -1,5 +1,5 @@
 ;;;; galosh -- amateur radio utilities.
-;;;; Copyright (C) 2011, 2012 Michael Clarke, M0PRL
+;;;; Copyright (C) 2011, 2012, 2013 Michael Clarke, M0PRL
 ;;;; <mike -at- galosh.org.uk>
 ;;;;
 ;;;; This program is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@
     (handler-case
 	(progn
 	  (process-route-option (get-option "route" options))
-	  (given (second leftovers) #'string-equal
+	  (given (third leftovers) #'string-equal
 	    ("mark-sent" (mark-sent *route*))
 	    ("show-waiting" (show-waiting))
 	    ("show-queue" (show-queue *route*))
