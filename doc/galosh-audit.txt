@@ -7,7 +7,7 @@ galosh-audit - Audit your amateur radio log.
 
 SYNOPSIS
 --------
-'galosh audit' [--commit]
+'galosh audit' [--fix]
 
 DESCRIPTION
 -----------
@@ -17,7 +17,7 @@ corrects it.
 OPTIONS
 -------
 
---commit::
+--fix::
     By default `galosh audit` will only _inform_ you of potential
     problems with the log; not do anything about it.  If this flag is
     provided, it will also correct what it can.
