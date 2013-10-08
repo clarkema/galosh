@@ -76,7 +76,7 @@ sub find_first_tab_fifo
 sub spawn_browser
 {
     my $tmp_dir = shift;
-    my $url     = shift || "about:blank";
+    my $url     = shift;
 
     if ( $pid = fork ) {
         # Parent
@@ -94,6 +94,7 @@ sub spawn_browser
 sub main
 {
     my ($command, $url) = @_;
+    $url ||= "about:blank";
 
     if ( $url =~ m!^[a-z0-9/]+$! ) {
         $url = "http://www.qrz.com/db/$url";
