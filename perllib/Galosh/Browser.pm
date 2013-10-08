@@ -96,7 +96,7 @@ sub main
     my ($command, $url) = @_;
     $url ||= "about:blank";
 
-    if ( $url =~ m!^[a-z0-9/]+$! ) {
+    if ( $url =~ m!^[a-z0-9/]+$!i ) {
         $url = "http://www.qrz.com/db/$url";
     }
 
