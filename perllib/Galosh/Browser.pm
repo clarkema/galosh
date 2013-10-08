@@ -1,5 +1,5 @@
 # galosh -- amateur radio utilities.
-# Copyright (C) 2011, 2012 Michael Clarke, M0PRL
+# Copyright (C) 2011, 2012, 2013 Michael Clarke, M0PRL
 # <mike -at- galosh.org.uk>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -84,6 +84,7 @@ sub spawn_browser
     }
     else {
         # Child
+        open( STDERR, '>', '/dev/null' ); # Swallow junk output from uzbl
         exec( "uzbl-tabbed", ( '--socketdir', $tmp_dir,
                                '--fifodir',   $tmp_dir, $url ) );
     }
