@@ -19,6 +19,7 @@ package Galosh::Browser;
 use English;
 use File::Glob ':glob';
 use File::Spec;
+use IPC::Cmd qw( can_run );
 #use IO::Socket::UNIX qw( SOCK_STREAM );
 
 sub send_command
@@ -104,6 +105,12 @@ sub main
         exec( qq[osascript -e 'tell application "Safari"' -e 'set URL of last item of tabs of first item of windows to "$url"' -e 'end tell'] );
     }
     else {
+        unless ( can_run('uzbl-tabbed') ) {
+            print STDERR ("galosh-browser depends on `uzbl' on systems other than OS X.\n");
+            print STDERR ("See www.uzbl.org or your package manager for more information.\n");
+            exit 1;
+        }
+
         my $tmp_dir = File::Spec->join( $main::galosh_dir, 'tmp' );
         my $fifo    = find_first_tab_fifo( $tmp_dir );
 
