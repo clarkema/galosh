@@ -79,6 +79,8 @@
   ((text :initarg :text :reader text)))
 (define-condition network-or-threading-error (error)
   ())
+(define-condition subscription-expired-error (error)
+  ())
 
 (defclass qrzcom-client ()
   ((username :initarg :username :initform "")
@@ -129,6 +131,9 @@
 								  (get-qrz-key (slot-value client 'username))
 								  request)))
 		    (doc (cxml:parse response (cxml-dom:make-dom-builder)))
+                    (sub-expiry (dom:node-value
+                                 (dom:first-child
+                                  (aref (dom:get-elements-by-tag-name doc "SubExp") 0))))
 		    (err (dom:get-elements-by-tag-name doc "Error")))
 	       (if (> (length err) 0)
 		   (let ((error-text (dom:node-value (dom:first-child (aref err 0)))))
@@ -149,7 +154,9 @@
 			(error 'callsign-not-found-error :text error-text))
 		       (t
 			(error (cats "Unknown error: " error-text)))))
-		   doc))))
+		   (if (equal sub-expiry "non-subscriber")
+                       (error 'subscription-expired-error)
+                       doc)))))
     (api-request 1)))
 
 (defun details-by-call (client call)
@@ -159,7 +166,8 @@
     (handler-case
 	(setf doc (api-call client (cats "callsign=" call)))
       (callsign-not-found-error () (return-from details-by-call nil))
-      (network-or-threading-error () (return-from details-by-call nil)))
+      (network-or-threading-error () (return-from details-by-call nil))
+      (subscription-expired-error () (return-from details-by-call nil)))
     (setf callsign (aref (dom:get-elements-by-tag-name doc "Callsign") 0))
     (dom:do-node-list (node (dom:child-nodes callsign) result)
       (when (dom:element-p node)
